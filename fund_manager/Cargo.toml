@@ -1,0 +1,19 @@
+[package]
+name = "fund_manager"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+scrypto = { workspace = true }
+radix-common = { workspace = true }
+radix-engine-interface = { workspace = true }
+scrypto-interface = { path = "../scrypto-interface" }
+
+[dev-dependencies]
+scrypto-test = { workspace = true }
+
+[features]
+default = []
+
+[lib]
+crate-type = ["cdylib", "lib"]

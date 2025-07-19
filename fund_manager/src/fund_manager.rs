@@ -1,0 +1,728 @@
+use scrypto::prelude::*;
+use crate::common::*;
+
+static AUTHORIZATION_TIMEOUT: i64 = 172800; // Two days
+static MAX_VECTOR_SIZE: usize = 20;
+
+#[derive(ScryptoSbor, NonFungibleData)]
+struct Admin {
+}
+
+#[derive(ScryptoSbor, PartialEq)]
+pub enum AuthorizedOperation {
+    WithdrawValidatorBadge,
+    AddDefiProtocol,
+    RemoveDefiProtocol,
+    AddDexPool,
+}
+
+#[derive(ScryptoSbor)]
+struct Authorization {
+    timestamp: i64,
+    allower_admin_id: u8,
+    allowed_admin_id: u8,
+    authorized_operation: AuthorizedOperation,
+}
+
+#[derive(ScryptoSbor)]
+struct DefiProtocol {
+    value: Decimal,
+    desired_percentage: u8,
+    wrapper: DefiProtocolInterfaceScryptoStub,
+    coin: ResourceAddress, // Example coin: xUSDC
+    protocol_token: ResourceAddress, // Example protocol_token: w2-xUSDC
+}
+
+#[derive(ScryptoSbor)]
+pub struct DefiProtocolVariableInfo {
+    value: Decimal,
+    desired_percentage: u8,
+}
+
+#[derive(ScryptoSbor, ScryptoEvent)]
+struct LsuUnstakeStarted {
+    amount: Decimal,
+    claim_nft_id: NonFungibleLocalId,
+}
+
+#[derive(ScryptoSbor)]
+struct CoinsCouple {
+    from: ResourceAddress,
+    to: ResourceAddress,
+}
+
+#[blueprint]
+#[events(
+    LsuUnstakeStarted,
+)]
+// TODO: More events needed
+#[types(String, DefiProtocol, CoinsCouple, DexInterfaceScryptoStub)]
+mod fund_manager {
+
+    enable_method_auth! {
+        roles {
+            bot => updatable_by: [OWNER];
+        },
+        methods {
+            init => PUBLIC;
+            mint_bot_badge => restrict_to: [OWNER];
+
+            // Multisig operations
+            authorize_admin_operation => PUBLIC;
+            add_defi_protocol => PUBLIC;
+            remove_defi_protocol => PUBLIC;
+            add_dex_pool => PUBLIC;
+            withdraw_validator_badge => PUBLIC;
+
+            deposit_validator_badge => restrict_to: [OWNER];
+
+            start_unlock_owner_stake_units => restrict_to: [bot];
+            start_unstake => restrict_to: [bot];
+            finish_unstake => restrict_to: [bot];
+
+            update_defi_protocols_info => restrict_to: [bot];
+
+            withdraw => PUBLIC;
+            fund_unit_value => PUBLIC;
+        }
+    }
+
+    struct FundManager {
+        admin_badge_resource_manager: NonFungibleResourceManager,
+        bot_badge_resource_manager: FungibleResourceManager,
+        fund_unit_resource_manager: FungibleResourceManager,
+        validator_badge_vault: NonFungibleVault,
+        authorization_vector: Vec<Authorization>,
+        min_authorizers: u8,
+        defi_protocols_list: Vec<String>,
+        defi_protocols: KeyValueStore<String, DefiProtocol>,
+        fund_manager_badge_vault: FungibleVault,
+        validator: Global<Validator>,
+        claim_nft_vault: NonFungibleVault,
+        account_locker: Global<AccountLocker>,
+        base_coin: ResourceAddress,
+        dexes: KeyValueStore<CoinsCouple, DexInterfaceScryptoStub>,
+        total_value: Decimal,
+        coins_value: HashMap<ResourceAddress, Decimal>, // TODO: What about an oracle instead of
+                                                        // this?
+    }
+
+    impl FundManager {
+
+        pub fn new(
+            validator: Global<Validator>,
+            claim_nft_address: ResourceAddress,
+            base_coin: ResourceAddress,
+        ) -> Global<FundManager> {
+            let (address_reservation, component_address) =
+                Runtime::allocate_component_address(FundManager::blueprint_id());
+
+            let admin_badge_resource_manager = ResourceBuilder::new_integer_non_fungible::<Admin>(OwnerRole::None)
+                .metadata(metadata!(
+                    roles {
+                        metadata_setter => rule!(deny_all);
+                        metadata_setter_updater => rule!(deny_all);
+                        metadata_locker => rule!(deny_all);
+                        metadata_locker_updater => rule!(deny_all);
+                    },
+                    init {
+                        "name" => "Fund admin badge", locked;
+                    }
+                ))
+                .mint_roles(mint_roles!(
+                    minter => rule!(require(global_caller(component_address)));
+                    minter_updater => rule!(deny_all);
+                ))
+                .create_with_no_initial_supply();
+            let admin_badge_address = admin_badge_resource_manager.address();
+
+            let bot_badge_resource_manager = ResourceBuilder::new_fungible(OwnerRole::Fixed(rule!(require(admin_badge_address))))
+                .metadata(metadata!(
+                    roles {
+                        metadata_setter => rule!(deny_all);
+                        metadata_setter_updater => rule!(deny_all);
+                        metadata_locker => rule!(deny_all);
+                        metadata_locker_updater => rule!(deny_all);
+                    },
+                    init {
+                        "name" => "Fund bot badge", locked;
+                    }
+                ))
+                .mint_roles(mint_roles!(
+                    minter => rule!(require(global_caller(component_address)));
+                    minter_updater => rule!(require(admin_badge_address));
+                ))
+                .withdraw_roles(withdraw_roles!(
+                    withdrawer => rule!(deny_all); // Non transferable
+                    withdrawer_updater => rule!(require(admin_badge_address));
+                ))
+                .recall_roles(recall_roles!(
+                    recaller => rule!(require(global_caller(component_address))); // Recallable
+                    recaller_updater => rule!(require(admin_badge_address));
+                ))
+                .create_with_no_initial_supply();
+
+            let fund_unit_resource_manager = ResourceBuilder::new_fungible(OwnerRole::Fixed(rule!(require(admin_badge_address))))
+                .metadata(metadata!(
+                    roles {
+                        metadata_setter => rule!(require(admin_badge_address));
+                        metadata_setter_updater => rule!(require(admin_badge_address));
+                        metadata_locker => rule!(require(admin_badge_address));
+                        metadata_locker_updater => rule!(require(admin_badge_address));
+                    },
+                    init {
+                        "name" => "Fund unit", updatable;
+                    }
+                ))
+                .mint_roles(mint_roles!(
+                    minter => rule!(require(global_caller(component_address)));
+                    minter_updater => rule!(require(admin_badge_address));
+                ))
+                .burn_roles(burn_roles!(
+                    burner => rule!(require(global_caller(component_address)));
+                    burner_updater => rule!(require(admin_badge_address));
+                ))
+                .create_with_no_initial_supply();
+
+            let fund_manager_badge_bucket = ResourceBuilder::new_fungible(OwnerRole::Fixed(rule!(require(admin_badge_address))))
+                .metadata(metadata!(
+                    roles {
+                        metadata_setter => rule!(require(admin_badge_address));
+                        metadata_setter_updater => rule!(require(admin_badge_address));
+                        metadata_locker => rule!(require(admin_badge_address));
+                        metadata_locker_updater => rule!(require(admin_badge_address));
+                    },
+                    init {
+                        "name" => "Fund manager badge", updatable;
+                    }
+                ))
+                .mint_roles(mint_roles!(
+                    minter => rule!(deny_all);
+                    minter_updater => rule!(require(admin_badge_address));
+                ))
+                .mint_initial_supply(Decimal::ONE);
+
+            let account_locker = Blueprint::<AccountLocker>::instantiate(
+                OwnerRole::Updatable(rule!(require(admin_badge_address))),  // owner_role
+                rule!(require(global_caller(component_address))),           // storer_role
+                rule!(require(admin_badge_address)),                        // storer_updater_role
+                rule!(deny_all),                                            // recoverer_role
+                rule!(require(admin_badge_address)),                        // recoverer_updater_role
+                None
+            );
+
+            Self {
+                admin_badge_resource_manager: admin_badge_resource_manager,
+                bot_badge_resource_manager: bot_badge_resource_manager,
+                fund_unit_resource_manager: fund_unit_resource_manager,
+                validator_badge_vault: NonFungibleVault::new(VALIDATOR_OWNER_BADGE),
+                authorization_vector: vec![],
+                min_authorizers: 0,
+                defi_protocols_list: vec![],
+                defi_protocols: KeyValueStore::new_with_registered_type(),
+                fund_manager_badge_vault: FungibleVault::with_bucket(fund_manager_badge_bucket),
+                validator: validator,
+                claim_nft_vault: NonFungibleVault::new(claim_nft_address),
+                account_locker: account_locker,
+                base_coin: base_coin,
+                dexes: KeyValueStore::new_with_registered_type(),
+                total_value: Decimal::ZERO,
+                coins_value: HashMap::new(),
+            }
+                .instantiate()
+                .prepare_to_globalize(OwnerRole::Fixed(rule!(require(admin_badge_address))))
+                .roles(roles!(
+                    bot => rule!(require(bot_badge_resource_manager.address()));
+                ))
+                .with_address(address_reservation)
+                .globalize()
+        }
+
+        // TODO: can we merge this method with new() ?
+        pub fn init(
+            &mut self,
+            number_of_admin_badges: u8,
+            min_authorizers: u8,
+            fund_units_initial_supply: Decimal,
+        ) -> (
+            NonFungibleBucket,
+            FungibleBucket,
+        ) {
+            assert!(
+                self.admin_badge_resource_manager.total_supply().unwrap() == Decimal::ZERO,
+                "Component already initialised",
+            );
+
+            assert!(
+                number_of_admin_badges > 0,
+                "Create at least one admin badge",
+            );
+
+            assert!(
+                number_of_admin_badges > min_authorizers,
+                "The minimum number of authorizers must be smaller than the number of badges",
+            );
+
+            self.min_authorizers = min_authorizers;
+
+            let mut admin_badges_bucket = NonFungibleBucket::new(self.admin_badge_resource_manager.address());
+
+            for n in 1..=number_of_admin_badges {
+                admin_badges_bucket.put(
+                    self.admin_badge_resource_manager.mint_non_fungible(
+                        &NonFungibleLocalId::integer(n.into()),
+                        Admin {},
+                    )
+                );
+            }
+
+            let fund_units_bucket = self.fund_unit_resource_manager.mint(fund_units_initial_supply);
+
+            (admin_badges_bucket, fund_units_bucket)
+        }
+
+        pub fn mint_bot_badge(&self) -> FungibleBucket {
+            self.bot_badge_resource_manager.mint(Decimal::ONE)
+        }
+
+        pub fn deposit_validator_badge(
+            &mut self,
+            validator_badge: NonFungibleBucket,
+        ) {
+            assert!(
+                self.validator_badge_vault.is_empty(),
+                "There's already a validator badge",
+            );
+
+            self.validator_badge_vault.put(validator_badge);
+        }
+
+        fn get_admin_id(
+            &self,
+            admin_proof: Proof,
+        ) -> u8 {
+            let non_fungible = admin_proof.check_with_message(
+                self.admin_badge_resource_manager.address(),
+                "Incorrect proof",
+            )
+                .as_non_fungible()
+                .non_fungible::<Admin>();
+
+            u8::try_from(
+                match &non_fungible.local_id() {
+                    NonFungibleLocalId::Integer(local_id) => local_id.value(),
+                    _ => Runtime::panic("Incorrect proof".to_string()),
+                }
+            )
+                .unwrap()
+        }
+
+        fn purge_authorization_vector(&mut self) {
+            let now = Clock::current_time_rounded_to_seconds().seconds_since_unix_epoch;
+
+            self.authorization_vector.retain(|authorization| {
+                authorization.timestamp > now + AUTHORIZATION_TIMEOUT
+            });
+        }
+
+        pub fn authorize_admin_operation(
+            &mut self,
+            admin_proof: Proof,
+            allowed_admin_id: u8,
+            authorized_operation: AuthorizedOperation,
+        ) {
+            let allower_admin_id = self.get_admin_id(admin_proof);
+
+            assert!(
+                allower_admin_id != allowed_admin_id,
+                "You can't authorize yourself",
+            );
+
+            self.purge_authorization_vector();
+
+            assert!(
+                self.authorization_vector.len() < MAX_VECTOR_SIZE,
+                "Authorization vector is getting too big",
+            );
+
+            self.authorization_vector.push(
+                Authorization {
+                    timestamp: Clock::current_time_rounded_to_seconds().seconds_since_unix_epoch,
+                    allower_admin_id: allower_admin_id,
+                    allowed_admin_id: allowed_admin_id,
+                    authorized_operation: authorized_operation,
+                }
+            );
+        }
+
+        fn check_operation_authorization(
+            &mut self,
+            admin_id: u8,
+            authorized_operation: AuthorizedOperation,
+        ) {
+            self.purge_authorization_vector();
+
+            let authorizers_number = self.authorization_vector
+                .iter()
+                .filter(|&authorization| {
+                    authorization.allowed_admin_id == admin_id && authorization.authorized_operation == authorized_operation
+                })
+                .count();
+
+            assert!(
+                authorizers_number >= self.min_authorizers.into(),
+                "Operation not authorized",
+            );
+
+            self.authorization_vector.retain(|authorization| {
+                authorization.allowed_admin_id != admin_id || authorization.authorized_operation != authorized_operation
+            });
+        }
+
+        pub fn fund_unit_value(&self) -> Decimal {
+            self.total_value / self.fund_unit_resource_manager.total_supply().unwrap()
+        }
+
+        pub fn withdraw_validator_badge(
+            &mut self,
+            admin_proof: Proof,
+        ) -> NonFungibleBucket {
+            self.check_operation_authorization(
+                self.get_admin_id(admin_proof),
+                AuthorizedOperation::WithdrawValidatorBadge,
+            );
+
+            self.validator_badge_vault.take_all()
+        }
+
+        pub fn start_unlock_owner_stake_units(
+            &mut self,
+            amount: Decimal,
+        ) { 
+            self.validator_badge_vault
+                .authorize_with_non_fungibles(
+                    &self.validator_badge_vault.non_fungible_local_ids(1),
+                    || {
+                        self.validator.start_unlock_owner_stake_units(amount);
+                    }
+                );
+        }
+
+        pub fn start_unstake(&mut self) { 
+            let lsu_bucket = self.validator_badge_vault
+                .authorize_with_non_fungibles(
+                    &self.validator_badge_vault.non_fungible_local_ids(1),
+                    || {
+                        self.validator.finish_unlock_owner_stake_units()
+                    }
+                );
+
+            let claim_nft_bucket = self.validator.unstake(lsu_bucket);
+
+            Runtime::emit_event(
+                LsuUnstakeStarted {
+                    amount: claim_nft_bucket.amount(),
+                    claim_nft_id: claim_nft_bucket.non_fungible_local_id(),
+                }
+            );
+            
+            self.claim_nft_vault.put(claim_nft_bucket);
+        }
+
+        fn find_where_to_deposit_to(&self) -> String {
+            let mut smallest_percentage_diff: Decimal = dec!(101);
+            let mut smallest_percentage_diff_name: Option<String> = None;
+
+            for name in self.defi_protocols_list.iter() {
+                let defi_protocol = self.defi_protocols.get(&name).unwrap();
+
+                let percentage = 100 * defi_protocol.value / self.total_value;
+                let percentage_diff: Decimal = percentage - defi_protocol.desired_percentage;
+
+                if percentage_diff < smallest_percentage_diff {
+                    smallest_percentage_diff = percentage_diff;
+                    smallest_percentage_diff_name = Some(name.to_string());
+                }
+            }
+
+            smallest_percentage_diff_name.unwrap()
+        }
+
+        pub fn finish_unstake(
+            &mut self,
+            claim_nft_id: u64,
+            stakers: IndexMap<Global<Account>, Decimal>,
+        ) {
+            let claim_nft_bucket = self.claim_nft_vault.take_non_fungible(
+                &NonFungibleLocalId::integer(claim_nft_id)
+            );
+
+            let mut bucket = self.validator.claim_xrd(claim_nft_bucket);
+
+            let fund_unit_value = self.fund_unit_value();
+
+            let mut defi_protocol = self.defi_protocols.get_mut(
+                &self.find_where_to_deposit_to()
+            )
+                .unwrap();
+
+            if defi_protocol.coin != XRD {
+                let mut dex = self.dexes.get_mut(
+                    &CoinsCouple {
+                        from: XRD,
+                        to: defi_protocol.coin,
+                    }
+                )
+                    .unwrap();
+
+                bucket = dex.swap(bucket);
+            }
+
+            let bucket_value = bucket.amount() * *self.coins_value.get(&defi_protocol.coin).unwrap();
+            defi_protocol.value += bucket_value;
+            defi_protocol.wrapper.deposit_coin(bucket);
+
+            self.total_value += bucket_value;
+
+            let fund_units_to_mint = self.total_value / fund_unit_value;
+
+            let fund_units_bucket = self.fund_unit_resource_manager.mint(fund_units_to_mint);
+
+            let mut distribution: IndexMap<Global<Account>, ResourceSpecifier> = IndexMap::new();
+            for (account, share) in stakers.iter() {
+                distribution.insert(
+                    *account,
+                    ResourceSpecifier::Fungible(*share * fund_units_to_mint),
+                );
+            }
+
+            // TODO: this will make the transaction fail if the numebr of stakers is too big!
+            let remainings = self.account_locker.airdrop(
+                distribution,
+                fund_units_bucket.into(),
+                true,
+            );
+            if remainings.is_some() {
+                remainings.unwrap().burn();
+            }
+        }
+
+        pub fn add_defi_protocol(
+            &mut self,
+            name: String,
+            admin_proof: Proof,
+            coin: ResourceAddress,
+            protocol_token: ResourceAddress,
+            desired_percentage: u8,
+            wrapper: DefiProtocolInterfaceScryptoStub,
+            // TODO: coin_bucket? protocol_token_bucket? Or new methods for admins to deposit them?
+        ) -> Option<Bucket> {
+            self.check_operation_authorization(
+                self.get_admin_id(admin_proof),
+                AuthorizedOperation::AddDefiProtocol,
+            );
+
+            let mut old_defi_protocol: Option<DefiProtocol> = None;
+
+            if self.defi_protocols_list.iter().position(|n| *n == name).is_none() {
+                self.defi_protocols_list.push(name.clone());
+            } else {
+                old_defi_protocol= self.defi_protocols.remove(&name);
+            }
+
+            self.defi_protocols.insert(
+                name,
+                DefiProtocol {
+                    value: Decimal::ZERO,
+                    desired_percentage: desired_percentage,
+                    wrapper: wrapper,
+                    coin: coin,
+                    protocol_token: protocol_token,
+                }
+            );
+
+            // TODO: Emit an event
+
+            if old_defi_protocol.is_some() {
+                self.total_value -= old_defi_protocol.as_ref().unwrap().value;
+
+                // TODO: What about putting the protocol_tokens in the new wrapper instead of
+                // returning them?
+                Some(old_defi_protocol.unwrap().wrapper.withdraw_protocol_token(None))
+            } else {
+                None
+            }
+        }
+
+        pub fn remove_defi_protocol(
+            &mut self,
+            admin_proof: Proof,
+            name: String,
+        ) -> Bucket {
+            self.check_operation_authorization(
+                self.get_admin_id(admin_proof),
+                AuthorizedOperation::RemoveDefiProtocol,
+            );
+
+            self.defi_protocols_list.retain(|n| { *n != name });
+
+            // TODO: Emit an event
+
+            // TODO: Update total_value
+
+            self.defi_protocols.remove(&name)
+                .expect("Not found")
+                .wrapper.withdraw_protocol_token(None)
+        }
+
+        pub fn update_defi_protocols_info(
+            &mut self,
+            defi_protocols_info: HashMap<String, DefiProtocolVariableInfo>,
+            coins_value: HashMap<ResourceAddress, Decimal>,
+        ) {
+            let mut total_value = Decimal::ZERO;
+
+            for (name, defi_protocol_info) in defi_protocols_info.iter() {
+                let mut defi_protocol = self.defi_protocols.get_mut(&name).expect("Not found");
+
+                defi_protocol.value = defi_protocol_info.value;
+                defi_protocol.desired_percentage = defi_protocol_info.desired_percentage;
+
+                total_value += defi_protocol_info.value;
+            }
+
+            self.total_value = total_value;
+
+            // TODO: can we use an oracle instead?
+            for (address, value) in coins_value.iter() {
+                self.coins_value.insert(*address, *value);
+            }
+        }
+
+        fn find_where_to_withdraw_from(
+            &self,
+            amount: Decimal,
+        ) -> (String, Decimal) {
+            let mut defi_protocol_candidates: Vec<String> = vec![];
+
+            for name in self.defi_protocols_list.iter() {
+                let value = self.defi_protocols.get(&name).unwrap().value;
+
+                if value >= amount {
+                    defi_protocol_candidates.push(name.to_string());
+                }
+            }
+
+            if defi_protocol_candidates.len() == 0 {
+                let mut largest_value = Decimal::ZERO;
+                let mut largest_value_name: Option<String> = None;
+
+                for name in self.defi_protocols_list.iter() {
+                    let value = self.defi_protocols.get(&name).unwrap().value;
+
+                    if value > largest_value {
+                        largest_value = value;
+                        largest_value_name = Some(name.to_string());
+                    }
+                }
+
+                return (largest_value_name.unwrap(), largest_value);
+            }
+
+            let mut largest_percentage_diff: Decimal = dec!(-101);
+            let mut largest_percentage_diff_name: Option<String> = None;
+
+            for name in defi_protocol_candidates.iter() {
+                let defi_protocol = self.defi_protocols.get(&name).unwrap();
+                let percentage = 100 * defi_protocol.value / self.total_value;
+                let percentage_diff: Decimal = percentage - defi_protocol.desired_percentage;
+
+                if percentage_diff > largest_percentage_diff {
+                    largest_percentage_diff = percentage_diff;
+                    largest_percentage_diff_name = Some(name.to_string());
+                }
+            }
+
+            return (largest_percentage_diff_name.unwrap(), amount);
+        }
+
+        pub fn withdraw(
+            &mut self,
+            mut fund_units_bucket: FungibleBucket,
+            swap_to: Option<ResourceAddress>,
+        ) -> (
+            FungibleBucket,
+            Option<FungibleBucket>,
+        ) {
+            assert!(
+                fund_units_bucket.resource_address() == self.fund_unit_resource_manager.address(),
+                "Wrong coin",
+            );
+
+            let (defi_protocol_name, withdrawable_value) = self.find_where_to_withdraw_from(
+                fund_units_bucket.amount() * self.fund_unit_value()
+            );
+
+            let fund_unit_value = self.fund_unit_value();
+
+            let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
+
+            let coin_value = self.coins_value.get(&defi_protocol.coin).unwrap();
+
+            let mut coin_bucket = defi_protocol.wrapper.withdraw_coin(Some(withdrawable_value / *coin_value));
+
+            let coin_bucket_value = coin_bucket.amount() * *coin_value;
+
+            self.total_value -= coin_bucket_value;
+            defi_protocol.value -= coin_bucket_value;
+
+            if swap_to.is_some() {
+                if swap_to.unwrap() != defi_protocol.coin {
+                    let mut dex_pool = self.dexes.get_mut(
+                        &CoinsCouple {
+                            from: defi_protocol.coin,
+                            to: swap_to.unwrap(),
+                        }
+                    )
+                        .expect("No DEX available");
+
+                    coin_bucket = dex_pool.swap(coin_bucket);
+                }
+            }
+
+            // TODO: Emit an event
+
+            let fund_units_to_burn = coin_bucket_value / fund_unit_value;
+            if fund_units_to_burn < fund_units_bucket.amount() {
+                fund_units_bucket.take(fund_units_to_burn).burn();
+
+                (coin_bucket, Some(fund_units_bucket))
+            } else {
+                fund_units_bucket.burn();
+
+                (coin_bucket, None)
+            }
+        }
+
+        pub fn add_dex_pool(
+            &mut self,
+            admin_proof: Proof,
+            from: ResourceAddress,
+            to: ResourceAddress,
+            wrapper: DexInterfaceScryptoStub,
+        ) {
+            self.check_operation_authorization(
+                self.get_admin_id(admin_proof),
+                AuthorizedOperation::AddDexPool,
+            );
+
+            self.dexes.insert(
+                CoinsCouple {
+                    from: from,
+                    to: to,
+                },
+                wrapper,
+            );
+        }
+    }
+}
