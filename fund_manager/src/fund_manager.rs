@@ -31,7 +31,8 @@ struct DefiProtocol {
     wrapper: DefiProtocolInterfaceScryptoStub,
     coin: ResourceAddress, // Example coin: xUSDC
     protocol_token: ResourceAddress, // Example protocol_token: w2-xUSDC
-    // TODO: Any protocol using more than one coin? e.g. providing liquidity to a DEX?
+    other_coin: Option<ResourceAddress>, // Only for protocols managing two coins, i.e. providing
+                                         // liquidity to a Dex
 }
 
 #[derive(ScryptoSbor)]
@@ -489,7 +490,7 @@ mod fund_manager {
 
             let bucket_value = bucket.amount() * *self.coins_value.get(&defi_protocol.coin).unwrap();
             defi_protocol.value += bucket_value;
-            defi_protocol.wrapper.deposit_coin(bucket);
+            defi_protocol.wrapper.deposit_coin(bucket, None); //TODO!!!
 
             self.total_value += bucket_value;
 
@@ -537,9 +538,9 @@ mod fund_manager {
             admin_proof: Proof,
             coin: ResourceAddress,
             protocol_token: ResourceAddress,
+            other_coin: Option<ResourceAddress>,
             desired_percentage: u8,
             wrapper: DefiProtocolInterfaceScryptoStub,
-            // TODO: coin_bucket? protocol_token_bucket? Or new methods for admins to deposit them?
         ) {
             self.check_operation_authorization(
                 self.get_admin_id(admin_proof),
@@ -560,6 +561,7 @@ mod fund_manager {
                 wrapper: wrapper,
                 coin: coin,
                 protocol_token: protocol_token,
+                other_coin: other_coin,
             };
 
             if old_defi_protocol.is_some() {
@@ -572,13 +574,7 @@ mod fund_manager {
 
             self.defi_protocols.insert(
                 name,
-                DefiProtocol {
-                    value: Decimal::ZERO,
-                    desired_percentage: desired_percentage,
-                    wrapper: wrapper,
-                    coin: coin,
-                    protocol_token: protocol_token,
-                }
+                new_defi_protocol,
             );
         }
 
@@ -586,15 +582,21 @@ mod fund_manager {
             &mut self,
             defi_protocol_name: String,
             coin_bucket: FungibleBucket,
+            other_coin_bucket: Option<FungibleBucket>,
         ) {
             let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).expect("Protocol not found");
 
-            let bucket_value = coin_bucket.amount() * *self.coins_value.get(&coin_bucket.resource_address()).unwrap();
+            let mut buckets_value = coin_bucket.amount() * *self.coins_value.get(&coin_bucket.resource_address()).unwrap();
+            if other_coin_bucket.is_some() {
+                buckets_value +=
+                    other_coin_bucket.as_ref().unwrap().amount() *
+                    *self.coins_value.get(&other_coin_bucket.as_ref().unwrap().resource_address()).unwrap();
+            }
 
-            defi_protocol.wrapper.deposit_coin(coin_bucket);
+            defi_protocol.wrapper.deposit_coin(coin_bucket, other_coin_bucket);
 
-            defi_protocol.value += bucket_value;
-            self.total_value += bucket_value;
+            defi_protocol.value += buckets_value;
+            self.total_value += buckets_value;
         }
 
         pub fn deposit_protocol_token(
@@ -604,14 +606,21 @@ mod fund_manager {
         ) {
             let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).expect("Protocol not found");
 
-            let option_amount = defi_protocol.wrapper.deposit_protocol_token(protocol_token_bucket);
+            let (option_amount1, option_amount2) = defi_protocol.wrapper.deposit_protocol_token(protocol_token_bucket);
 
-            if option_amount.is_some() {
-                let added_value = option_amount.unwrap() * *self.coins_value.get(&defi_protocol.coin).unwrap();
+            if option_amount1.is_some() {
+                let added_value = option_amount1.unwrap() * *self.coins_value.get(&defi_protocol.coin).unwrap();
 
                 defi_protocol.value += added_value;
                 self.total_value += added_value;
             } // TODO: else the missing information must be recovered somehow
+
+            if option_amount2.is_some() {
+                let added_value = option_amount2.unwrap() * *self.coins_value.get(&defi_protocol.other_coin.unwrap()).unwrap();
+
+                defi_protocol.value += added_value;
+                self.total_value += added_value;
+            }
         }
 
         pub fn remove_defi_protocol(
@@ -712,8 +721,9 @@ mod fund_manager {
             mut fund_units_bucket: FungibleBucket,
             swap_to: Option<ResourceAddress>,
         ) -> (
-            FungibleBucket,
-            Option<FungibleBucket>,
+            FungibleBucket, // coin
+            Option<FungibleBucket>, // other coin
+            Option<FungibleBucket>, // fund units
         ) {
             assert!(
                 fund_units_bucket.resource_address() == self.fund_unit_resource_manager.address(),
@@ -730,9 +740,13 @@ mod fund_manager {
 
             let coin_value = self.coins_value.get(&defi_protocol.coin).unwrap();
 
-            let mut coin_bucket = defi_protocol.wrapper.withdraw_coin(Some(withdrawable_value / *coin_value));
+            let (mut coin_bucket, mut other_coin_bucket) = defi_protocol.wrapper.withdraw_coin(Some(withdrawable_value / *coin_value));
 
-            let coin_bucket_value = coin_bucket.amount() * *coin_value;
+            let mut coin_bucket_value = coin_bucket.amount() * *coin_value;
+            if other_coin_bucket.is_some() {
+                coin_bucket_value += other_coin_bucket.as_ref().unwrap().amount() *
+                    *self.coins_value.get(&defi_protocol.other_coin.unwrap()).unwrap();
+            }
 
             self.total_value -= coin_bucket_value;
             defi_protocol.value -= coin_bucket_value;
@@ -747,7 +761,23 @@ mod fund_manager {
                     )
                         .expect("No DEX available");
 
+                    // I'm reusing the same bucket name for a different coin.
+                    // It is possibile since the old bucket is destroyed by swap().
                     coin_bucket = dex_pool.swap(coin_bucket);
+                }
+
+                if other_coin_bucket.is_some() && swap_to.unwrap() != defi_protocol.other_coin.unwrap() {
+                    let mut dex_pool = self.dexes.get_mut(
+                        &CoinsCouple {
+                            from: defi_protocol.other_coin.unwrap(),
+                            to: swap_to.unwrap(),
+                        }
+                    )
+                        .expect("No DEX available");
+
+                    coin_bucket.put(dex_pool.swap(other_coin_bucket.unwrap()));
+
+                    other_coin_bucket = None;
                 }
             }
 
@@ -757,11 +787,11 @@ mod fund_manager {
             if fund_units_to_burn < fund_units_bucket.amount() {
                 fund_units_bucket.take(fund_units_to_burn).burn();
 
-                (coin_bucket, Some(fund_units_bucket))
+                (coin_bucket, other_coin_bucket, Some(fund_units_bucket))
             } else {
                 fund_units_bucket.burn();
 
-                (coin_bucket, None)
+                (coin_bucket, other_coin_bucket, None)
             }
         }
 

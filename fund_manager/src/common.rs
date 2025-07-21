@@ -7,7 +7,7 @@ define_interface! {
         fn deposit_protocol_token(
             &mut self,
             token: Bucket,
-        ) -> Option<Decimal>;
+        ) -> (Option<Decimal>, Option<Decimal>);
 
         fn withdraw_protocol_token(
             &mut self,
@@ -17,12 +17,13 @@ define_interface! {
         fn deposit_coin(
             &mut self,
             coin: FungibleBucket,
+            other_coin: Option<FungibleBucket>,
         );
 
         fn withdraw_coin(
             &mut self,
             amount: Option<Decimal>,
-        ) -> FungibleBucket;
+        ) -> (FungibleBucket, Option<FungibleBucket>);
     }
 }
 

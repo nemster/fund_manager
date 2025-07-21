@@ -69,12 +69,12 @@ mod weft_wrapper {
         fn deposit_protocol_token(
             &mut self,
             token: Bucket,
-        ) -> Option<Decimal> {
+        ) -> (Option<Decimal>, Option<Decimal>) {
             let token_amount = token.amount();
 
             self.token_vault.put(FungibleBucket(token));
 
-            Some(self.coin_token_ratio * token_amount)
+            (Some(self.coin_token_ratio * token_amount), None)
         }
 
         fn withdraw_protocol_token(
@@ -96,6 +96,7 @@ mod weft_wrapper {
         fn deposit_coin(
             &mut self,
             coin: FungibleBucket,
+            _other_coin: Option<FungibleBucket>,
         ) {
             let coin_amount =  coin.amount();
 
@@ -115,7 +116,7 @@ mod weft_wrapper {
         fn withdraw_coin(
             &mut self,
             amount: Option<Decimal>,
-        ) -> FungibleBucket {
+        ) -> (FungibleBucket, Option<FungibleBucket>) {
             match amount {
                 Some(amount) => {
                     let token_amount = match amount / self.coin_token_ratio > self.token_vault.amount() {
@@ -146,14 +147,17 @@ mod weft_wrapper {
                         );
                     }
 
-                    coin_bucket
+                    (coin_bucket, None)
                 },
 
-                None => self.component_address.withdraw(
-                    vec![self.token_vault.take_all()]
-                )
-                    .pop()
-                    .unwrap(),
+                None => (
+                    self.component_address.withdraw(
+                        vec![self.token_vault.take_all()]
+                    )
+                        .pop()
+                        .unwrap(),
+                    None
+                ),
             }
         }
     }
