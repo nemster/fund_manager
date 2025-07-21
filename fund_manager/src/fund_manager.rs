@@ -78,12 +78,13 @@ mod fund_manager {
             // TODO: mint new admin_badges?
 
             deposit_validator_badge => restrict_to: [OWNER];
+            deposit_coin => restrict_to: [OWNER];
+            deposit_protocol_token => restrict_to: [OWNER];
 
             start_unlock_owner_stake_units => restrict_to: [bot];
             start_unstake => restrict_to: [bot];
             finish_unstake => restrict_to: [bot];
             fund_units_distribution => restrict_to: [bot];
-
             update_defi_protocols_info => restrict_to: [bot];
 
             withdraw => PUBLIC;
@@ -581,6 +582,38 @@ mod fund_manager {
             );
         }
 
+        pub fn deposit_coin(
+            &mut self,
+            defi_protocol_name: String,
+            coin_bucket: FungibleBucket,
+        ) {
+            let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).expect("Protocol not found");
+
+            let bucket_value = coin_bucket.amount() * *self.coins_value.get(&coin_bucket.resource_address()).unwrap();
+
+            defi_protocol.wrapper.deposit_coin(coin_bucket);
+
+            defi_protocol.value += bucket_value;
+            self.total_value += bucket_value;
+        }
+
+        pub fn deposit_protocol_token(
+            &mut self,
+            defi_protocol_name: String,
+            protocol_token_bucket: Bucket,
+        ) {
+            let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).expect("Protocol not found");
+
+            let option_amount = defi_protocol.wrapper.deposit_protocol_token(protocol_token_bucket);
+
+            if option_amount.is_some() {
+                let added_value = option_amount.unwrap() * *self.coins_value.get(&defi_protocol.coin).unwrap();
+
+                defi_protocol.value += added_value;
+                self.total_value += added_value;
+            } // TODO: else the missing information must be recovered somehow
+        }
+
         pub fn remove_defi_protocol(
             &mut self,
             admin_proof: Proof,
@@ -593,13 +626,12 @@ mod fund_manager {
 
             self.defi_protocols_list.retain(|n| { *n != name });
 
-            // TODO: Emit an event
+            let mut defi_protocol = self.defi_protocols.remove(&name)
+                .expect("Protocol not found");
 
-            // TODO: Update total_value
+            self.total_value -= defi_protocol.value;
 
-            self.defi_protocols.remove(&name)
-                .expect("Not found")
-                .wrapper.withdraw_protocol_token(None)
+            defi_protocol.wrapper.withdraw_protocol_token(None)
         }
 
         pub fn update_defi_protocols_info(
@@ -612,7 +644,9 @@ mod fund_manager {
             for (name, defi_protocol_info) in defi_protocols_info.iter() {
                 let mut defi_protocol = self.defi_protocols.get_mut(&name).expect("Not found");
 
-                defi_protocol.value = defi_protocol_info.value;
+                defi_protocol.value = defi_protocol_info.value; // TODO: are we going to blindly
+                                                                // trust the bot?
+
                 defi_protocol.desired_percentage = defi_protocol_info.desired_percentage;
 
                 total_value += defi_protocol_info.value;

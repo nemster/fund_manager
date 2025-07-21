@@ -7,7 +7,7 @@ define_interface! {
         fn deposit_protocol_token(
             &mut self,
             token: Bucket,
-        );
+        ) -> Option<Decimal>;
 
         fn withdraw_protocol_token(
             &mut self,

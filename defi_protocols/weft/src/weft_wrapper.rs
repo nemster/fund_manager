@@ -69,8 +69,12 @@ mod weft_wrapper {
         fn deposit_protocol_token(
             &mut self,
             token: Bucket,
-        ) {
+        ) -> Option<Decimal> {
+            let token_amount = token.amount();
+
             self.token_vault.put(FungibleBucket(token));
+
+            Some(self.coin_token_ratio * token_amount)
         }
 
         fn withdraw_protocol_token(
