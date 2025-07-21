@@ -539,7 +539,7 @@ mod fund_manager {
             desired_percentage: u8,
             wrapper: DefiProtocolInterfaceScryptoStub,
             // TODO: coin_bucket? protocol_token_bucket? Or new methods for admins to deposit them?
-        ) -> Option<Bucket> {
+        ) {
             self.check_operation_authorization(
                 self.get_admin_id(admin_proof),
                 AuthorizedOperation::AddDefiProtocol,
@@ -553,6 +553,22 @@ mod fund_manager {
                 old_defi_protocol= self.defi_protocols.remove(&name);
             }
 
+            let mut new_defi_protocol = DefiProtocol {
+                value: Decimal::ZERO,
+                desired_percentage: desired_percentage,
+                wrapper: wrapper,
+                coin: coin,
+                protocol_token: protocol_token,
+            };
+
+            if old_defi_protocol.is_some() {
+                new_defi_protocol.value = old_defi_protocol.as_ref().unwrap().value;
+
+                new_defi_protocol.wrapper.deposit_protocol_token(
+                    old_defi_protocol.unwrap().wrapper.withdraw_protocol_token(None)
+                );
+            }
+
             self.defi_protocols.insert(
                 name,
                 DefiProtocol {
@@ -563,18 +579,6 @@ mod fund_manager {
                     protocol_token: protocol_token,
                 }
             );
-
-            // TODO: Emit an event
-
-            if old_defi_protocol.is_some() {
-                self.total_value -= old_defi_protocol.as_ref().unwrap().value;
-
-                // TODO: What about putting the protocol_tokens in the new wrapper instead of
-                // returning them?
-                Some(old_defi_protocol.unwrap().wrapper.withdraw_protocol_token(None))
-            } else {
-                None
-            }
         }
 
         pub fn remove_defi_protocol(
