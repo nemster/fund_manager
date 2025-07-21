@@ -31,6 +31,7 @@ struct DefiProtocol {
     wrapper: DefiProtocolInterfaceScryptoStub,
     coin: ResourceAddress, // Example coin: xUSDC
     protocol_token: ResourceAddress, // Example protocol_token: w2-xUSDC
+    // TODO: Any protocol using more than one coin? e.g. providing liquidity to a DEX?
 }
 
 #[derive(ScryptoSbor)]
@@ -73,12 +74,15 @@ mod fund_manager {
             remove_defi_protocol => PUBLIC;
             add_dex_pool => PUBLIC;
             withdraw_validator_badge => PUBLIC;
+            // TODO: update min_authorizers?
+            // TODO: mint new admin_badges?
 
             deposit_validator_badge => restrict_to: [OWNER];
 
             start_unlock_owner_stake_units => restrict_to: [bot];
             start_unstake => restrict_to: [bot];
             finish_unstake => restrict_to: [bot];
+            fund_units_distribution => restrict_to: [bot];
 
             update_defi_protocols_info => restrict_to: [bot];
 
@@ -103,8 +107,9 @@ mod fund_manager {
         base_coin: ResourceAddress,
         dexes: KeyValueStore<CoinsCouple, DexInterfaceScryptoStub>,
         total_value: Decimal,
-        coins_value: HashMap<ResourceAddress, Decimal>, // TODO: What about an oracle instead of
-                                                        // this?
+        coins_value: HashMap<ResourceAddress, Decimal>, // TODO: What about an oracle instead of this?
+        fund_units_vault: FungibleVault,
+        fund_units_to_distribute: Decimal,
     }
 
     impl FundManager {
@@ -228,6 +233,8 @@ mod fund_manager {
                 dexes: KeyValueStore::new_with_registered_type(),
                 total_value: Decimal::ZERO,
                 coins_value: HashMap::new(),
+                fund_units_vault: FungibleVault::new(fund_unit_resource_manager.address()),
+                fund_units_to_distribute: Decimal::ZERO,
             }
                 .instantiate()
                 .prepare_to_globalize(OwnerRole::Fixed(rule!(require(admin_badge_address))))
@@ -451,7 +458,6 @@ mod fund_manager {
         pub fn finish_unstake(
             &mut self,
             claim_nft_id: u64,
-            stakers: IndexMap<Global<Account>, Decimal>,
         ) {
             let claim_nft_bucket = self.claim_nft_vault.take_non_fungible(
                 &NonFungibleLocalId::integer(claim_nft_id)
@@ -476,6 +482,8 @@ mod fund_manager {
                     .unwrap();
 
                 bucket = dex.swap(bucket);
+
+                // TODO: check slippage
             }
 
             let bucket_value = bucket.amount() * *self.coins_value.get(&defi_protocol.coin).unwrap();
@@ -484,25 +492,40 @@ mod fund_manager {
 
             self.total_value += bucket_value;
 
-            let fund_units_to_mint = self.total_value / fund_unit_value;
+            assert!(
+                self.fund_units_vault.amount() == Decimal::ZERO,
+                "Previous distribution was not finished",
+            );
 
-            let fund_units_bucket = self.fund_unit_resource_manager.mint(fund_units_to_mint);
+            self.fund_units_to_distribute = self.total_value / fund_unit_value;
 
+            self.fund_units_vault.put(
+                self.fund_unit_resource_manager.mint(self.fund_units_to_distribute + Decimal::ONE)
+            );
+        }
+
+        pub fn fund_units_distribution (
+            &mut self,
+            stakers: IndexMap<Global<Account>, Decimal>,
+            more_stakers: bool,
+        ) {
             let mut distribution: IndexMap<Global<Account>, ResourceSpecifier> = IndexMap::new();
             for (account, share) in stakers.iter() {
                 distribution.insert(
                     *account,
-                    ResourceSpecifier::Fungible(*share * fund_units_to_mint),
+                    ResourceSpecifier::Fungible(*share * self.fund_units_to_distribute),
                 );
             }
 
-            // TODO: this will make the transaction fail if the numebr of stakers is too big!
             let remainings = self.account_locker.airdrop(
                 distribution,
-                fund_units_bucket.into(),
+                self.fund_units_vault.take_all().into(),
                 true,
             );
-            if remainings.is_some() {
+
+            if more_stakers {
+                self.fund_units_vault.put(FungibleBucket(remainings.unwrap()));
+            } else if remainings.is_some() {
                 remainings.unwrap().burn();
             }
         }
