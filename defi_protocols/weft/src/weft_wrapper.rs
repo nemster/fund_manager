@@ -32,6 +32,7 @@ mod weft_wrapper {
                                     // us to receive WEFT incentives. Can we do that in 
                                     // another way?
         component_address: Global<LendingPool>,
+        coin_token_ratio: Decimal,
     }
 
     impl WeftWrapper {
@@ -51,6 +52,7 @@ mod weft_wrapper {
                 minimum_coin_amount: Decimal::ONE / 10.pow(coin_divisibility),
                 token_vault: FungibleVault::new(token_address),
                 component_address: component_address,
+                coin_token_ratio: Decimal::ONE,
             }
                 .instantiate()
                 .prepare_to_globalize(OwnerRole::None)
@@ -91,26 +93,30 @@ mod weft_wrapper {
             &mut self,
             coin: FungibleBucket,
         ) {
-            self.token_vault.put(
-                self.component_address.deposit(
-                    vec![coin]
-                )
-                    .pop()
-                    .unwrap()
-            );
+            let coin_amount =  coin.amount();
+
+            let token_bucket = self.component_address.deposit(
+                vec![coin]
+            )
+                .pop()
+                .unwrap();
+
+            let token_amount = token_bucket.amount();
+
+            self.token_vault.put(token_bucket);
+
+            self.coin_token_ratio = coin_amount / token_amount;
         }
 
-        // TODO: what about storing the last coin->token conversion ratio? It could improve
-        // this method
         fn withdraw_coin(
             &mut self,
             amount: Option<Decimal>,
         ) -> FungibleBucket {
             match amount {
                 Some(amount) => {
-                    let token_amount = match amount > self.token_vault.amount() {
+                    let token_amount = match amount / self.coin_token_ratio > self.token_vault.amount() {
                         true => self.token_vault.amount(),
-                        false => amount
+                        false => amount / self.coin_token_ratio,
                     };
 
                     let mut coin_bucket = self.component_address.withdraw(
