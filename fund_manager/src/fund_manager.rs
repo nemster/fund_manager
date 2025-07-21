@@ -474,6 +474,28 @@ mod fund_manager {
             )
                 .unwrap();
 
+            let other_bucket = match defi_protocol.other_coin {
+                Some(other_coin_resource_address) => {
+                    let tmp_bucket = bucket.take(bucket.amount() / 2);
+
+                    if other_coin_resource_address != XRD {
+                        let mut other_dex = self.dexes.get_mut(
+                            &CoinsCouple {
+                                from: XRD,
+                                to: other_coin_resource_address,
+                            }
+                        )
+                            .unwrap();
+
+                        Some(other_dex.swap(tmp_bucket))
+                        // TODO: check slippage
+                    } else {
+                        Some(tmp_bucket)
+                    }
+                },
+                None => None,
+            };
+
             if defi_protocol.coin != XRD {
                 let mut dex = self.dexes.get_mut(
                     &CoinsCouple {
@@ -484,13 +506,16 @@ mod fund_manager {
                     .unwrap();
 
                 bucket = dex.swap(bucket);
-
                 // TODO: check slippage
             }
 
-            let bucket_value = bucket.amount() * *self.coins_value.get(&defi_protocol.coin).unwrap();
+            let mut bucket_value = bucket.amount() * *self.coins_value.get(&defi_protocol.coin).unwrap();
+            if other_bucket.is_some() {
+                bucket_value += other_bucket.as_ref().unwrap().amount() * *self.coins_value.get(&defi_protocol.other_coin.unwrap()).unwrap();
+            }
+
             defi_protocol.value += bucket_value;
-            defi_protocol.wrapper.deposit_coin(bucket, None); //TODO!!!
+            defi_protocol.wrapper.deposit_coin(bucket, other_bucket);
 
             self.total_value += bucket_value;
 
