@@ -6,8 +6,7 @@ use scrypto_interface::*;
 mod weft_wrapper {
 
     extern_blueprint! {
-        // TODO: is there a Stokenet version?
-        "package_rdx1p5uwrs3heg37n5zyzate8xtc440l2x3l59ywya4jl2na6em25qjnfj",
+        "package_tdx_2_1pk02rsgrec4dv3fhtw2ltmy3g80325wlusl76tjwhjpj48qtk8c80n",
         LendingPool {
             fn deposit(&mut self, buckets: Vec<FungibleBucket>) -> Vec<FungibleBucket>;
             fn withdraw(&mut self, buckets: Vec<FungibleBucket>) -> Vec<FungibleBucket>;

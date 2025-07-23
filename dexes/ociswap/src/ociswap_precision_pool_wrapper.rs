@@ -8,8 +8,7 @@ static ACCEPTABLE_REMAININGS_RATIO: u8 = 10;
 mod ociswap_precision_pool_wrapper {
 
     extern_blueprint! {
-        // TODO: is there a Stokenet version?
-        "package_rdx1pkrgvskdkglfd2ar4jkpw5r2tsptk85gap4hzr9h3qxw6ca40ts8dt",
+        "package_tdx_2_1pha4sgrwdc09ymqy6e8gpe7h0e652p5l22esxd2t8u82290cjq45ma",
         PrecisionPool {
             fn swap(&mut self, input_bucket: Bucket) -> (Bucket, Bucket); // (output_bucket, remainings)
         }

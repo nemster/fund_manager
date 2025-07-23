@@ -128,7 +128,6 @@ mod fund_manager {
         validator: Global<Validator>,
         claim_nft_vault: NonFungibleVault,
         account_locker: Global<AccountLocker>,
-        base_coin: ResourceAddress,
         dexes: KeyValueStore<CoinsCouple, DexInterfaceScryptoStub>,
         total_value: Decimal,
         coins_value: HashMap<ResourceAddress, Decimal>, // TODO: What about an oracle instead of this?
@@ -141,7 +140,6 @@ mod fund_manager {
         pub fn new(
             validator: Global<Validator>,
             claim_nft_address: ResourceAddress,
-            base_coin: ResourceAddress,
         ) -> Global<FundManager> {
             let (address_reservation, component_address) =
                 Runtime::allocate_component_address(FundManager::blueprint_id());
@@ -253,7 +251,6 @@ mod fund_manager {
                 validator: validator,
                 claim_nft_vault: NonFungibleVault::new(claim_nft_address),
                 account_locker: account_locker,
-                base_coin: base_coin,
                 dexes: KeyValueStore::new_with_registered_type(),
                 total_value: Decimal::ZERO,
                 coins_value: HashMap::new(),
