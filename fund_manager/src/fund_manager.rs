@@ -14,6 +14,9 @@ pub enum AuthorizedOperation {
     AddDefiProtocol,
     RemoveDefiProtocol,
     AddDexPool,
+    DecreaseMinAuthorizers,
+    IncreaseMinAuthorizers,
+    MintAdminBadge,
 }
 
 #[derive(ScryptoSbor)]
@@ -42,9 +45,26 @@ pub struct DefiProtocolVariableInfo {
 }
 
 #[derive(ScryptoSbor, ScryptoEvent)]
-struct LsuUnstakeStarted {
-    amount: Decimal,
+struct LsuUnstakeStartedEvent {
+    lsu_amount: Decimal,
     claim_nft_id: NonFungibleLocalId,
+}
+
+#[derive(ScryptoSbor, ScryptoEvent)]
+struct LsuUnstakeCompletedEvent {
+    xrd_amount: Decimal,
+    defi_protocol_name: String,
+}
+
+#[derive(ScryptoSbor, ScryptoEvent)]
+struct WithdrawFromFundEvent {
+    fund_unit_amount: Decimal,
+    defi_protocol_name: String,
+}
+
+#[derive(ScryptoSbor, ScryptoEvent)]
+struct MissingInfoEvent {
+    defi_protocol_name: String,
 }
 
 #[derive(ScryptoSbor)]
@@ -55,9 +75,11 @@ struct CoinsCouple {
 
 #[blueprint]
 #[events(
-    LsuUnstakeStarted,
+    LsuUnstakeStartedEvent,
+    LsuUnstakeCompletedEvent,
+    WithdrawFromFundEvent,
+    MissingInfoEvent,
 )]
-// TODO: More events needed
 #[types(String, DefiProtocol, CoinsCouple, DexInterfaceScryptoStub)]
 mod fund_manager {
 
@@ -75,8 +97,8 @@ mod fund_manager {
             remove_defi_protocol => PUBLIC;
             add_dex_pool => PUBLIC;
             withdraw_validator_badge => PUBLIC;
-            // TODO: update min_authorizers?
-            // TODO: mint new admin_badges?
+            update_min_authorizers => PUBLIC;
+            mint_admin_badge => PUBLIC;
 
             deposit_validator_badge => restrict_to: [OWNER];
             deposit_coin => restrict_to: [OWNER];
@@ -404,6 +426,54 @@ mod fund_manager {
             self.validator_badge_vault.take_all()
         }
 
+        pub fn update_min_authorizers(
+            &mut self,
+            admin_proof: Proof,
+            min_authorizers: u8,
+        ) {
+            let admin_id = self.get_admin_id(admin_proof);
+
+            if min_authorizers == self.min_authorizers + 1 {
+                self.check_operation_authorization(
+                    admin_id,
+                    AuthorizedOperation::IncreaseMinAuthorizers,
+                );
+
+                self.min_authorizers += 1;
+            } else if min_authorizers + 1 == self.min_authorizers {
+                self.check_operation_authorization(
+                    admin_id,
+                    AuthorizedOperation::DecreaseMinAuthorizers,
+                );
+
+                self.min_authorizers -= 1;
+            } else {
+                Runtime::panic("Operation not allowed".to_string());
+            }
+        }
+
+        pub fn mint_admin_badge(
+            &mut self,
+            admin_proof: Proof,
+        ) -> NonFungibleBucket {
+            self.check_operation_authorization(
+                self.get_admin_id(admin_proof),
+                AuthorizedOperation::MintAdminBadge,
+            );
+
+            // TODO: Any intelligent way to convert a Decimal into an integer?
+            let mut n: u64 = 1;
+            while Decimal::from(n) < self.admin_badge_resource_manager.total_supply().unwrap() {
+                n += 1;
+            }
+            self.admin_badge_resource_manager.mint_non_fungible(
+                &NonFungibleLocalId::integer(
+                    n + 1
+                ),
+                Admin {},
+            )
+        }
+
         pub fn start_unlock_owner_stake_units(
             &mut self,
             amount: Decimal,
@@ -426,11 +496,13 @@ mod fund_manager {
                     }
                 );
 
+            let lsu_amount = lsu_bucket.amount();
+
             let claim_nft_bucket = self.validator.unstake(lsu_bucket);
 
             Runtime::emit_event(
-                LsuUnstakeStarted {
-                    amount: claim_nft_bucket.amount(),
+                LsuUnstakeStartedEvent {
+                    lsu_amount: lsu_amount,
                     claim_nft_id: claim_nft_bucket.non_fungible_local_id(),
                 }
             );
@@ -469,10 +541,16 @@ mod fund_manager {
 
             let fund_unit_value = self.fund_unit_value();
 
-            let mut defi_protocol = self.defi_protocols.get_mut(
-                &self.find_where_to_deposit_to()
-            )
-                .unwrap();
+            let defi_protocol_name = self.find_where_to_deposit_to();
+
+            let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
+
+            Runtime::emit_event(
+                LsuUnstakeCompletedEvent {
+                    xrd_amount: bucket.amount(),
+                    defi_protocol_name: defi_protocol_name,
+                }
+            );
 
             let other_bucket = match defi_protocol.other_coin {
                 Some(other_coin_resource_address) => {
@@ -638,7 +716,13 @@ mod fund_manager {
 
                 defi_protocol.value += added_value;
                 self.total_value += added_value;
-            } // TODO: else the missing information must be recovered somehow
+            } else {
+                Runtime::emit_event(
+                    MissingInfoEvent {
+                        defi_protocol_name: defi_protocol_name,
+                    }
+                );
+            }
 
             if option_amount2.is_some() {
                 let added_value = option_amount2.unwrap() * *self.coins_value.get(&defi_protocol.other_coin.unwrap()).unwrap();
@@ -806,9 +890,15 @@ mod fund_manager {
                 }
             }
 
-            // TODO: Emit an event
-
             let fund_units_to_burn = coin_bucket_value / fund_unit_value;
+
+            Runtime::emit_event(
+                WithdrawFromFundEvent {
+                    fund_unit_amount: fund_units_to_burn,
+                    defi_protocol_name: defi_protocol_name,
+                }
+            );
+
             if fund_units_to_burn < fund_units_bucket.amount() {
                 fund_units_bucket.take(fund_units_to_burn).burn();
 
