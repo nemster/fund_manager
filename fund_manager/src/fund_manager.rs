@@ -585,7 +585,11 @@ mod fund_manager {
                         )
                             .unwrap();
 
-                        Some(other_dex.swap(tmp_bucket))
+                        Some(
+                            self.fund_manager_badge_vault.authorize_with_amount(
+                                1,
+                                || other_dex.swap(tmp_bucket))
+                        )
                         // TODO: check slippage
                     } else {
                         Some(tmp_bucket)
@@ -622,12 +626,18 @@ mod fund_manager {
                 )
                     .unwrap();
 
-                bucket = dex.swap(bucket);
+                bucket = self.fund_manager_badge_vault.authorize_with_amount(
+                    1,
+                    || dex.swap(bucket)
+                );
                 // TODO: check slippage
             }
 
             defi_protocol.value += bucket_value;
-            defi_protocol.wrapper.deposit_coin(bucket, other_bucket);
+            self.fund_manager_badge_vault.authorize_with_amount(
+                1,
+                || defi_protocol.wrapper.deposit_coin(bucket, other_bucket)
+            );
 
             self.total_value += bucket_value;
 
@@ -704,8 +714,12 @@ mod fund_manager {
             if old_defi_protocol.is_some() {
                 new_defi_protocol.value = old_defi_protocol.as_ref().unwrap().value;
 
-                new_defi_protocol.wrapper.deposit_protocol_token(
-                    old_defi_protocol.unwrap().wrapper.withdraw_protocol_token(None)
+                self.fund_manager_badge_vault.authorize_with_amount(
+                    1,
+                    || {
+                        let bucket = old_defi_protocol.unwrap().wrapper.withdraw_protocol_token(None);
+                        new_defi_protocol.wrapper.deposit_protocol_token(bucket);
+                    }
                 );
             }
 
@@ -738,7 +752,10 @@ mod fund_manager {
 
             let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).expect("Protocol not found");
 
-            defi_protocol.wrapper.deposit_coin(coin_bucket, other_coin_bucket);
+            self.fund_manager_badge_vault.authorize_with_amount(
+                1,
+                || defi_protocol.wrapper.deposit_coin(coin_bucket, other_coin_bucket)
+            );
 
             defi_protocol.value += buckets_value;
             self.total_value += buckets_value;
@@ -765,7 +782,10 @@ mod fund_manager {
 
             let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
 
-            let (option_amount1, option_amount2) = defi_protocol.wrapper.deposit_protocol_token(protocol_token_bucket);
+            let (option_amount1, option_amount2) = self.fund_manager_badge_vault.authorize_with_amount(
+                1,
+                || defi_protocol.wrapper.deposit_protocol_token(protocol_token_bucket)
+            );
 
             if option_amount1.is_some() {
                 added_value += option_amount1.unwrap() * coin1_price;
@@ -802,7 +822,10 @@ mod fund_manager {
 
             self.total_value -= defi_protocol.value;
 
-            defi_protocol.wrapper.withdraw_protocol_token(None)
+            self.fund_manager_badge_vault.authorize_with_amount(
+                1,
+                || defi_protocol.wrapper.withdraw_protocol_token(None)
+            )
         }
 
         pub fn update_defi_protocols_info(
@@ -906,7 +929,10 @@ mod fund_manager {
 
             let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
 
-            let (mut coin_bucket, mut other_coin_bucket) = defi_protocol.wrapper.withdraw_coin(Some(withdrawable_value / coin_value));
+            let (mut coin_bucket, mut other_coin_bucket) = self.fund_manager_badge_vault.authorize_with_amount(
+                1,
+                || defi_protocol.wrapper.withdraw_coin(Some(withdrawable_value / coin_value))
+            );
 
             let mut coin_bucket_value = coin_bucket.amount() * coin_value;
             if other_coin_bucket.is_some() {
@@ -928,7 +954,10 @@ mod fund_manager {
 
                     // I'm reusing the same bucket name for a different coin.
                     // It is possibile since the old bucket is destroyed by swap().
-                    coin_bucket = dex_pool.swap(coin_bucket);
+                    coin_bucket = self.fund_manager_badge_vault.authorize_with_amount(
+                        1,
+                        || dex_pool.swap(coin_bucket)
+                    );
                 }
 
                 if other_coin_bucket.is_some() && swap_to.unwrap() != defi_protocol.other_coin.unwrap() {
@@ -940,7 +969,12 @@ mod fund_manager {
                     )
                         .expect("No DEX available");
 
-                    coin_bucket.put(dex_pool.swap(other_coin_bucket.unwrap()));
+                    coin_bucket.put(
+                        self.fund_manager_badge_vault.authorize_with_amount(
+                            1,
+                            || dex_pool.swap(other_coin_bucket.unwrap())
+                        )
+                    );
 
                     other_coin_bucket = None;
                 }
@@ -1050,18 +1084,25 @@ mod fund_manager {
                     if data.is_some() {
                         let unwrapped_data = (*data.unwrap()).clone();
 
-                        wrapper.get_price(
-                            coin,
-                            Some(unwrapped_data.0),
-                            Some(unwrapped_data.1),
+                        self.fund_manager_badge_vault.authorize_with_amount(
+                            1,
+                            || wrapper.get_price(
+                                coin,
+                                Some(unwrapped_data.0),
+                                Some(unwrapped_data.1),
+                            )
                         )
                     } else {
                         wrapper.get_price(coin, None, None)
                     }
                 },
                 OracleType::Ociswap => {
-                    self.ociswap_wrapper.expect("Oracle wrapper component not found")
-                        .get_price(coin, None, None)
+                    self.fund_manager_badge_vault.authorize_with_amount(
+                        1,
+                        || self.ociswap_wrapper
+                            .expect("Oracle wrapper component not found")
+                            .get_price(coin, None, None)
+                    )
                 },
                 OracleType::FixedPrice { price } => price,
                 OracleType::RedStone => Runtime::panic("TODO".to_string()),
