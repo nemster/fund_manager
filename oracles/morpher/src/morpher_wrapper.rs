@@ -33,8 +33,8 @@ mod morpher_wrapper {
         },
         methods {
            get_price  => restrict_to: [fund_manager];
-           // TODO: update_settings(price_lifetime, cache_data)
-           // TODO: add_market_id(market_id, resource_address)
+           update_settings => restrict_to: [OWNER];
+           add_market_id => restrict_to: [OWNER];
         }
     }
 
@@ -69,6 +69,26 @@ mod morpher_wrapper {
                     fund_manager => rule!(require(fund_manager_badge_address));
                 ))
                 .globalize()
+        }
+
+        pub fn update_settings(
+            &mut self,
+            price_lifetime: u64,
+            cache_data: bool
+        ) {
+            self.price_lifetime = price_lifetime;
+            self.cache_data = cache_data;
+        }
+
+        pub fn add_market_id(
+            &mut self,
+            market_id: String,
+            resource_address: ResourceAddress
+        ) {
+            self.market_id_to_resource_address.insert(
+                market_id,
+                resource_address
+            );
         }
     }
 
