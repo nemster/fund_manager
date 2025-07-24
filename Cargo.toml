@@ -25,7 +25,8 @@ resolver = "2"
 members= [
         "fund_manager",
 	"defi_protocols/weft",
-	"dexes/ociswap"
+	"dexes/ociswap",
+	"oracles/morpher",
 ]
 
 [workspace.lints.clippy]

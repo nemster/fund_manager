@@ -17,6 +17,7 @@ pub enum AuthorizedOperation {
     DecreaseMinAuthorizers,
     IncreaseMinAuthorizers,
     MintAdminBadge,
+    SetOracleToUse,
 }
 
 #[derive(ScryptoSbor)]
@@ -73,6 +74,16 @@ struct CoinsCouple {
     to: ResourceAddress,
 }
 
+#[derive(ScryptoSbor)]
+enum OracleType {
+    Morpher,
+    RedStone,
+    Ociswap,
+    FixedPrice {
+        price: Decimal,
+    }
+}
+
 #[blueprint]
 #[events(
     LsuUnstakeStartedEvent,
@@ -80,7 +91,14 @@ struct CoinsCouple {
     WithdrawFromFundEvent,
     MissingInfoEvent,
 )]
-#[types(String, DefiProtocol, CoinsCouple, DexInterfaceScryptoStub)]
+#[types(
+    String,
+    DefiProtocol,
+    CoinsCouple,
+    DexInterfaceScryptoStub,
+    ResourceAddress,
+    OracleType,
+)]
 mod fund_manager {
 
     enable_method_auth! {
@@ -99,6 +117,7 @@ mod fund_manager {
             withdraw_validator_badge => PUBLIC;
             update_min_authorizers => PUBLIC;
             mint_admin_badge => PUBLIC;
+            set_oracle_to_use => PUBLIC;
 
             deposit_validator_badge => restrict_to: [OWNER];
             deposit_coin => restrict_to: [OWNER];
@@ -130,9 +149,11 @@ mod fund_manager {
         account_locker: Global<AccountLocker>,
         dexes: KeyValueStore<CoinsCouple, DexInterfaceScryptoStub>,
         total_value: Decimal,
-        coins_value: HashMap<ResourceAddress, Decimal>, // TODO: What about an oracle instead of this?
         fund_units_vault: FungibleVault,
         fund_units_to_distribute: Decimal,
+        which_oracle_to_use: KeyValueStore<ResourceAddress, OracleType>,
+        morpher_wrapper: Option<OracleInterfaceScryptoStub>,
+        ociswap_wrapper: Option<OracleInterfaceScryptoStub>,
     }
 
     impl FundManager {
@@ -253,9 +274,11 @@ mod fund_manager {
                 account_locker: account_locker,
                 dexes: KeyValueStore::new_with_registered_type(),
                 total_value: Decimal::ZERO,
-                coins_value: HashMap::new(),
                 fund_units_vault: FungibleVault::new(fund_unit_resource_manager.address()),
                 fund_units_to_distribute: Decimal::ZERO,
+                which_oracle_to_use: KeyValueStore::new_with_registered_type(),
+                morpher_wrapper: None,
+                ociswap_wrapper: None,
             }
                 .instantiate()
                 .prepare_to_globalize(OwnerRole::Fixed(rule!(require(admin_badge_address))))
@@ -266,7 +289,6 @@ mod fund_manager {
                 .globalize()
         }
 
-        // TODO: can we merge this method with new() ?
         pub fn init(
             &mut self,
             number_of_admin_badges: u8,
@@ -306,6 +328,8 @@ mod fund_manager {
 
             let fund_units_bucket = self.fund_unit_resource_manager.mint(fund_units_initial_supply);
 
+            // TODO: what about putting fund units in the fund_units_vault instead?
+            
             (admin_badges_bucket, fund_units_bucket)
         }
 
@@ -529,6 +553,7 @@ mod fund_manager {
         pub fn finish_unstake(
             &mut self,
             claim_nft_id: u64,
+            morpher_data: HashMap<ResourceAddress, (String, String)>,
         ) {
             let claim_nft_bucket = self.claim_nft_vault.take_non_fungible(
                 &NonFungibleLocalId::integer(claim_nft_id)
@@ -540,13 +565,11 @@ mod fund_manager {
 
             let defi_protocol_name = self.find_where_to_deposit_to();
 
-            let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
+            let defi_protocol = self.defi_protocols.get(&defi_protocol_name).unwrap();
 
-            Runtime::emit_event(
-                LsuUnstakeCompletedEvent {
-                    xrd_amount: bucket.amount(),
-                    defi_protocol_name: defi_protocol_name,
-                }
+            let mut bucket_value = bucket.amount() * self.coin_value(
+                defi_protocol.coin,
+                &morpher_data
             );
 
             let other_bucket = match defi_protocol.other_coin {
@@ -571,6 +594,25 @@ mod fund_manager {
                 None => None,
             };
 
+            if other_bucket.is_some() {
+                bucket_value += other_bucket.as_ref().unwrap().amount() *
+                    self.coin_value(
+                        defi_protocol.other_coin.unwrap(),
+                        &morpher_data,
+                    );
+            }
+
+            drop(defi_protocol);
+
+            let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
+
+            Runtime::emit_event(
+                LsuUnstakeCompletedEvent {
+                    xrd_amount: bucket.amount(),
+                    defi_protocol_name: defi_protocol_name,
+                }
+            );
+
             if defi_protocol.coin != XRD {
                 let mut dex = self.dexes.get_mut(
                     &CoinsCouple {
@@ -582,11 +624,6 @@ mod fund_manager {
 
                 bucket = dex.swap(bucket);
                 // TODO: check slippage
-            }
-
-            let mut bucket_value = bucket.amount() * *self.coins_value.get(&defi_protocol.coin).unwrap();
-            if other_bucket.is_some() {
-                bucket_value += other_bucket.as_ref().unwrap().amount() * *self.coins_value.get(&defi_protocol.other_coin.unwrap()).unwrap();
             }
 
             defi_protocol.value += bucket_value;
@@ -683,15 +720,23 @@ mod fund_manager {
             defi_protocol_name: String,
             coin_bucket: FungibleBucket,
             other_coin_bucket: Option<FungibleBucket>,
+            morpher_data: HashMap<ResourceAddress, (String, String)>,
         ) {
-            let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).expect("Protocol not found");
+            let mut buckets_value = coin_bucket.amount() * self.coin_value(
+                coin_bucket.resource_address(),
+                &morpher_data,
+            );
 
-            let mut buckets_value = coin_bucket.amount() * *self.coins_value.get(&coin_bucket.resource_address()).unwrap();
             if other_coin_bucket.is_some() {
                 buckets_value +=
                     other_coin_bucket.as_ref().unwrap().amount() *
-                    *self.coins_value.get(&other_coin_bucket.as_ref().unwrap().resource_address()).unwrap();
+                    self.coin_value(
+                        other_coin_bucket.as_ref().unwrap().resource_address(),
+                        &morpher_data
+                    );
             }
+
+            let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).expect("Protocol not found");
 
             defi_protocol.wrapper.deposit_coin(coin_bucket, other_coin_bucket);
 
@@ -703,16 +748,27 @@ mod fund_manager {
             &mut self,
             defi_protocol_name: String,
             protocol_token_bucket: Bucket,
+            morpher_data: HashMap<ResourceAddress, (String, String)>,
         ) {
-            let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).expect("Protocol not found");
+            let mut added_value = Decimal::ZERO;
+
+            let defi_protocol = self.defi_protocols.get(&defi_protocol_name).expect("Protocol not found");
+
+            let coin1_price = self.coin_value(defi_protocol.coin, &morpher_data);
+
+            let coin2_price = match defi_protocol.other_coin {
+                Some(coin2) => Some(self.coin_value(coin2, &morpher_data)),
+                None => None,
+            };
+
+            drop(defi_protocol);
+
+            let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
 
             let (option_amount1, option_amount2) = defi_protocol.wrapper.deposit_protocol_token(protocol_token_bucket);
 
             if option_amount1.is_some() {
-                let added_value = option_amount1.unwrap() * *self.coins_value.get(&defi_protocol.coin).unwrap();
-
-                defi_protocol.value += added_value;
-                self.total_value += added_value;
+                added_value += option_amount1.unwrap() * coin1_price;
             } else {
                 Runtime::emit_event(
                     MissingInfoEvent {
@@ -722,11 +778,11 @@ mod fund_manager {
             }
 
             if option_amount2.is_some() {
-                let added_value = option_amount2.unwrap() * *self.coins_value.get(&defi_protocol.other_coin.unwrap()).unwrap();
-
-                defi_protocol.value += added_value;
-                self.total_value += added_value;
+                added_value += option_amount2.unwrap() * coin2_price.unwrap();
             }
+
+            defi_protocol.value += added_value;
+            self.total_value += added_value;
         }
 
         pub fn remove_defi_protocol(
@@ -752,7 +808,6 @@ mod fund_manager {
         pub fn update_defi_protocols_info(
             &mut self,
             defi_protocols_info: HashMap<String, DefiProtocolVariableInfo>,
-            coins_value: HashMap<ResourceAddress, Decimal>,
         ) {
             let mut total_value = Decimal::ZERO;
 
@@ -768,11 +823,6 @@ mod fund_manager {
             }
 
             self.total_value = total_value;
-
-            // TODO: can we use an oracle instead?
-            for (address, value) in coins_value.iter() {
-                self.coins_value.insert(*address, *value);
-            }
         }
 
         fn find_where_to_withdraw_from(
@@ -826,6 +876,7 @@ mod fund_manager {
             &mut self,
             mut fund_units_bucket: FungibleBucket,
             swap_to: Option<ResourceAddress>,
+            morpher_data: HashMap<ResourceAddress, (String, String)>,
         ) -> (
             FungibleBucket, // coin
             Option<FungibleBucket>, // other coin
@@ -842,16 +893,24 @@ mod fund_manager {
 
             let fund_unit_value = self.fund_unit_value();
 
+            let defi_protocol = self.defi_protocols.get(&defi_protocol_name).unwrap();
+
+            let coin_value = self.coin_value(defi_protocol.coin, &morpher_data);
+
+            let other_coin_value = match defi_protocol.other_coin {
+                Some(other_coin) => Some(self.coin_value(other_coin, &morpher_data)),
+                None => None,
+            };
+
+            drop(defi_protocol);
+
             let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
 
-            let coin_value = self.coins_value.get(&defi_protocol.coin).unwrap();
+            let (mut coin_bucket, mut other_coin_bucket) = defi_protocol.wrapper.withdraw_coin(Some(withdrawable_value / coin_value));
 
-            let (mut coin_bucket, mut other_coin_bucket) = defi_protocol.wrapper.withdraw_coin(Some(withdrawable_value / *coin_value));
-
-            let mut coin_bucket_value = coin_bucket.amount() * *coin_value;
+            let mut coin_bucket_value = coin_bucket.amount() * coin_value;
             if other_coin_bucket.is_some() {
-                coin_bucket_value += other_coin_bucket.as_ref().unwrap().amount() *
-                    *self.coins_value.get(&defi_protocol.other_coin.unwrap()).unwrap();
+                coin_bucket_value += other_coin_bucket.as_ref().unwrap().amount() * other_coin_value.unwrap();
             }
 
             self.total_value -= coin_bucket_value;
@@ -926,6 +985,87 @@ mod fund_manager {
                 },
                 wrapper,
             );
+        }
+
+        pub fn set_oracle_to_use(
+            &mut self,
+            admin_proof: Proof,
+            coin: ResourceAddress,
+            oracle: String,
+            wrapper: Option<OracleInterfaceScryptoStub>,
+            fixed_price: Option<Decimal>,
+        ) {
+            self.check_operation_authorization(
+                self.get_admin_id(admin_proof),
+                AuthorizedOperation::SetOracleToUse,
+            );
+
+            match oracle.as_ref() {
+                "morpher" => {
+                    self.which_oracle_to_use.insert(
+                        coin,
+                        OracleType::Morpher
+                    );
+
+                    if wrapper.is_some() {
+                        self.morpher_wrapper = wrapper;
+                    }
+                },
+                "ociswap" => {
+                    self.which_oracle_to_use.insert(
+                        coin,
+                        OracleType::Ociswap
+                    );
+
+                    if wrapper.is_some() {
+                        self.ociswap_wrapper = wrapper;
+                    }
+                },
+                "fixed_price" => {
+                    self.which_oracle_to_use.insert(
+                        coin,
+                        OracleType::FixedPrice {
+                            price: fixed_price.unwrap(),
+                        }
+                    );
+                },
+                "redstone" => {
+                    // TODO
+                },
+                _ => Runtime::panic("Unknown oracle".to_string()),
+            }
+        }
+
+        fn coin_value(
+            &self,
+            coin: ResourceAddress,
+            morpher_data: &HashMap<ResourceAddress, (String, String)>,
+        ) -> Decimal {
+            match *self.which_oracle_to_use.get(&coin).expect("Unknown coin") {
+                OracleType::Morpher => {
+                    let data = morpher_data.get(&coin);
+
+                    let mut wrapper = self.morpher_wrapper.expect("Oracle wrapper component not found");
+
+                    if data.is_some() {
+                        let unwrapped_data = (*data.unwrap()).clone();
+
+                        wrapper.get_price(
+                            coin,
+                            Some(unwrapped_data.0),
+                            Some(unwrapped_data.1),
+                        )
+                    } else {
+                        wrapper.get_price(coin, None, None)
+                    }
+                },
+                OracleType::Ociswap => {
+                    self.ociswap_wrapper.expect("Oracle wrapper component not found")
+                        .get_price(coin, None, None)
+                },
+                OracleType::FixedPrice { price } => price,
+                OracleType::RedStone => Runtime::panic("TODO".to_string()),
+            }
         }
     }
 }

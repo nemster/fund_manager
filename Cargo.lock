@@ -676,6 +676,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "morpher_wrapper"
+version = "1.0.0"
+dependencies = [
+ "radix-common 1.3.0 (git+https://github.com/radixdlt/radixdlt-scrypto?tag=v1.3.0)",
+ "radix-engine-interface 1.3.0 (git+https://github.com/radixdlt/radixdlt-scrypto?tag=v1.3.0)",
+ "scrypto 1.3.0 (git+https://github.com/radixdlt/radixdlt-scrypto?tag=v1.3.0)",
+ "scrypto-interface",
+]
+
+[[package]]
 name = "multi-stash"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

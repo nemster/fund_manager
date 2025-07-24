@@ -36,3 +36,15 @@ define_interface! {
         ) -> FungibleBucket;
     }
 }
+
+define_interface! {
+    Oracle impl [ScryptoStub, Trait, ScryptoTestStub] {
+
+        fn get_price(
+            &mut self,
+            coin_address: ResourceAddress,
+            message: Option<String>,
+            signature: Option<String>,
+        ) -> Decimal;
+    }
+}
