@@ -27,6 +27,7 @@ members= [
 	"defi_protocols/weft",
 	"dexes/ociswap",
 	"oracles/morpher",
+	"oracles/ociswap",
 ]
 
 [workspace.lints.clippy]

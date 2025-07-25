@@ -294,10 +294,7 @@ mod fund_manager {
             number_of_admin_badges: u8,
             min_authorizers: u8,
             fund_units_initial_supply: Decimal,
-        ) -> (
-            NonFungibleBucket,
-            FungibleBucket,
-        ) {
+        ) -> NonFungibleBucket {
             assert!(
                 self.admin_badge_resource_manager.total_supply().unwrap() == Decimal::ZERO,
                 "Component already initialised",
@@ -326,11 +323,12 @@ mod fund_manager {
                 );
             }
 
-            let fund_units_bucket = self.fund_unit_resource_manager.mint(fund_units_initial_supply);
-
-            // TODO: what about putting fund units in the fund_units_vault instead?
+            self.fund_units_to_distribute = fund_units_initial_supply;
+            self.fund_units_vault.put(
+                self.fund_unit_resource_manager.mint(fund_units_initial_supply)
+            );
             
-            (admin_badges_bucket, fund_units_bucket)
+            admin_badges_bucket
         }
 
         pub fn mint_bot_badge(&self) -> FungibleBucket {
