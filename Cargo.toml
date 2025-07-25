@@ -25,6 +25,7 @@ resolver = "2"
 members= [
         "fund_manager",
 	"defi_protocols/weft",
+	"defi_protocols/root_finance",
 	"dexes/ociswap",
 	"dexes/caviarnine",
 	"oracles/morpher",
