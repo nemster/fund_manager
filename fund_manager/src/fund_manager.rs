@@ -35,6 +35,7 @@ struct DefiProtocol {
     wrapper: DefiProtocolInterfaceScryptoStub,
     coin: ResourceAddress, // Example coin: xUSDC
     protocol_token: ResourceAddress, // Example protocol_token: w2-xUSDC
+    needed_morpher_data: Option<ResourceAddress>,
     other_coin: Option<ResourceAddress>, // Only for protocols managing two coins, i.e. providing
                                          // liquidity to a Dex
 }
@@ -565,6 +566,15 @@ mod fund_manager {
 
             let defi_protocol = self.defi_protocols.get(&defi_protocol_name).unwrap();
 
+            let (message, signature) = match defi_protocol.needed_morpher_data {
+                Some(resource_address) => {
+                    let morpher_data_needed_by_protocol = morpher_data.get(&resource_address).expect("Missing needed morpher data").clone();
+                    
+                    (Some(morpher_data_needed_by_protocol.0), Some(morpher_data_needed_by_protocol.1))
+                },
+                None => (None, None),
+            };
+
             let mut bucket_value = bucket.amount() * self.coin_value(
                 defi_protocol.coin,
                 &morpher_data
@@ -634,7 +644,12 @@ mod fund_manager {
             defi_protocol.value += bucket_value;
             self.fund_manager_badge_vault.authorize_with_amount(
                 1,
-                || defi_protocol.wrapper.deposit_coin(bucket, other_bucket)
+                || defi_protocol.wrapper.deposit_coin(
+                    bucket,
+                    other_bucket,
+                    message,
+                    signature,
+                )
             );
 
             self.total_value += bucket_value;
@@ -686,6 +701,7 @@ mod fund_manager {
             other_coin: Option<ResourceAddress>,
             desired_percentage: u8,
             wrapper: DefiProtocolInterfaceScryptoStub,
+            needed_morpher_data: Option<ResourceAddress>,
         ) {
             self.check_operation_authorization(
                 self.get_admin_id(admin_proof),
@@ -707,6 +723,7 @@ mod fund_manager {
                 coin: coin,
                 protocol_token: protocol_token,
                 other_coin: other_coin,
+                needed_morpher_data: needed_morpher_data,
             };
 
             if old_defi_protocol.is_some() {
@@ -750,9 +767,23 @@ mod fund_manager {
 
             let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).expect("Protocol not found");
 
+            let (message, signature) = match defi_protocol.needed_morpher_data {
+                Some(resource_address) => {
+                    let morpher_data_needed_by_protocol = morpher_data.get(&resource_address).expect("Missing needed morpher data").clone();
+                    
+                    (Some(morpher_data_needed_by_protocol.0), Some(morpher_data_needed_by_protocol.1))
+                },
+                None => (None, None),
+            };
+
             self.fund_manager_badge_vault.authorize_with_amount(
                 1,
-                || defi_protocol.wrapper.deposit_coin(coin_bucket, other_coin_bucket)
+                || defi_protocol.wrapper.deposit_coin(
+                    coin_bucket,
+                    other_coin_bucket,
+                    message,
+                    signature,
+                )
             );
 
             defi_protocol.value += buckets_value;
@@ -918,9 +949,13 @@ mod fund_manager {
 
             let coin_value = self.coin_value(defi_protocol.coin, &morpher_data);
 
-            let other_coin_value = match defi_protocol.other_coin {
-                Some(other_coin) => Some(self.coin_value(other_coin, &morpher_data)),
-                None => None,
+            let (other_coin_to_coin_price_ratio, other_coin_value) = match defi_protocol.other_coin {
+                Some(other_coin) => {
+                    let other_coin_price = self.coin_value(other_coin, &morpher_data);
+
+                    (Some(other_coin_price / coin_value), Some(other_coin_price))
+                },
+                None => (None, None),
             };
 
             drop(defi_protocol);
@@ -929,7 +964,10 @@ mod fund_manager {
 
             let (mut coin_bucket, mut other_coin_bucket) = self.fund_manager_badge_vault.authorize_with_amount(
                 1,
-                || defi_protocol.wrapper.withdraw_coin(Some(withdrawable_value / coin_value))
+                || defi_protocol.wrapper.withdraw_coin(
+                    Some(withdrawable_value / coin_value),
+                    other_coin_to_coin_price_ratio,
+                )
             );
 
             let mut coin_bucket_value = coin_bucket.amount() * coin_value;

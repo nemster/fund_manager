@@ -18,11 +18,14 @@ define_interface! {
             &mut self,
             coin: FungibleBucket,
             other_coin: Option<FungibleBucket>,
+            message: Option<String>,
+            signature: Option<String>,
         );
 
         fn withdraw_coin(
             &mut self,
             amount: Option<Decimal>,
+            other_coin_to_coin_price_ratio: Option<Decimal>,
         ) -> (FungibleBucket, Option<FungibleBucket>);
     }
 }

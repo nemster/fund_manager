@@ -96,6 +96,8 @@ mod weft_wrapper {
             &mut self,
             coin: FungibleBucket,
             _other_coin: Option<FungibleBucket>,
+            _message: Option<String>,
+            _signature: Option<String>,
         ) {
             let coin_amount =  coin.amount();
 
@@ -115,6 +117,7 @@ mod weft_wrapper {
         fn withdraw_coin(
             &mut self,
             amount: Option<Decimal>,
+            _other_coin_to_coin_price_ratio: Option<Decimal>,
         ) -> (FungibleBucket, Option<FungibleBucket>) {
             match amount {
                 Some(amount) => {

@@ -120,6 +120,8 @@ mod root_finance_wrapper {
             &mut self,
             coin: FungibleBucket,
             _other_coin: Option<FungibleBucket>,
+            _message: Option<String>,
+            _signature: Option<String>,
         ) {
             let proof = self.token_vault.create_proof_of_non_fungibles(
                 &self.token_vault.non_fungible_local_ids(1)
@@ -134,6 +136,7 @@ mod root_finance_wrapper {
         fn withdraw_coin(
             &mut self,
             mut amount: Option<Decimal>,
+            _other_coin_to_coin_price_ratio: Option<Decimal>,
         ) -> (FungibleBucket, Option<FungibleBucket>) {
             let proof = self.token_vault.create_proof_of_non_fungibles(
                 &self.token_vault.non_fungible_local_ids(1)
