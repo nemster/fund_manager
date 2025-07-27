@@ -26,6 +26,7 @@ members= [
         "fund_manager",
 	"defi_protocols/weft",
 	"defi_protocols/root_finance",
+	"defi_protocols/ociswap",
 	"dexes/ociswap",
 	"dexes/caviarnine",
 	"oracles/morpher",
