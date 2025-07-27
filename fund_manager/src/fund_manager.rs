@@ -82,7 +82,11 @@ enum OracleType {
     Ociswap,
     FixedPrice {
         price: Decimal,
-    }
+    },
+    FixedMultiplier {
+        multiplier: Decimal,
+        base_coin: ResourceAddress
+    },
 }
 
 #[blueprint]
@@ -1064,6 +1068,8 @@ mod fund_manager {
             oracle: String,
             wrapper: Option<OracleInterfaceScryptoStub>,
             fixed_price: Option<Decimal>,
+            fixed_multiplier: Option<Decimal>,
+            base_coin: Option<ResourceAddress>,
         ) {
             self.check_operation_authorization(
                 self.get_admin_id(admin_proof),
@@ -1096,6 +1102,15 @@ mod fund_manager {
                         coin,
                         OracleType::FixedPrice {
                             price: fixed_price.unwrap(),
+                        }
+                    );
+                },
+                "fixed_multiplier" => {
+                    self.which_oracle_to_use.insert(
+                        coin,
+                        OracleType::FixedMultiplier {
+                            multiplier: fixed_multiplier.unwrap(),
+                            base_coin: base_coin.unwrap(),
                         }
                     );
                 },
@@ -1141,6 +1156,8 @@ mod fund_manager {
                     )
                 },
                 OracleType::FixedPrice { price } => price,
+                OracleType::FixedMultiplier { multiplier, base_coin } => 
+                    multiplier * self.coin_value(base_coin, morpher_data),
                 OracleType::RedStone => Runtime::panic("TODO".to_string()),
             }
         }
