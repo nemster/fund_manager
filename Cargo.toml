@@ -28,7 +28,7 @@ members= [
 	"defi_protocols/root_finance",
 	"defi_protocols/ociswap",
 	"defi_protocols/flux",
-#	"defi_protocols/surge",
+	"defi_protocols/surge",
 	"dexes/ociswap",
 	"dexes/caviarnine",
 	"oracles/morpher",

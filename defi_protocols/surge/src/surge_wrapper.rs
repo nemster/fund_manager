@@ -18,7 +18,7 @@ struct PoolDetails {
 mod surge_wrapper {
 
     extern_blueprint! {
-        "", // TODO
+        "package_tdx_2_1pk6dp0yek7ctv4evkhk78lc2af8ha8wd70ntkxva49cres0nl0pd2x",
         Exchange {
             fn add_liquidity(&self, payment: Bucket) -> Bucket;
             fn remove_liquidity(&self, lp_token: Bucket) -> Bucket;
@@ -27,8 +27,8 @@ mod surge_wrapper {
     }
 
     extern_blueprint! {
-        "", // TODO
-        TokenWrapper2 {
+        "package_tdx_2_1pkddk9u36afsazvfad3af09gvs0l5kmk560v9n9ejj5z99x35scnyn",
+        TokenWrapper {
             fn wrap(&mut self, child_token: Bucket) -> Bucket;
             fn unwrap(&mut self, parent_token: Bucket, child_resource: ResourceAddress) -> Bucket;
         }
@@ -50,7 +50,7 @@ mod surge_wrapper {
         coin_address: ResourceAddress,
         token_vault: FungibleVault,
         exchange_component: Global<Exchange>,
-        wrapper_component: Global<TokenWrapper2>,
+        wrapper_component: Global<TokenWrapper>,
     }
 
     impl SurgeWrapper {
@@ -59,7 +59,7 @@ mod surge_wrapper {
             coin_address: ResourceAddress,
             token_address: ResourceAddress,
             exchange_component: Global<Exchange>,
-            wrapper_component: Global<TokenWrapper2>,
+            wrapper_component: Global<TokenWrapper>,
             fund_manager_badge_address: ResourceAddress,
         ) -> Global<SurgeWrapper> {
             Self {
