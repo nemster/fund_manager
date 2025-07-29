@@ -22,7 +22,7 @@ pub struct StabilityPoolInfoReturn {
 mod flux_wrapper {
 
     extern_blueprint! {
-        "", // TODO
+        "package_tdx_2_1p42tqez7qegpjgz26vnfjrc92vcuqx7ghwezu49qlh785qjz40y9t5",
         StabilityPools {
             fn contribute_to_pool(
                 &mut self,
@@ -60,12 +60,13 @@ mod flux_wrapper {
 
     struct FluxWrapper {
         fusd_address: ResourceAddress,
+        coin_address: ResourceAddress,
         token_vault: FungibleVault,
         component_address: Global<StabilityPools>,
         pool: Global<TwoResourcePool>,
     }
 
-    impl WeftWrapper {
+    impl FluxWrapper {
 
         pub fn new(
             fusd_address: ResourceAddress,
@@ -75,7 +76,8 @@ mod flux_wrapper {
             fund_manager_badge_address: ResourceAddress,
         ) -> Global<FluxWrapper> {
             Self {
-                fusd_address: ResourceAddress,
+                fusd_address: fusd_address,
+                coin_address: coin_address,
                 token_vault: FungibleVault::new(token_address),
                 component_address: component_address,
                 pool: component_address.get_stability_pool_infos(Some(vec![coin_address])).pop().unwrap().pool,
@@ -103,8 +105,8 @@ mod flux_wrapper {
             let amounts = self.pool.get_redemption_value(token_amount);
 
             (
-                amounts.get(self.fusd_address),
-                amounts.get(self.coin_address),
+                amounts.get(&self.fusd_address).copied(),
+                amounts.get(&self.coin_address).copied(),
             )
         }
 
@@ -133,13 +135,13 @@ mod flux_wrapper {
         ) {
             let (token_bucket, _, _) = self.component_address.contribute_to_pool(
                 self.coin_address,
-                coin,
+                coin.into(),
                 true,
                 message.expect("Message needed"),
                 signature.expect("Signature needed"),
             );
 
-            self.token_vault.put(token_bucket);
+            self.token_vault.put(FungibleBucket(token_bucket));
         }
 
         fn withdraw_coin(
@@ -152,10 +154,10 @@ mod flux_wrapper {
                     let amounts = self.pool.get_redemption_value(Decimal::ONE);
 
                     // Amount of coins withdrawn by returning one pool unit
-                    let fusd_amount = amounts.get(self.fusd_address).unwrap_or(Decimal::ZERO);
-                    let coin_amount = amounts.get(self.coin_address).unwrap_or(Decimal::ZERO);
+                    let fusd_amount = amounts.get(&self.fusd_address).unwrap_or(&Decimal::ZERO);
+                    let coin_amount = amounts.get(&self.coin_address).unwrap_or(&Decimal::ZERO);
 
-                    let mut token_amount = amount / (fusd_amount + coin_amount * other_coin_to_coin_price_ratio.unwrap())
+                    let mut token_amount = amount / (*fusd_amount + *coin_amount * other_coin_to_coin_price_ratio.unwrap());
                     if token_amount > self.token_vault.amount() {
                         token_amount = self.token_vault.amount();
                     }
