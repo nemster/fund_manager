@@ -13,7 +13,7 @@ pub enum AuthorizedOperation {
     WithdrawValidatorBadge,
     AddDefiProtocol,
     RemoveDefiProtocol,
-    AddDexPool,
+    SetDexComponent,
     DecreaseMinAuthorizers,
     IncreaseMinAuthorizers,
     MintAdminBadge,
@@ -70,12 +70,6 @@ struct MissingInfoEvent {
 }
 
 #[derive(ScryptoSbor)]
-struct CoinsCouple {
-    from: ResourceAddress,
-    to: ResourceAddress,
-}
-
-#[derive(ScryptoSbor)]
 enum OracleType {
     Morpher,
     RedStone,
@@ -99,8 +93,6 @@ enum OracleType {
 #[types(
     String,
     DefiProtocol,
-    CoinsCouple,
-    DexInterfaceScryptoStub,
     ResourceAddress,
     OracleType,
 )]
@@ -118,7 +110,7 @@ mod fund_manager {
             authorize_admin_operation => PUBLIC;
             add_defi_protocol => PUBLIC;
             remove_defi_protocol => PUBLIC;
-            add_dex_pool => PUBLIC;
+            set_dex_component => PUBLIC;
             withdraw_validator_badge => PUBLIC;
             update_min_authorizers => PUBLIC;
             mint_admin_badge => PUBLIC;
@@ -152,7 +144,7 @@ mod fund_manager {
         validator: Global<Validator>,
         claim_nft_vault: NonFungibleVault,
         account_locker: Global<AccountLocker>,
-        dexes: KeyValueStore<CoinsCouple, DexInterfaceScryptoStub>,
+        dex: DexInterfaceScryptoStub,
         total_value: Decimal,
         fund_units_vault: FungibleVault,
         fund_units_to_distribute: Decimal,
@@ -166,6 +158,7 @@ mod fund_manager {
         pub fn new(
             validator: Global<Validator>,
             claim_nft_address: ResourceAddress,
+            dex: DexInterfaceScryptoStub,
         ) -> Global<FundManager> {
             let (address_reservation, component_address) =
                 Runtime::allocate_component_address(FundManager::blueprint_id());
@@ -277,7 +270,7 @@ mod fund_manager {
                 validator: validator,
                 claim_nft_vault: NonFungibleVault::new(claim_nft_address),
                 account_locker: account_locker,
-                dexes: KeyValueStore::new_with_registered_type(),
+                dex: dex,
                 total_value: Decimal::ZERO,
                 fund_units_vault: FungibleVault::new(fund_unit_resource_manager.address()),
                 fund_units_to_distribute: Decimal::ZERO,
@@ -558,6 +551,11 @@ mod fund_manager {
             claim_nft_id: u64,
             morpher_data: HashMap<ResourceAddress, (String, String)>,
         ) {
+            assert!(
+                self.fund_units_vault.amount() == Decimal::ZERO,
+                "Previous distribution was not finished",
+            );
+
             let claim_nft_bucket = self.claim_nft_vault.take_non_fungible(
                 &NonFungibleLocalId::integer(claim_nft_id)
             );
@@ -579,89 +577,76 @@ mod fund_manager {
                 None => (None, None),
             };
 
-            let mut bucket_value = bucket.amount() * self.coin_value(
+            let bucket_value = bucket.amount() * self.coin_value(
                 defi_protocol.coin,
                 &morpher_data
             );
 
-            let other_bucket = match defi_protocol.other_coin {
-                Some(other_coin_resource_address) => {
-                    let tmp_bucket = bucket.take(bucket.amount() / 2);
-
-                    if other_coin_resource_address != XRD {
-                        let mut other_dex = self.dexes.get_mut(
-                            &CoinsCouple {
-                                from: XRD,
-                                to: other_coin_resource_address,
-                            }
-                        )
-                            .unwrap();
-
-                        Some(
-                            self.fund_manager_badge_vault.authorize_with_amount(
-                                1,
-                                || other_dex.swap(tmp_bucket))
-                        )
-                        // TODO: check slippage
-                    } else {
-                        Some(tmp_bucket)
-                    }
-                },
-                None => None,
-            };
-
-            if other_bucket.is_some() {
-                bucket_value += other_bucket.as_ref().unwrap().amount() *
-                    self.coin_value(
-                        defi_protocol.other_coin.unwrap(),
-                        &morpher_data,
-                    );
-            }
-
-            drop(defi_protocol);
-
-            let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
-
             Runtime::emit_event(
                 LsuUnstakeCompletedEvent {
                     xrd_amount: bucket.amount(),
-                    defi_protocol_name: defi_protocol_name,
+                    defi_protocol_name: defi_protocol_name.clone(),
                 }
             );
 
-            if defi_protocol.coin != XRD {
-                let mut dex = self.dexes.get_mut(
-                    &CoinsCouple {
-                        from: XRD,
-                        to: defi_protocol.coin,
-                    }
-                )
-                    .unwrap();
+            if defi_protocol.coin == XRD {
+                drop(defi_protocol);
+
+                let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
+
+                self.fund_manager_badge_vault.authorize_with_amount(
+                    1,
+                    || defi_protocol.wrapper.deposit_coin(
+                        bucket,
+                        None,
+                        message,
+                        signature,
+                    )
+                );
+
+                defi_protocol.value += bucket_value;
+            } else if defi_protocol.other_coin == Some(XRD) {
+                let defi_protocol_coin = defi_protocol.coin;
+
+                drop(defi_protocol);
+
+                let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
+
+                self.fund_manager_badge_vault.authorize_with_amount(
+                    1,
+                    || defi_protocol.wrapper.deposit_coin(
+                        FungibleBucket::new(defi_protocol_coin),
+                        Some(bucket),
+                        message,
+                        signature,
+                    )
+                );
+
+                defi_protocol.value += bucket_value;
+            } else {
+                drop(defi_protocol);
+
+                let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
 
                 bucket = self.fund_manager_badge_vault.authorize_with_amount(
                     1,
-                    || dex.swap(bucket)
+                    || FungibleBucket(self.dex.swap(bucket.into(), defi_protocol.coin))
                 );
-                // TODO: check slippage
+
+                self.fund_manager_badge_vault.authorize_with_amount(
+                    1,
+                    || defi_protocol.wrapper.deposit_coin(
+                        bucket,
+                        None,
+                        message,
+                        signature,
+                    )
+                );
+
+                defi_protocol.value += bucket_value;
             }
 
-            defi_protocol.value += bucket_value;
-            self.fund_manager_badge_vault.authorize_with_amount(
-                1,
-                || defi_protocol.wrapper.deposit_coin(
-                    bucket,
-                    other_bucket,
-                    message,
-                    signature,
-                )
-            );
-
             self.total_value += bucket_value;
-
-            assert!(
-                self.fund_units_vault.amount() == Decimal::ZERO,
-                "Previous distribution was not finished",
-            );
 
             self.fund_units_to_distribute = self.total_value / fund_unit_value;
 
@@ -984,35 +969,19 @@ mod fund_manager {
 
             if swap_to.is_some() {
                 if swap_to.unwrap() != defi_protocol.coin {
-                    let mut dex_pool = self.dexes.get_mut(
-                        &CoinsCouple {
-                            from: defi_protocol.coin,
-                            to: swap_to.unwrap(),
-                        }
-                    )
-                        .expect("No DEX available");
-
-                    // I'm reusing the same bucket name for a different coin.
-                    // It is possibile since the old bucket is destroyed by swap().
                     coin_bucket = self.fund_manager_badge_vault.authorize_with_amount(
                         1,
-                        || dex_pool.swap(coin_bucket)
+                        || FungibleBucket(self.dex.swap(coin_bucket.into(), swap_to.unwrap()))
                     );
                 }
 
                 if other_coin_bucket.is_some() && swap_to.unwrap() != defi_protocol.other_coin.unwrap() {
-                    let mut dex_pool = self.dexes.get_mut(
-                        &CoinsCouple {
-                            from: defi_protocol.other_coin.unwrap(),
-                            to: swap_to.unwrap(),
-                        }
-                    )
-                        .expect("No DEX available");
-
                     coin_bucket.put(
                         self.fund_manager_badge_vault.authorize_with_amount(
                             1,
-                            || dex_pool.swap(other_coin_bucket.unwrap())
+                            || FungibleBucket(
+                                self.dex.swap(other_coin_bucket.unwrap().into(), swap_to.unwrap())
+                            )
                         )
                     );
 
@@ -1040,25 +1009,17 @@ mod fund_manager {
             }
         }
 
-        pub fn add_dex_pool(
+        pub fn set_dex_component(
             &mut self,
             admin_proof: Proof,
-            from: ResourceAddress,
-            to: ResourceAddress,
-            wrapper: DexInterfaceScryptoStub,
+            dex: DexInterfaceScryptoStub,
         ) {
             self.check_operation_authorization(
                 self.get_admin_id(admin_proof),
-                AuthorizedOperation::AddDexPool,
+                AuthorizedOperation::SetDexComponent,
             );
 
-            self.dexes.insert(
-                CoinsCouple {
-                    from: from,
-                    to: to,
-                },
-                wrapper,
-            );
+            self.dex = dex;
         }
 
         pub fn set_oracle_to_use(

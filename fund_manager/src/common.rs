@@ -35,8 +35,9 @@ define_interface! {
 
         fn swap(
             &mut self,
-            input_bucket: FungibleBucket,
-        ) -> FungibleBucket;
+            input_bucket: Bucket,
+            output_resource: ResourceAddress,
+        ) -> Bucket;
     }
 }
 
