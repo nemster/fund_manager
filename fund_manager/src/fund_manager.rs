@@ -144,7 +144,7 @@ mod fund_manager {
         validator: Global<Validator>,
         claim_nft_vault: NonFungibleVault,
         account_locker: Global<AccountLocker>,
-        dex: DexInterfaceScryptoStub,
+        dex: Option<DexInterfaceScryptoStub>,
         total_value: Decimal,
         fund_units_vault: FungibleVault,
         fund_units_to_distribute: Decimal,
@@ -158,7 +158,6 @@ mod fund_manager {
         pub fn new(
             validator: Global<Validator>,
             claim_nft_address: ResourceAddress,
-            dex: DexInterfaceScryptoStub,
         ) -> Global<FundManager> {
             let (address_reservation, component_address) =
                 Runtime::allocate_component_address(FundManager::blueprint_id());
@@ -270,7 +269,7 @@ mod fund_manager {
                 validator: validator,
                 claim_nft_vault: NonFungibleVault::new(claim_nft_address),
                 account_locker: account_locker,
-                dex: dex,
+                dex: None,
                 total_value: Decimal::ZERO,
                 fund_units_vault: FungibleVault::new(fund_unit_resource_manager.address()),
                 fund_units_to_distribute: Decimal::ZERO,
@@ -630,7 +629,7 @@ mod fund_manager {
 
                 bucket = self.fund_manager_badge_vault.authorize_with_amount(
                     1,
-                    || FungibleBucket(self.dex.swap(bucket.into(), defi_protocol.coin))
+                    || FungibleBucket(self.dex.unwrap().swap(bucket.into(), defi_protocol.coin))
                 );
 
                 self.fund_manager_badge_vault.authorize_with_amount(
@@ -971,7 +970,7 @@ mod fund_manager {
                 if swap_to.unwrap() != defi_protocol.coin {
                     coin_bucket = self.fund_manager_badge_vault.authorize_with_amount(
                         1,
-                        || FungibleBucket(self.dex.swap(coin_bucket.into(), swap_to.unwrap()))
+                        || FungibleBucket(self.dex.unwrap().swap(coin_bucket.into(), swap_to.unwrap()))
                     );
                 }
 
@@ -980,7 +979,7 @@ mod fund_manager {
                         self.fund_manager_badge_vault.authorize_with_amount(
                             1,
                             || FungibleBucket(
-                                self.dex.swap(other_coin_bucket.unwrap().into(), swap_to.unwrap())
+                                self.dex.unwrap().swap(other_coin_bucket.unwrap().into(), swap_to.unwrap())
                             )
                         )
                     );
@@ -1019,7 +1018,7 @@ mod fund_manager {
                 AuthorizedOperation::SetDexComponent,
             );
 
-            self.dex = dex;
+            self.dex = Some(dex);
         }
 
         pub fn set_oracle_to_use(
