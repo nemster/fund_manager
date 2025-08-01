@@ -15,6 +15,7 @@ enum PoolType {
     OciswapPool2,
     OciswapPrecisionPool,
     CaviarninePool,
+    DefiPlazaPool,
 }
 
 #[derive(ScryptoSbor, Clone)]
@@ -51,6 +52,13 @@ mod multi_dex_wrapper {
         "package_tdx_2_1p4g09xagmsyql6r65a70c94n6qgvk6ffx9q0z5g3vnqmrsr96627vg",
         QuantaSwap {
             fn swap(&mut self, tokens: Bucket) -> (Bucket, Bucket); // (output_bucket, remainings)
+        }
+    }
+
+    extern_blueprint! {
+        "package_tdx_2_1pk8umega5zc4fft0lmemml3g6qlce99h3wszsukwe3lx45xqay6l9t",
+        PlazaPair {
+            fn swap(&mut self, input_bucket: Bucket) -> (Bucket, Option<Bucket>);
         }
     }
 */
@@ -107,6 +115,10 @@ mod multi_dex_wrapper {
                 },
                 "caviarnine_pool" => DexPool {
                     pool_type: PoolType::CaviarninePool,
+                    component: component,
+                },
+                "defiplaza_pool" => DexPool {
+                    pool_type: PoolType::DefiPlazaPool,
                     component: component,
                 },
                 _ => { Runtime::panic("Unrecognized pool type".to_string()); },
@@ -170,6 +182,20 @@ mod multi_dex_wrapper {
                                 );
 
                             input_bucket = Bucket::new(input_resource);
+                        },
+                        PoolType::DefiPlazaPool => {
+                            let (output, opt_input) = dex_pool.component
+                                .call::<Bucket, (Bucket, Option<Bucket>)>(
+                                    "swap",
+                                    &input_bucket
+                                );
+
+                            output_bucket = output;
+
+                            match opt_input {
+                                None => input_bucket = Bucket::new(input_resource),
+                                Some(bucket) => input_bucket = bucket,
+                            }
                         },
                         _ => (output_bucket, input_bucket) = dex_pool.component
                             .call::<Bucket, (Bucket, Bucket)>(
