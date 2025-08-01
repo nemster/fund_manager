@@ -224,28 +224,30 @@ mod ociswap_lp_pool2_wrapper {
                         false => FungibleBucket::new(self.b_vault.resource_address()),
                     };
 
-                    let amounts = self.pool.get_redemption_value(
-                        self.lp_token_vault.amount()
-                    );
+                    if self.lp_token_vault.amount() > Decimal::ZERO {
+                        let amounts = self.pool.get_redemption_value(
+                            self.lp_token_vault.amount()
+                        );
 
-                    let reedemeble_a_amount_equivalent =
-                        *amounts.get(&self.a_vault.resource_address()).unwrap() +
-                        *amounts.get(&self.b_vault.resource_address()).unwrap() * other_coin_to_coin_price_ratio.unwrap();
+                        let reedemeble_a_amount_equivalent =
+                            *amounts.get(&self.a_vault.resource_address()).unwrap() +
+                            *amounts.get(&self.b_vault.resource_address()).unwrap() * other_coin_to_coin_price_ratio.unwrap();
 
-                    let (a, b) = match reedemeble_a_amount_equivalent > amount {
-                        true => self.component_address.remove_liquidity(
-                            self.lp_token_vault.take(
-                                self.lp_token_vault.amount() * amount / reedemeble_a_amount_equivalent
-                            )
-                                .into()
-                        ),
-                        false => self.component_address.remove_liquidity(
-                            self.lp_token_vault.take_all().into()
-                        ),
-                    };
+                        let (a, b) = match reedemeble_a_amount_equivalent > amount {
+                            true => self.component_address.remove_liquidity(
+                                self.lp_token_vault.take(
+                                    self.lp_token_vault.amount() * amount / reedemeble_a_amount_equivalent
+                                )
+                                    .into()
+                            ),
+                            false => self.component_address.remove_liquidity(
+                                self.lp_token_vault.take_all().into()
+                            ),
+                        };
 
-                    a_bucket.put(FungibleBucket(a));
-                    b_bucket.put(FungibleBucket(b));
+                        a_bucket.put(FungibleBucket(a));
+                        b_bucket.put(FungibleBucket(b));
+                    }
 
                     (a_bucket, Some(b_bucket))
                 },
@@ -253,12 +255,14 @@ mod ociswap_lp_pool2_wrapper {
                     let mut a_bucket = self.a_vault.take_all();
                     let mut b_bucket = self.b_vault.take_all();
 
-                    let (a, b) = self.component_address.remove_liquidity(
-                        self.lp_token_vault.take_all().into()
-                    );
+                    if self.lp_token_vault.amount() > Decimal::ZERO {
+                        let (a, b) = self.component_address.remove_liquidity(
+                            self.lp_token_vault.take_all().into()
+                        );
 
-                    a_bucket.put(FungibleBucket(a));
-                    b_bucket.put(FungibleBucket(b));
+                        a_bucket.put(FungibleBucket(a));
+                        b_bucket.put(FungibleBucket(b));
+                    }
 
                     (a_bucket, Some(b_bucket))
                 },
