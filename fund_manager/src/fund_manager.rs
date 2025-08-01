@@ -18,6 +18,7 @@ pub enum AuthorizedOperation {
     IncreaseMinAuthorizers,
     MintAdminBadge,
     SetOracleToUse,
+    WithdrawFundManagerBadge,
 }
 
 #[derive(ScryptoSbor)]
@@ -115,10 +116,12 @@ mod fund_manager {
             update_min_authorizers => PUBLIC;
             mint_admin_badge => PUBLIC;
             set_oracle_to_use => PUBLIC;
+            withdraw_fund_manager_badge => PUBLIC;
 
             deposit_validator_badge => restrict_to: [OWNER];
             deposit_coin => restrict_to: [OWNER];
             deposit_protocol_token => restrict_to: [OWNER];
+            deposit_fund_manager_badge => restrict_to: [OWNER];
 
             start_unlock_owner_stake_units => restrict_to: [bot];
             start_unstake => restrict_to: [bot];
@@ -162,80 +165,14 @@ mod fund_manager {
             let (address_reservation, component_address) =
                 Runtime::allocate_component_address(FundManager::blueprint_id());
 
-            let admin_badge_resource_manager = ResourceBuilder::new_integer_non_fungible::<Admin>(OwnerRole::None)
+            let fund_manager_badge_bucket = ResourceBuilder::new_fungible(OwnerRole::None)
+                .divisibility(0)
                 .metadata(metadata!(
                     roles {
                         metadata_setter => rule!(deny_all);
                         metadata_setter_updater => rule!(deny_all);
                         metadata_locker => rule!(deny_all);
                         metadata_locker_updater => rule!(deny_all);
-                    },
-                    init {
-                        "name" => "Fund admin badge", locked;
-                    }
-                ))
-                .mint_roles(mint_roles!(
-                    minter => rule!(require(global_caller(component_address)));
-                    minter_updater => rule!(deny_all);
-                ))
-                .create_with_no_initial_supply();
-            let admin_badge_address = admin_badge_resource_manager.address();
-
-            let bot_badge_resource_manager = ResourceBuilder::new_fungible(OwnerRole::Fixed(rule!(require(admin_badge_address))))
-                .metadata(metadata!(
-                    roles {
-                        metadata_setter => rule!(deny_all);
-                        metadata_setter_updater => rule!(deny_all);
-                        metadata_locker => rule!(deny_all);
-                        metadata_locker_updater => rule!(deny_all);
-                    },
-                    init {
-                        "name" => "Fund bot badge", locked;
-                    }
-                ))
-                .mint_roles(mint_roles!(
-                    minter => rule!(require(global_caller(component_address)));
-                    minter_updater => rule!(require(admin_badge_address));
-                ))
-                .withdraw_roles(withdraw_roles!(
-                    withdrawer => rule!(deny_all); // Non transferable
-                    withdrawer_updater => rule!(require(admin_badge_address));
-                ))
-                .recall_roles(recall_roles!(
-                    recaller => rule!(require(global_caller(component_address))); // Recallable
-                    recaller_updater => rule!(require(admin_badge_address));
-                ))
-                .create_with_no_initial_supply();
-
-            let fund_unit_resource_manager = ResourceBuilder::new_fungible(OwnerRole::Fixed(rule!(require(admin_badge_address))))
-                .metadata(metadata!(
-                    roles {
-                        metadata_setter => rule!(require(admin_badge_address));
-                        metadata_setter_updater => rule!(require(admin_badge_address));
-                        metadata_locker => rule!(require(admin_badge_address));
-                        metadata_locker_updater => rule!(require(admin_badge_address));
-                    },
-                    init {
-                        "name" => "Fund unit", updatable;
-                    }
-                ))
-                .mint_roles(mint_roles!(
-                    minter => rule!(require(global_caller(component_address)));
-                    minter_updater => rule!(require(admin_badge_address));
-                ))
-                .burn_roles(burn_roles!(
-                    burner => rule!(require(global_caller(component_address)));
-                    burner_updater => rule!(require(admin_badge_address));
-                ))
-                .create_with_no_initial_supply();
-
-            let fund_manager_badge_bucket = ResourceBuilder::new_fungible(OwnerRole::Fixed(rule!(require(admin_badge_address))))
-                .metadata(metadata!(
-                    roles {
-                        metadata_setter => rule!(require(admin_badge_address));
-                        metadata_setter_updater => rule!(require(admin_badge_address));
-                        metadata_locker => rule!(require(admin_badge_address));
-                        metadata_locker_updater => rule!(require(admin_badge_address));
                     },
                     init {
                         "name" => "Fund manager badge", updatable;
@@ -243,16 +180,85 @@ mod fund_manager {
                 ))
                 .mint_roles(mint_roles!(
                     minter => rule!(deny_all);
-                    minter_updater => rule!(require(admin_badge_address));
+                    minter_updater => rule!(deny_all);
                 ))
                 .mint_initial_supply(Decimal::ONE);
+            let fund_manager_badge_address = fund_manager_badge_bucket.resource_address();
+
+            let admin_badge_resource_manager = ResourceBuilder::new_integer_non_fungible::<Admin>(OwnerRole::None)
+                .metadata(metadata!(
+                    roles {
+                        metadata_setter => rule!(require(fund_manager_badge_address));
+                        metadata_setter_updater => rule!(require(fund_manager_badge_address));
+                        metadata_locker => rule!(require(fund_manager_badge_address));
+                        metadata_locker_updater => rule!(require(fund_manager_badge_address));
+                    },
+                    init {
+                        "name" => "Fund admin badge", locked;
+                    }
+                ))
+                .mint_roles(mint_roles!(
+                    minter => rule!(require(global_caller(component_address)));
+                    minter_updater => rule!(require(fund_manager_badge_address));
+                ))
+                .create_with_no_initial_supply();
+            let admin_badge_address = admin_badge_resource_manager.address();
+
+            let fund_unit_resource_manager = ResourceBuilder::new_fungible(OwnerRole::Fixed(rule!(require(admin_badge_address))))
+                .metadata(metadata!(
+                    roles {
+                        metadata_setter => rule!(require(admin_badge_address));
+                        metadata_setter_updater => rule!(require(fund_manager_badge_address));
+                        metadata_locker => rule!(require(fund_manager_badge_address));
+                        metadata_locker_updater => rule!(require(fund_manager_badge_address));
+                    },
+                    init {
+                        "name" => "Fund unit", updatable;
+                    }
+                ))
+                .mint_roles(mint_roles!(
+                    minter => rule!(require(global_caller(component_address)));
+                    minter_updater => rule!(require(fund_manager_badge_address));
+                ))
+                .burn_roles(burn_roles!(
+                    burner => rule!(require(global_caller(component_address)));
+                    burner_updater => rule!(require(fund_manager_badge_address));
+                ))
+                .create_with_no_initial_supply();
+
+            let bot_badge_resource_manager = ResourceBuilder::new_fungible(OwnerRole::Fixed(rule!(require(admin_badge_address))))
+                .divisibility(0)
+                .metadata(metadata!(
+                    roles {
+                        metadata_setter => rule!(require(admin_badge_address));
+                        metadata_setter_updater => rule!(require(fund_manager_badge_address));
+                        metadata_locker => rule!(require(fund_manager_badge_address));
+                        metadata_locker_updater => rule!(require(fund_manager_badge_address));
+                    },
+                    init {
+                        "name" => "Fund bot badge", locked;
+                    }
+                ))
+                .mint_roles(mint_roles!(
+                    minter => rule!(require(global_caller(component_address)));
+                    minter_updater => rule!(require(fund_manager_badge_address));
+                ))
+                .withdraw_roles(withdraw_roles!(
+                    withdrawer => rule!(deny_all); // Non transferable
+                    withdrawer_updater => rule!(require(fund_manager_badge_address));
+                ))
+                .recall_roles(recall_roles!(
+                    recaller => rule!(require(fund_manager_badge_address)); // Recallable
+                    recaller_updater => rule!(require(fund_manager_badge_address));
+                ))
+                .create_with_no_initial_supply();
 
             let account_locker = Blueprint::<AccountLocker>::instantiate(
-                OwnerRole::Updatable(rule!(require(admin_badge_address))),  // owner_role
-                rule!(require(global_caller(component_address))),           // storer_role
-                rule!(require(admin_badge_address)),                        // storer_updater_role
-                rule!(deny_all),                                            // recoverer_role
-                rule!(require(admin_badge_address)),                        // recoverer_updater_role
+                OwnerRole::Fixed(rule!(require(admin_badge_address))),  // owner_role
+                rule!(require(global_caller(component_address))),       // storer_role
+                rule!(require(admin_badge_address)),                    // storer_updater_role
+                rule!(deny_all),                                        // recoverer_role
+                rule!(require(fund_manager_badge_address)),             // recoverer_updater_role
                 None
             );
 
@@ -342,6 +348,13 @@ mod fund_manager {
             );
 
             self.validator_badge_vault.put(validator_badge);
+        }
+
+        pub fn deposit_fund_manager_badge(
+            &mut self,
+            fund_manager_badge: FungibleBucket,
+        ) {
+            self.fund_manager_badge_vault.put(fund_manager_badge);
         }
 
         fn get_admin_id(
@@ -440,6 +453,18 @@ mod fund_manager {
             );
 
             self.validator_badge_vault.take_all()
+        }
+
+        pub fn withdraw_fund_manager_badge(
+            &mut self,
+            admin_proof: Proof,
+        ) -> FungibleBucket {
+            self.check_operation_authorization(
+                self.get_admin_id(admin_proof),
+                AuthorizedOperation::WithdrawFundManagerBadge,
+            );
+
+            self.fund_manager_badge_vault.take_all()
         }
 
         pub fn update_min_authorizers(
