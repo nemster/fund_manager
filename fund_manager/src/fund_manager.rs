@@ -19,6 +19,7 @@ pub enum AuthorizedOperation {
     MintAdminBadge,
     SetOracleToUse,
     WithdrawFundManagerBadge,
+    SetWithdrawalFee,
 }
 
 #[derive(ScryptoSbor)]
@@ -117,6 +118,7 @@ mod fund_manager {
             mint_admin_badge => PUBLIC;
             set_oracle_to_use => PUBLIC;
             withdraw_fund_manager_badge => PUBLIC;
+            set_withdrawal_fee => PUBLIC;
 
             deposit_validator_badge => restrict_to: [OWNER];
             deposit_coin => restrict_to: [OWNER];
@@ -154,6 +156,7 @@ mod fund_manager {
         which_oracle_to_use: KeyValueStore<ResourceAddress, OracleType>,
         morpher_wrapper: Option<OracleInterfaceScryptoStub>,
         ociswap_wrapper: Option<OracleInterfaceScryptoStub>,
+        withdrawal_fee: Decimal,
     }
 
     impl FundManager {
@@ -282,6 +285,7 @@ mod fund_manager {
                 which_oracle_to_use: KeyValueStore::new_with_registered_type(),
                 morpher_wrapper: None,
                 ociswap_wrapper: None,
+                withdrawal_fee: dec![0.2],
             }
                 .instantiate()
                 .prepare_to_globalize(OwnerRole::Fixed(rule!(require(admin_badge_address))))
@@ -439,8 +443,13 @@ mod fund_manager {
             });
         }
 
-        pub fn fund_unit_value(&self) -> Decimal {
-            self.total_value / self.fund_unit_resource_manager.total_supply().unwrap()
+        pub fn fund_unit_value(&self) -> (Decimal, Decimal) {
+            let gross_value = self.total_value / self.fund_unit_resource_manager.total_supply().unwrap();
+
+            (
+                gross_value * (Decimal::ONE - self.withdrawal_fee), // net value
+                gross_value
+            )
         }
 
         pub fn withdraw_validator_badge(
@@ -586,7 +595,7 @@ mod fund_manager {
 
             let mut bucket = self.validator.claim_xrd(claim_nft_bucket);
 
-            let fund_unit_value = self.fund_unit_value();
+            let (_, fund_unit_gross_value) = self.fund_unit_value();
 
             let defi_protocol_name = self.find_where_to_deposit_to();
 
@@ -672,7 +681,7 @@ mod fund_manager {
 
             self.total_value += bucket_value;
 
-            self.fund_units_to_distribute = self.total_value / fund_unit_value;
+            self.fund_units_to_distribute = self.total_value / fund_unit_gross_value;
 
             self.fund_units_vault.put(
                 self.fund_unit_resource_manager.mint(self.fund_units_to_distribute + Decimal::ONE)
@@ -952,11 +961,11 @@ mod fund_manager {
                 "Wrong coin",
             );
 
-            let (defi_protocol_name, withdrawable_value) = self.find_where_to_withdraw_from(
-                fund_units_bucket.amount() * self.fund_unit_value()
-            );
+            let (fund_unit_net_value, fund_unit_gross_value) = self.fund_unit_value();
 
-            let fund_unit_value = self.fund_unit_value();
+            let (defi_protocol_name, withdrawable_value) = self.find_where_to_withdraw_from(
+                fund_units_bucket.amount() * fund_unit_net_value
+            );
 
             let defi_protocol = self.defi_protocols.get(&defi_protocol_name).unwrap();
 
@@ -1013,7 +1022,7 @@ mod fund_manager {
                 }
             }
 
-            let fund_units_to_burn = coin_bucket_value / fund_unit_value;
+            let fund_units_to_burn = coin_bucket_value / fund_unit_gross_value;
 
             Runtime::emit_event(
                 WithdrawFromFundEvent {
@@ -1044,6 +1053,24 @@ mod fund_manager {
             );
 
             self.dex = Some(dex);
+        }
+
+        pub fn set_withdrawal_fee(
+            &mut self,
+            admin_proof: Proof,
+            fee: Decimal,
+        ) {
+            self.check_operation_authorization(
+                self.get_admin_id(admin_proof),
+                AuthorizedOperation::SetWithdrawalFee,
+            );
+
+            assert!(
+                fee >= Decimal::ZERO && fee < Decimal::ONE,
+                "Fee must be a number from 0 to 1"
+            );
+
+            self.withdrawal_fee = fee;
         }
 
         pub fn set_oracle_to_use(
