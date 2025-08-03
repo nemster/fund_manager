@@ -30,8 +30,7 @@ members= [
 	"defi_protocols/flux",
 	"defi_protocols/surge",
 	"dex",
-	"oracles/morpher",
-	"oracles/ociswap",
+	"oracle",
 ]
 
 [workspace.lints.clippy]

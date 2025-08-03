@@ -17,7 +17,7 @@ pub enum AuthorizedOperation {
     DecreaseMinAuthorizers,
     IncreaseMinAuthorizers,
     MintAdminBadge,
-    SetOracleToUse,
+    SetOracleComponent,
     WithdrawFundManagerBadge,
     SetWithdrawalFee,
 }
@@ -71,20 +71,6 @@ struct MissingInfoEvent {
     defi_protocol_name: String,
 }
 
-#[derive(ScryptoSbor)]
-enum OracleType {
-    Morpher,
-    RedStone,
-    Ociswap,
-    FixedPrice {
-        price: Decimal,
-    },
-    FixedMultiplier {
-        multiplier: Decimal,
-        base_coin: ResourceAddress
-    },
-}
-
 #[blueprint]
 #[events(
     LsuUnstakeStartedEvent,
@@ -95,8 +81,6 @@ enum OracleType {
 #[types(
     String,
     DefiProtocol,
-    ResourceAddress,
-    OracleType,
 )]
 mod fund_manager {
 
@@ -116,7 +100,7 @@ mod fund_manager {
             withdraw_validator_badge => PUBLIC;
             update_min_authorizers => PUBLIC;
             mint_admin_badge => PUBLIC;
-            set_oracle_to_use => PUBLIC;
+            set_oracle_component => PUBLIC;
             withdraw_fund_manager_badge => PUBLIC;
             set_withdrawal_fee => PUBLIC;
 
@@ -153,9 +137,7 @@ mod fund_manager {
         total_value: Decimal,
         fund_units_vault: FungibleVault,
         fund_units_to_distribute: Decimal,
-        which_oracle_to_use: KeyValueStore<ResourceAddress, OracleType>,
-        morpher_wrapper: Option<OracleInterfaceScryptoStub>,
-        ociswap_wrapper: Option<OracleInterfaceScryptoStub>,
+        oracle_component: Option<OracleInterfaceScryptoStub>,
         withdrawal_fee: Decimal,
     }
 
@@ -282,9 +264,7 @@ mod fund_manager {
                 total_value: Decimal::ZERO,
                 fund_units_vault: FungibleVault::new(fund_unit_resource_manager.address()),
                 fund_units_to_distribute: Decimal::ZERO,
-                which_oracle_to_use: KeyValueStore::new_with_registered_type(),
-                morpher_wrapper: None,
-                ociswap_wrapper: None,
+                oracle_component: None,
                 withdrawal_fee: dec![0.2],
             }
                 .instantiate()
@@ -610,9 +590,9 @@ mod fund_manager {
                 None => (None, None),
             };
 
-            let bucket_value = bucket.amount() * self.coin_value(
+            let bucket_value = bucket.amount() * self.oracle_component.unwrap().get_price(
                 defi_protocol.coin,
-                &morpher_data
+                morpher_data
             );
 
             Runtime::emit_event(
@@ -773,17 +753,17 @@ mod fund_manager {
             other_coin_bucket: Option<FungibleBucket>,
             morpher_data: HashMap<ResourceAddress, (String, String)>,
         ) {
-            let mut buckets_value = coin_bucket.amount() * self.coin_value(
+            let mut buckets_value = coin_bucket.amount() * self.oracle_component.unwrap().get_price(
                 coin_bucket.resource_address(),
-                &morpher_data,
+                morpher_data.clone(),
             );
 
             if other_coin_bucket.is_some() {
                 buckets_value +=
                     other_coin_bucket.as_ref().unwrap().amount() *
-                    self.coin_value(
+                    self.oracle_component.unwrap().get_price(
                         other_coin_bucket.as_ref().unwrap().resource_address(),
-                        &morpher_data
+                        morpher_data.clone()
                     );
             }
 
@@ -822,10 +802,10 @@ mod fund_manager {
 
             let defi_protocol = self.defi_protocols.get(&defi_protocol_name).expect("Protocol not found");
 
-            let coin1_price = self.coin_value(defi_protocol.coin, &morpher_data);
+            let coin1_price = self.oracle_component.unwrap().get_price(defi_protocol.coin, morpher_data.clone());
 
             let coin2_price = match defi_protocol.other_coin {
-                Some(coin2) => Some(self.coin_value(coin2, &morpher_data)),
+                Some(coin2) => Some(self.oracle_component.unwrap().get_price(coin2, morpher_data)),
                 None => None,
             };
 
@@ -969,11 +949,11 @@ mod fund_manager {
 
             let defi_protocol = self.defi_protocols.get(&defi_protocol_name).unwrap();
 
-            let coin_value = self.coin_value(defi_protocol.coin, &morpher_data);
+            let coin_value = self.oracle_component.unwrap().get_price(defi_protocol.coin, morpher_data.clone());
 
             let (other_coin_to_coin_price_ratio, other_coin_value) = match defi_protocol.other_coin {
                 Some(other_coin) => {
-                    let other_coin_price = self.coin_value(other_coin, &morpher_data);
+                    let other_coin_price = self.oracle_component.unwrap().get_price(other_coin, morpher_data);
 
                     (Some(other_coin_price / coin_value), Some(other_coin_price))
                 },
@@ -1073,105 +1053,17 @@ mod fund_manager {
             self.withdrawal_fee = fee;
         }
 
-        pub fn set_oracle_to_use(
+        pub fn set_oracle_component(
             &mut self,
             admin_proof: Proof,
-            coin: ResourceAddress,
-            oracle: String,
-            wrapper: Option<OracleInterfaceScryptoStub>,
-            fixed_price: Option<Decimal>,
-            fixed_multiplier: Option<Decimal>,
-            base_coin: Option<ResourceAddress>,
+            component: Option<OracleInterfaceScryptoStub>,
         ) {
             self.check_operation_authorization(
                 self.get_admin_id(admin_proof),
-                AuthorizedOperation::SetOracleToUse,
+                AuthorizedOperation::SetOracleComponent,
             );
 
-            match oracle.as_ref() {
-                "morpher" => {
-                    self.which_oracle_to_use.insert(
-                        coin,
-                        OracleType::Morpher
-                    );
-
-                    if wrapper.is_some() {
-                        self.morpher_wrapper = wrapper;
-                    }
-                },
-                "ociswap" => {
-                    self.which_oracle_to_use.insert(
-                        coin,
-                        OracleType::Ociswap
-                    );
-
-                    if wrapper.is_some() {
-                        self.ociswap_wrapper = wrapper;
-                    }
-                },
-                "fixed_price" => {
-                    self.which_oracle_to_use.insert(
-                        coin,
-                        OracleType::FixedPrice {
-                            price: fixed_price.unwrap(),
-                        }
-                    );
-                },
-                "fixed_multiplier" => {
-                    self.which_oracle_to_use.insert(
-                        coin,
-                        OracleType::FixedMultiplier {
-                            multiplier: fixed_multiplier.unwrap(),
-                            base_coin: base_coin.unwrap(),
-                        }
-                    );
-                },
-                "redstone" => {
-                    // TODO
-                },
-                _ => Runtime::panic("Unknown oracle".to_string()),
-            }
-        }
-
-        fn coin_value(
-            &self,
-            coin: ResourceAddress,
-            morpher_data: &HashMap<ResourceAddress, (String, String)>,
-        ) -> Decimal {
-            match *self.which_oracle_to_use.get(&coin).expect("Unknown coin") {
-                OracleType::Morpher => {
-                    let data = morpher_data.get(&coin);
-
-                    let mut wrapper = self.morpher_wrapper.expect("Oracle wrapper component not found");
-
-                    if data.is_some() {
-                        let unwrapped_data = (*data.unwrap()).clone();
-
-                        self.fund_manager_badge_vault.authorize_with_amount(
-                            1,
-                            || wrapper.get_price(
-                                coin,
-                                Some(unwrapped_data.0),
-                                Some(unwrapped_data.1),
-                            )
-                        )
-                    } else {
-                        wrapper.get_price(coin, None, None)
-                    }
-                },
-                OracleType::Ociswap => {
-                    self.fund_manager_badge_vault.authorize_with_amount(
-                        1,
-                        || self.ociswap_wrapper
-                            .expect("Oracle wrapper component not found")
-                            .get_price(coin, None, None)
-                    )
-                },
-                OracleType::FixedPrice { price } => price,
-                OracleType::FixedMultiplier { multiplier, base_coin } => 
-                    multiplier * self.coin_value(base_coin, morpher_data),
-                OracleType::RedStone => Runtime::panic("TODO".to_string()),
-            }
+            self.oracle_component = component;
         }
     }
 }

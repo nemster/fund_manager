@@ -47,8 +47,7 @@ define_interface! {
         fn get_price(
             &mut self,
             coin_address: ResourceAddress,
-            message: Option<String>,
-            signature: Option<String>,
+            morpher_data: HashMap<ResourceAddress, (String, String)>,
         ) -> Decimal;
     }
 }

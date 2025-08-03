@@ -1,5 +1,5 @@
 [package]
-name = "ociswap_oracle_wrapper"
+name = "multi_oracle_wrapper"
 version = "1.0.0"
 edition = "2021"
 
@@ -7,10 +7,11 @@ edition = "2021"
 scrypto = { workspace = true }
 radix-common = { workspace = true }
 radix-engine-interface = { workspace = true }
-scrypto-interface = { path = "../../scrypto-interface" }
+scrypto-interface = { path = "../scrypto-interface" }
 
 [features]
 default = []
 
 [lib]
 crate-type = ["cdylib", "lib"]
+
