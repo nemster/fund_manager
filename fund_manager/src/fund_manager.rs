@@ -42,12 +42,6 @@ struct DefiProtocol {
                                          // liquidity to a Dex
 }
 
-#[derive(ScryptoSbor)]
-pub struct DefiProtocolVariableInfo {
-    value: Decimal,
-    desired_percentage: u8,
-}
-
 #[derive(ScryptoSbor, ScryptoEvent)]
 struct LsuUnstakeStartedEvent {
     lsu_amount: Decimal,
@@ -58,6 +52,7 @@ struct LsuUnstakeStartedEvent {
 struct LsuUnstakeCompletedEvent {
     xrd_amount: Decimal,
     defi_protocol_name: String,
+    fund_units_to_distribute: Decimal,
 }
 
 #[derive(ScryptoSbor, ScryptoEvent)]
@@ -117,6 +112,7 @@ mod fund_manager {
 
             withdraw => PUBLIC;
             fund_unit_value => PUBLIC;
+            //TOOO : fund_details => PUBLIC;
         }
     }
 
@@ -528,6 +524,11 @@ mod fund_manager {
 
             let lsu_amount = lsu_bucket.amount();
 
+            assert!(
+                lsu_amount > Decimal::ZERO,
+                "No LSU available"
+            );
+
             let claim_nft_bucket = self.validator.unstake(lsu_bucket);
 
             Runtime::emit_event(
@@ -561,7 +562,7 @@ mod fund_manager {
 
         pub fn finish_unstake(
             &mut self,
-            claim_nft_id: u64,
+            claim_nft_id: String,
             morpher_data: HashMap<ResourceAddress, (String, String)>,
         ) {
             assert!(
@@ -570,10 +571,12 @@ mod fund_manager {
             );
 
             let claim_nft_bucket = self.claim_nft_vault.take_non_fungible(
-                &NonFungibleLocalId::integer(claim_nft_id)
+                &NonFungibleLocalId::String(StringNonFungibleLocalId::try_from(claim_nft_id).unwrap())
             );
 
             let mut bucket = self.validator.claim_xrd(claim_nft_bucket);
+
+            let xrd_amount = bucket.amount();
 
             let (_, fund_unit_gross_value) = self.fund_unit_value();
 
@@ -590,16 +593,9 @@ mod fund_manager {
                 None => (None, None),
             };
 
-            let bucket_value = bucket.amount() * self.oracle_component.unwrap().get_price(
+            let bucket_value = xrd_amount * self.oracle_component.unwrap().get_price(
                 defi_protocol.coin,
                 morpher_data
-            );
-
-            Runtime::emit_event(
-                LsuUnstakeCompletedEvent {
-                    xrd_amount: bucket.amount(),
-                    defi_protocol_name: defi_protocol_name.clone(),
-                }
             );
 
             if defi_protocol.coin == XRD {
@@ -665,6 +661,14 @@ mod fund_manager {
 
             self.fund_units_vault.put(
                 self.fund_unit_resource_manager.mint(self.fund_units_to_distribute + Decimal::ONE)
+            );
+
+            Runtime::emit_event(
+                LsuUnstakeCompletedEvent {
+                    xrd_amount: xrd_amount,
+                    defi_protocol_name: defi_protocol_name,
+                    fund_units_to_distribute: self.fund_units_to_distribute,
+                }
             );
         }
 
@@ -861,22 +865,31 @@ mod fund_manager {
 
         pub fn update_defi_protocols_info(
             &mut self,
-            defi_protocols_info: HashMap<String, DefiProtocolVariableInfo>,
+            defi_protocols_value: HashMap<String, Decimal>,
+            defi_protocols_desired_percentage: HashMap<String, u8>,
         ) {
-            let mut total_value = Decimal::ZERO;
+            let mut value_change = Decimal::ZERO;
 
-            for (name, defi_protocol_info) in defi_protocols_info.iter() {
+            for (name, value) in defi_protocols_value.iter() {
                 let mut defi_protocol = self.defi_protocols.get_mut(&name).expect("Not found");
 
-                defi_protocol.value = defi_protocol_info.value; // TODO: are we going to blindly
-                                                                // trust the bot?
+                value_change += *value - defi_protocol.value;
 
-                defi_protocol.desired_percentage = defi_protocol_info.desired_percentage;
-
-                total_value += defi_protocol_info.value;
+                defi_protocol.value = *value;
             }
 
-            self.total_value = total_value;
+            self.total_value += value_change;
+
+            for (name, percentage) in defi_protocols_desired_percentage.iter() {
+                assert!(
+                    *percentage <= 100,
+                    "Pergentage out of 0 -100 range"
+                );
+
+                let mut defi_protocol = self.defi_protocols.get_mut(&name).expect("Not found");
+
+                defi_protocol.desired_percentage = *percentage;
+            }
         }
 
         fn find_where_to_withdraw_from(
