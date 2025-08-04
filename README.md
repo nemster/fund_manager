@@ -6,8 +6,8 @@ Validator stakers are rewarded with fund units that represent a share of the fun
 This software is composed of multiple blueprints:  
 - `FundManager` is the main blueprint, it must be instatiated first.  
 - `MultiDexWrapper` is a consistent interface towards pools from Ociswap, Caviarnine and DefiPlaza.  
-- `MultiOracleWrapper` is a unique interface towards Morpher, Ociswap and two simple internal oracles.
-It also defines the `DefiProtocol` interface that can be used to talk to different protocols; the current implementation of the interface are:  
+- `MultiOracleWrapper` is a unique interface towards Morpher, Ociswap and two simple internal oracles.  
+The software also contains the `DefiProtocol` interface that can be used to talk to different protocols; the current implementation of the interface are:  
 - `FluxWrapper`  for managing liquidity in the Flux protocol.  
 - `OciswapLpPool2Wrapper` for managing liquidity in the newest Ociswap pools.  
 - `SurgeWrapper` for managing liquidity provided to Surge.  
@@ -17,7 +17,7 @@ It also defines the `DefiProtocol` interface that can be used to talk to differe
 ## Actors and badges
 
 ### Unauthenticated user
-A user can only exchange his fund units for whatever coin the contract will give him (or ask to swap it for a specific coin).  
+A user can exchange his fund units for whatever coin the contract will give him (or ask to swap it for a specific coin).  
 The exchanged fund units are burned.  
 The withdraw happens taking funds from only one DeFi protocol.  
 If there's not enough liquidity in any protocol the unused fund units will be returned to the user; the user can execute new withdrawals to convert them too.  
@@ -25,13 +25,13 @@ A withdrawal fee makes everyone else a bit richer when someone withdraws: I actu
 
 ### Bot
 The bot badge allows to perform everyday's operations such as unstaking from the Validator and distributing freshly minted fund units.  
-The distribution happend in a "push" way (an AccountLocker is used) and follows a snapshot happened 5 weeks before so everyone gets the exact value of the XRD he contributed to the Validator rewards.  
-This badge will be held by a backend so that everything happens automatically without human intervention.  
+The distribution happens in a "push" way (an AccountLocker is used) and follows a snapshot happened 5 weeks before so everyone gets the exact value of the XRD he contributed to the Validator rewards.  
+This badge can be held by a backend so that everything happens automatically without human intervention.  
 The bot badge will also tell the component about how we want to share the funds among the different DeFi protocols; changing this setting will not directly move funds from one protocol to another, it will influence the future decisions about which protocol to withdraw from and which protocol to deposit to the future unstaked XRD.  
 
 ### Admin
-There can be multiple admin badges; these allow to set metadata for the componet and the coins.  
-A single admin can't steal funds or alter the componet functionality.  
+There can be multiple admin badges; these allow to set metadata for the component and the coins.  
+A single admin can't steal funds or alter the component functionality.  
 There's a sort of multisignature system through which some admins can allow other admins to perform extraordinary tasks:  
 - Withdraw the Validator badge to perform operations such as node maintenance.  
 - Add/remove/replace DeFi protocol adapters, this will allow to fix bugs and also support eventual future DeFi protocols will appear.  
@@ -40,6 +40,7 @@ There's a sort of multisignature system through which some admins can allow othe
 - Replace the oracle adapter to fix bugs and support any future oracle will appear.  
 - Set the withdrawal fee percentage.  
 - Withdraw the fund manager badge.  
+The admin badge is not fungible: one admin authorizes one single admin to perform one single operation.  
 
 ### Fund manager
 There will be just one fund manager badge and will be locked in the main component.  
@@ -52,7 +53,7 @@ Multiple admins can agree to withdraw it in an emergency situation.
 Exchange fund units for any coin in the fund or a specific coin.  
 The method emits the `WithdrawFromFundEvent` that contains:  
 - the amount of fund units burnt  
-- the name of the DeFi protocols where the withdraw happened  
+- the name of the DeFi protocols the withdraw happened from  
 
 ```
 CALL_METHOD
@@ -99,6 +100,19 @@ A preview of the transaction is enough to get the values; it is not necessary to
 CALL_METHOD
     Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
     "fund_unit_value"
+;
+```
+
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+
+### fund\_details
+Returns an HashMap containing the amount invested in each DeFi protocol.
+A preview of the transaction is enough to get the values; it is not necessary to consume fees actually executing it.  
+
+```
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "fund_details"
 ;
 ```
 

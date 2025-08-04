@@ -112,7 +112,7 @@ mod fund_manager {
 
             withdraw => PUBLIC;
             fund_unit_value => PUBLIC;
-            //TOOO : fund_details => PUBLIC;
+            fund_details => PUBLIC;
         }
     }
 
@@ -426,6 +426,18 @@ mod fund_manager {
                 gross_value * (Decimal::ONE - self.withdrawal_fee), // net value
                 gross_value
             )
+        }
+
+        pub fn fund_details(&self) -> HashMap<String, Decimal> {
+            let mut protocols_value = HashMap::new();
+
+            for name in self.defi_protocols_list.iter() {
+                let defi_protocol = self.defi_protocols.get(&name).unwrap();
+
+                protocols_value.insert(name.clone(), defi_protocol.value);
+            }
+
+            protocols_value
         }
 
         pub fn withdraw_validator_badge(
