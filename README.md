@@ -54,6 +54,7 @@ Exchange fund units for any coin in the fund or a specific coin.
 The method emits the `WithdrawFromFundEvent` that contains:  
 - the amount of fund units burnt  
 - the name of the DeFi protocols the withdraw happened from  
+This method returns one or two buckets of coins used by a DeFi protocol or the requested coin.  
 
 ```
 CALL_METHOD
@@ -106,7 +107,7 @@ CALL_METHOD
 `<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
 
 ### fund\_details
-Returns an HashMap containing the amount invested in each DeFi protocol.
+Returns an HashMap containing the amount invested in each DeFi protocol.  
 A preview of the transaction is enough to get the values; it is not necessary to consume fees actually executing it.  
 
 ```
@@ -136,7 +137,7 @@ CALL_METHOD
 
 `<ORACLE_COMPONENT_ADDRESS>` the address of the oracle wrapper component.  
 `<COIN_RESOURCE_ADDRESS>` the resource address of the coin the user wants to know the value of.  
-`<MORPHER_MESSAGE>` the message for the Morpher oracle regarding `<COIN_RESOURCE_ADDRESS>`. The Map can be empty if the price is provided by a differnt oracle from Morpher.  
+`<MORPHER_MESSAGE>` the message for the Morpher oracle regarding `<COIN_RESOURCE_ADDRESS>`. The Map can be empty if the price is provided by a different oracle from Morpher.  
 `<MORPHER_SIGNATURE>` the signature of `<MORPHER_MESSAGE>`.  
 
 ## Bot callable methods
@@ -159,7 +160,7 @@ CALL_METHOD
 ```
 
 `<ACCOUNT>` is the bot account.  
-`<BOT_BADGE>` is the badge held by the bot account.  
+`<BOT_BADGE>` is the resource address of the badge held by the bot account.  
 `<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
 `<AMOUNT>` the amount of LSU to unlock.  
 
@@ -183,7 +184,7 @@ CALL_METHOD
 ```
 
 `<ACCOUNT>` is the bot account.  
-`<BOT_BADGE>` is the badge held by the bot account.  
+`<BOT_BADGE>` is the resource address of the badge held by the bot account.  
 `<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
 
 ### finish\_unstake
@@ -213,7 +214,7 @@ CALL_METHOD
 ```
 
 `<ACCOUNT>` is the bot account.  
-`<BOT_BADGE>` is the badge held by the bot account.  
+`<BOT_BADGE>` is the resource address of the badge held by the bot account.  
 `<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
 `<CLAIM_NFT_ID>` the NonFungibleId of the Claim NFT to complete the unstake.  
 `<COIN_RESOURCE_ADDRESS>` the resource address of a coin that is listed on the Morpher oracle.  
@@ -243,7 +244,7 @@ CALL_METHOD
 ```
 
 `<ACCOUNT>` is the bot account.  
-`<BOT_BADGE>` is the badge held by the bot account.  
+`<BOT_BADGE>` is the resource address of the badge held by the bot account.  
 `<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
 `<RECIPIENT_ADDRESS>` the account address of a recipient of the airdrop.  
 `<AMOUNT>` the number of fund units to send to `<RECIPIENT_ADDRESS>`.  
@@ -270,10 +271,11 @@ CALL_METHOD
         Address("<PROTOCOL_NAME>") => <DESIRED_PERCENTAGE>u8,
         ...
     )
+;
 ```
 
 `<ACCOUNT>` is the bot account.  
-`<BOT_BADGE>` is the badge held by the bot account.  
+`<BOT_BADGE>` is the resource address of the badge held by the bot account.  
 `<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
 `<PROTOCOL_NAME>` is one of the DeFi protocols whose information need to be updates.  
 `<VALUE>` the dollar value of the investment in `<PROTOCOL_NAME>`.  
@@ -302,14 +304,450 @@ CALL_METHOD
 ```
 
 `<ACCOUNT>` is the bot account.  
-`<BOT_BADGE>` is the badge held by the bot account.  
+`<BOT_BADGE>` is the resource address of the badge held by the bot account.  
 `<ORACLE_COMPONENT_ADDRESS>` the address of the oracle component.  
 `<COIN_RESOURCE_ADDRESS>` the resource address of the coin whose price information needs to be set.  
 `<PRICE>` dollar value of the coin for the FixedPrice oracle. In case of a FixedMultiplier oracle the whole line should be `None`.  
 `<PRICE_MULTIPLIER>` multiplier to apply to the price of the reference coin for the FixedMultiplier oracle. In case of a FixedPrice oracle the whole line should be `None`.  
 
 ## Admin callable methods
-TODO...  
+
+### authorize\_admin\_operation
+Allow another admin to perform a restricted operation.  
+The authorization persists until the operation is performed or two days has passed (timeout).  
+Allowers must agree, not just on the operation to perform, but on most of the parameter to pass to it too. As en example, for `mint_admin_badge` both the authorizers and the admin that executes the operation must pass the same `<RECEIVER_ACCOUNT>`.  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "authorize_admin_operation"
+    Proof("admin_proof")
+    <ADMIN_BADGE_ID>u8
+    <AUTHORIZED_OPERATION>u8
+    Some("<PROTOCOL_NAME>")
+    Some(Decimal("<WITHDRAWAL_FEE>"))
+    Some(Address("<RECEIVER_ACCOUNT>"))
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+`<ADMIN_BADGE_ID>` is the numeric identifier of the admin badge to be allowed (obviously must be different from `<MY_ADMIN_BADGE_ID>`).   
+`<AUTHORIZED_OPERATION>` a number representing the operation to authorize:  
+- 0 -> `withdraw_validator_badge`  
+- 1 -> `add_defi_protocol`  
+- 2 -> `remove_defi_protocol`  
+- 3 -> `set_dex_component`  
+- 4 -> `decrease_min_authorizers`  
+- 5 -> `increase_min_authorizers`  
+- 6 -> `mint_admin_badge`  
+- 7 -> `set_oracle_component`  
+- 8 -> `withdraw_fund_manager_badge`  
+- 9 -> `set_withdrawal_fee`  
+- 10 -> `mint_bot_badge`  
+`<PROTOCOL_NAME>` is the name of the protocol to add/remove for `add_defi_protocol` and `remove_defi_protocol` operations, `None` for all the other operations.  
+`<WITHDRAWAL_FEE>` is the new withdrawal fee percentage to set for `set_withdrawal_fee` operation, `None` for all the other operations.  
+`<RECEIVER_ACCOUNT>` is the account address that will receive the badge for the `mint_admin_badge` and `mint_bot_badge` operations, `None` for all the other operations.  
+
+### withdraw\_validator\_badge
+The Validator badge is usually deposited in the FundManager component, this method lets an authorized admin withdraw it.  
+Returns a bucket containing the Validator badge.  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "withdraw_validator_badge"
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "deposit_batch"
+    Expression("ENTIRE_WORKTOP")
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+
+### deposit\_validator\_badge
+Put the Validator badge back in the FundManager component.  
+This operation does not need authorization by a different admin.  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "withdraw_non_fungibles"
+    Address("<VALIDATOR_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<VALIDATOR_BADGE_ID>"))
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("<VALIDATOR_BADGE>")
+    Bucket("validator_badge")
+;
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "deposit_validator_badge"
+    Bucket("validator_badge")
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<VALIDATOR_BADGE>` is the resource address of Validator badges.  
+`<VALIDATOR_BADGE_ID>` is the unique identifier of a Validator badge.  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+
+### add\_defi\_protocol
+This method allows an authorized admin to add a new DeFi protocol to the ones managed by the FundManager.  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "add_defi_protocol"
+    Proof("admin_proof")
+    "<PROTOCOL_NAME>"
+    Address("<COIN_ADDRESS>")
+    Address("<TOKEN_ADDRESS>")
+    Some(Address("<OTHER_COIN_ADDRESS>"))
+    <DESIRED_PERCENTAGE>u8
+    Address("<COMPONENT_ADDRESS>")
+    Some(Address("<MORPHER_COIN_ADDRESS>"))
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+`<PROTOCOL_NAME>` is a conventional name that will be used to identify this protocol. Is a protocol with such a name already exists the new one will replace the existing one and take all of the liquidity from it (so `<TOKEN_ADDRESS>` must be the same).  
+`<COIN_ADDRESS>` the resource address of the coin that will be deposited in this protocol.  
+`<TOKEN_ADDRESS>` the resource address of the receipt that the protocol returns when a deposit operation happens. It can be both a fungible (WEFT) or a non fungible (Root Finance).  
+`<OTHER_COIN_ADDRESS>` if the protocol allows depositing more two coins togheter (as an example a dex pool), this is the resource address of the second coin to be deposited. Otherwise the line must be `None`.  
+`<DESIRED_PERCENTAGE>` the percentage value share of the fund that must be deposited in this protocol.  
+`<COMPONENT_ADDRESS>` the address of the wrapper component implementing the `DefiProtocol` interface for this protocol.  
+`<MORPHER_COIN_ADDRESS>` some protocols (Flux) need data from the Morpher oracle when performing operations on them. This is the resource address of the coin whose data are needed by the protocol. If this is not the case the line must be `None`.  
+
+### remove\_defi\_protocol
+This method allows an authorized admin to remove a DeFi protocol wrapper from the FundManager.  
+Warning: the admin will receive all of the liquidity (tokens) in the protocol so it's advisable to set the desired percentage to zero and let users withdraw the liquidity before authorizing this operation.  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "remove_defi_protocol"
+    Proof("admin_proof")
+    "<PROTOCOL_NAME>"
+;
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "deposit_batch"
+    Expression("ENTIRE_WORKTOP")
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+`<PROTOCOL_NAME>` is the name of the protocol to remove.  
+
+### set\_dex\_component
+This method allows an authorized admin to replace the dex component used by FundManager.  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "set_dex_component"
+    Proof("admin_proof")
+    Address("<DEX_COMPONENT>")
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+`<DEX_COMPONENT>` the address of the new dex component to use.  
+
+### decrease\_min\_authorizers
+This method decreases by one the minimum number of admins required to authorize an admin to perform a restricted operation.  
+Warning: reducing this number to zero will make authorizations no longer required.  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "decrease_min_authorizers"
+    Proof("admin_proof")
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+
+### increase\_min\_authorizers
+This method increases by one the minimum number of admins required to authorize an admin to perform a restricted operation.  
+It is not possible to increase this number above the number of existing admin badges - 1.  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "increase_min_authorizers"
+    Proof("admin_proof")
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+
+### mint\_admin\_badge
+Mints a new admin badge and sends it to the specified account.  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "mint_admin_badge"
+    Proof("admin_proof")
+    Address("<RECEIVER_ACCOUNT>")
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+`<RECEIVER_ACCOUNT>` is the account address that will receive the admin badge.  
+
+### mint\_bot\_badge
+Mints a new bot badge and sends it to the specified account.  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "mint_bot_badge"
+    Proof("admin_proof")
+    Address("<RECEIVER_ACCOUNT>")
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+`<RECEIVER_ACCOUNT>` is the account address that will receive the bot badge.  
+
+### set\_oracle\_component
+Replaces the current oracle componet with the specified one.  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "set_oracle_component"
+    Proof("admin_proof")
+    Address("<COMPONENT_ADDRESS>")
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+`<COMPONENT_ADDRESS>` the address of the new oracle component; it must implement the `Oracle` interface.  
+
+### withdraw\_fund\_manager\_badge
+Withdraws the fund manager badge from the FundManager component.  
+Warning: the admin that receives the fund manager badge can do almost anything, included stealing all funds. Moreover the FundManager component will not work without this badge. Authorize this operation only in case of emergency.  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "withdraw_fund_manager_badge"
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "deposit_batch"
+    Expression("ENTIRE_WORKTOP")
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+
+### deposit\_fund\_manager\_badge
+Puts the fund manager badge back to its place in the FundManager component.  
+
+``` 
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "withdraw"
+    Address("<FUND_MANAGER_BADGE>")
+    Decimal("1")
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("<FUND_MANAGER_BADGE>")
+    Bucket("fund_manager_badge")
+;   
+CALL_METHOD
+    Address("<ACCOUNT>") 
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "deposit_fund_manager_badge"
+    Bucket("fund_manager_badge")
+;
+```
+
+`<ACCOUNT>` is the admin account.
+`<FUND_MANAGER_BADGE>` is the resource address of the fund manager badge.   
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+
+### set\_withdrawal\_fee
+Updates the percentage fee that users leave in the protocol during a withdraw operation.  
+
+``` 
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof") 
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "set_withdrawal_fee"
+    Proof("admin_proof")
+    Decimal("<FEE>")
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+`<FEE>` is the percentage fee to set.  
 
 ## Disclaimer
 Untested software, for educational purposes only, no warranty.  

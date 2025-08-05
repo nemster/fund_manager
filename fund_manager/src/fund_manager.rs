@@ -2,24 +2,26 @@ use scrypto::prelude::*;
 use crate::common::*;
 
 static AUTHORIZATION_TIMEOUT: i64 = 172800; // Two days
-static MAX_VECTOR_SIZE: usize = 20;
+static MAX_VECTOR_SIZE: usize = 30;
 
 #[derive(ScryptoSbor, NonFungibleData)]
 struct Admin {
 }
 
 #[derive(ScryptoSbor, PartialEq)]
+#[repr(u8)]
 pub enum AuthorizedOperation {
-    WithdrawValidatorBadge,
-    AddDefiProtocol,
-    RemoveDefiProtocol,
-    SetDexComponent,
-    DecreaseMinAuthorizers,
-    IncreaseMinAuthorizers,
-    MintAdminBadge,
-    SetOracleComponent,
-    WithdrawFundManagerBadge,
-    SetWithdrawalFee,
+    WithdrawValidatorBadge      = 0,
+    AddDefiProtocol             = 1,
+    RemoveDefiProtocol          = 2,
+    SetDexComponent             = 3,
+    DecreaseMinAuthorizers      = 4,
+    IncreaseMinAuthorizers      = 5,
+    MintAdminBadge              = 6,
+    SetOracleComponent          = 7,
+    WithdrawFundManagerBadge    = 8,
+    SetWithdrawalFee            = 9,
+    MintBotBadge                = 10,
 }
 
 #[derive(ScryptoSbor)]
@@ -28,6 +30,9 @@ struct Authorization {
     allower_admin_id: u8,
     allowed_admin_id: u8,
     authorized_operation: AuthorizedOperation,
+    protocol_name: Option<String>,
+    withdrawal_fee: Option<Decimal>,
+    account_address: Option<Global<Account>>,
 }
 
 #[derive(ScryptoSbor)]
@@ -85,20 +90,22 @@ mod fund_manager {
         },
         methods {
             init => PUBLIC;
-            mint_bot_badge => restrict_to: [OWNER];
 
             // Multisig operations
-            authorize_admin_operation => PUBLIC;
             add_defi_protocol => PUBLIC;
             remove_defi_protocol => PUBLIC;
             set_dex_component => PUBLIC;
             withdraw_validator_badge => PUBLIC;
-            update_min_authorizers => PUBLIC;
+            decrease_min_authorizers => PUBLIC;
+            increase_min_authorizers => PUBLIC;
             mint_admin_badge => PUBLIC;
             set_oracle_component => PUBLIC;
             withdraw_fund_manager_badge => PUBLIC;
             set_withdrawal_fee => PUBLIC;
+            mint_bot_badge => PUBLIC;
 
+            // Single admin operations
+            authorize_admin_operation => PUBLIC;
             deposit_validator_badge => restrict_to: [OWNER];
             deposit_coin => restrict_to: [OWNER];
             deposit_protocol_token => restrict_to: [OWNER];
@@ -135,6 +142,7 @@ mod fund_manager {
         fund_units_to_distribute: Decimal,
         oracle_component: Option<OracleInterfaceScryptoStub>,
         withdrawal_fee: Decimal,
+        number_of_admins: u8,
     }
 
     impl FundManager {
@@ -181,6 +189,10 @@ mod fund_manager {
                 .mint_roles(mint_roles!(
                     minter => rule!(require(global_caller(component_address)));
                     minter_updater => rule!(require(fund_manager_badge_address));
+                ))
+                .recall_roles(recall_roles!(
+                    recaller => rule!(require(fund_manager_badge_address)); // Recallable
+                    recaller_updater => rule!(require(fund_manager_badge_address));
                 ))
                 .create_with_no_initial_supply();
             let admin_badge_address = admin_badge_resource_manager.address();
@@ -262,6 +274,7 @@ mod fund_manager {
                 fund_units_to_distribute: Decimal::ZERO,
                 oracle_component: None,
                 withdrawal_fee: dec![0.2],
+                number_of_admins: 0,
             }
                 .instantiate()
                 .prepare_to_globalize(OwnerRole::Fixed(rule!(require(admin_badge_address))))
@@ -311,11 +324,31 @@ mod fund_manager {
                 self.fund_unit_resource_manager.mint(fund_units_initial_supply)
             );
             
+            self.number_of_admins = number_of_admin_badges;
+
             admin_badges_bucket
         }
 
-        pub fn mint_bot_badge(&self) -> FungibleBucket {
-            self.bot_badge_resource_manager.mint(Decimal::ONE)
+        pub fn mint_bot_badge(
+            &mut self,
+            admin_proof: Proof,
+            new_bot_account: Global<Account>,
+        ) {
+            self.check_operation_authorization(
+                self.get_admin_id(admin_proof),
+                AuthorizedOperation::MintBotBadge,
+                None,
+                None,
+                Some(new_bot_account),
+            );
+
+            let bot_badge = self.bot_badge_resource_manager.mint(Decimal::ONE);
+
+            self.account_locker.store(
+                new_bot_account,
+                bot_badge.into(),
+                true,
+            );
         }
 
         pub fn deposit_validator_badge(
@@ -370,6 +403,9 @@ mod fund_manager {
             admin_proof: Proof,
             allowed_admin_id: u8,
             authorized_operation: AuthorizedOperation,
+            protocol_name: Option<String>,
+            withdrawal_fee: Option<Decimal>,
+            account_address: Option<Global<Account>>,
         ) {
             let allower_admin_id = self.get_admin_id(admin_proof);
 
@@ -391,6 +427,9 @@ mod fund_manager {
                     allower_admin_id: allower_admin_id,
                     allowed_admin_id: allowed_admin_id,
                     authorized_operation: authorized_operation,
+                    protocol_name: protocol_name,
+                    withdrawal_fee: withdrawal_fee,
+                    account_address: account_address,
                 }
             );
         }
@@ -399,13 +438,20 @@ mod fund_manager {
             &mut self,
             admin_id: u8,
             authorized_operation: AuthorizedOperation,
+            protocol_name: Option<String>,
+            withdrawal_fee: Option<Decimal>,
+            account_address: Option<Global<Account>>,
         ) {
             self.purge_authorization_vector();
 
             let authorizers_number = self.authorization_vector
                 .iter()
                 .filter(|&authorization| {
-                    authorization.allowed_admin_id == admin_id && authorization.authorized_operation == authorized_operation
+                    authorization.allowed_admin_id == admin_id &&
+                        authorization.authorized_operation == authorized_operation &&
+                        authorization.protocol_name == protocol_name &&
+                        authorization.withdrawal_fee == withdrawal_fee &&
+                        authorization.account_address == account_address
                 })
                 .count();
 
@@ -447,6 +493,9 @@ mod fund_manager {
             self.check_operation_authorization(
                 self.get_admin_id(admin_proof),
                 AuthorizedOperation::WithdrawValidatorBadge,
+                None,
+                None,
+                None,
             );
 
             self.validator_badge_vault.take_all()
@@ -459,57 +508,74 @@ mod fund_manager {
             self.check_operation_authorization(
                 self.get_admin_id(admin_proof),
                 AuthorizedOperation::WithdrawFundManagerBadge,
+                None,
+                None,
+                None,
             );
 
             self.fund_manager_badge_vault.take_all()
         }
 
-        pub fn update_min_authorizers(
+        pub fn increase_min_authorizers(
             &mut self,
             admin_proof: Proof,
-            min_authorizers: u8,
         ) {
-            let admin_id = self.get_admin_id(admin_proof);
+            self.check_operation_authorization(
+                self.get_admin_id(admin_proof),
+                AuthorizedOperation::IncreaseMinAuthorizers,
+                None,
+                None,
+                None,
+            );
 
-            if min_authorizers == self.min_authorizers + 1 {
-                self.check_operation_authorization(
-                    admin_id,
-                    AuthorizedOperation::IncreaseMinAuthorizers,
-                );
+            self.min_authorizers += 1;
 
-                self.min_authorizers += 1;
-            } else if min_authorizers + 1 == self.min_authorizers {
-                self.check_operation_authorization(
-                    admin_id,
-                    AuthorizedOperation::DecreaseMinAuthorizers,
-                );
+            assert!(
+                self.min_authorizers < self.number_of_admins,
+                "The minimum number of authorizers must be smaller than the number of badges",
+            );
+        }
 
-                self.min_authorizers -= 1;
-            } else {
-                Runtime::panic("Operation not allowed".to_string());
-            }
+        pub fn decrease_min_authorizers(
+            &mut self,
+            admin_proof: Proof,
+        ) {
+            self.check_operation_authorization(
+                self.get_admin_id(admin_proof),
+                AuthorizedOperation::DecreaseMinAuthorizers,
+                None,
+                None,
+                None,
+            );
+
+            self.min_authorizers -= 1;
         }
 
         pub fn mint_admin_badge(
             &mut self,
             admin_proof: Proof,
-        ) -> NonFungibleBucket {
+            new_admin_account: Global<Account>,
+        ) {
             self.check_operation_authorization(
                 self.get_admin_id(admin_proof),
                 AuthorizedOperation::MintAdminBadge,
+                None,
+                None,
+                Some(new_admin_account),
             );
 
-            // TODO: Any intelligent way to convert a Decimal into an integer?
-            let mut n: u64 = 1;
-            while Decimal::from(n) < self.admin_badge_resource_manager.total_supply().unwrap() {
-                n += 1;
-            }
-            self.admin_badge_resource_manager.mint_non_fungible(
-                &NonFungibleLocalId::integer(
-                    n + 1
-                ),
+            self.number_of_admins += 1;
+
+            let admin_badge = self.admin_badge_resource_manager.mint_non_fungible(
+                &NonFungibleLocalId::integer(self.number_of_admins.into()),
                 Admin {},
-            )
+            );
+
+            self.account_locker.store(
+                new_admin_account,
+                admin_badge.into(),
+                true,
+            );
         }
 
         pub fn start_unlock_owner_stake_units(
@@ -712,8 +778,8 @@ mod fund_manager {
 
         pub fn add_defi_protocol(
             &mut self,
-            name: String,
             admin_proof: Proof,
+            name: String,
             coin: ResourceAddress,
             protocol_token: ResourceAddress,
             other_coin: Option<ResourceAddress>,
@@ -724,11 +790,19 @@ mod fund_manager {
             self.check_operation_authorization(
                 self.get_admin_id(admin_proof),
                 AuthorizedOperation::AddDefiProtocol,
+                Some(name.clone()),
+                None,
+                None,
             );
 
             let mut old_defi_protocol: Option<DefiProtocol> = None;
 
             if self.defi_protocols_list.iter().position(|n| *n == name).is_none() {
+                assert!(
+                    self.defi_protocols_list.len() < MAX_VECTOR_SIZE,
+                    "Protocols list is getting too big",
+                );
+
                 self.defi_protocols_list.push(name.clone());
             } else {
                 old_defi_protocol= self.defi_protocols.remove(&name);
@@ -860,6 +934,9 @@ mod fund_manager {
             self.check_operation_authorization(
                 self.get_admin_id(admin_proof),
                 AuthorizedOperation::RemoveDefiProtocol,
+                Some(name.clone()),
+                None,
+                None,
             );
 
             self.defi_protocols_list.retain(|n| { *n != name });
@@ -1055,6 +1132,9 @@ mod fund_manager {
             self.check_operation_authorization(
                 self.get_admin_id(admin_proof),
                 AuthorizedOperation::SetDexComponent,
+                None,
+                None,
+                None,
             );
 
             self.dex = Some(dex);
@@ -1068,6 +1148,9 @@ mod fund_manager {
             self.check_operation_authorization(
                 self.get_admin_id(admin_proof),
                 AuthorizedOperation::SetWithdrawalFee,
+                None,
+                Some(fee),
+                None,
             );
 
             assert!(
@@ -1081,14 +1164,17 @@ mod fund_manager {
         pub fn set_oracle_component(
             &mut self,
             admin_proof: Proof,
-            component: Option<OracleInterfaceScryptoStub>,
+            component: OracleInterfaceScryptoStub,
         ) {
             self.check_operation_authorization(
                 self.get_admin_id(admin_proof),
                 AuthorizedOperation::SetOracleComponent,
+                None,
+                None,
+                None,
             );
 
-            self.oracle_component = component;
+            self.oracle_component = Some(component);
         }
     }
 }
