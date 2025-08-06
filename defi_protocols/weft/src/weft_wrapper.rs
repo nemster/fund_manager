@@ -30,9 +30,9 @@ mod weft_wrapper {
 
     // Blueprint that handles WEFT Finance incentives
     extern_blueprint! {
-        "", //TODO
+        "package_tdx_2_1p4qm5qpdj4tt3fr6cl0cqsmmk4h8ag2y0450zzvvzaqyyrf6a9e4p7",
         WeftTokenClaimer {
-            fn claim(&mut self, incentice_type: u8, amount: Decimal, proof: Proof) -> Bucket;
+            fn claim(&mut self, claim_type: u8, amount: Decimal, proof: Proof) -> Bucket;
         }
     }
 
