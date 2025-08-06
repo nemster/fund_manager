@@ -22,6 +22,7 @@ pub enum AuthorizedOperation {
     WithdrawFundManagerBadge    = 8,
     SetWithdrawalFee            = 9,
     MintBotBadge                = 10,
+    SetBuybackFund              = 11,
 }
 
 #[derive(ScryptoSbor)]
@@ -31,7 +32,7 @@ struct Authorization {
     allowed_admin_id: u8,
     authorized_operation: AuthorizedOperation,
     protocol_name: Option<String>,
-    withdrawal_fee: Option<Decimal>,
+    percentage: Option<u8>,
     account_address: Option<Global<Account>>,
 }
 
@@ -103,6 +104,7 @@ mod fund_manager {
             withdraw_fund_manager_badge => PUBLIC;
             set_withdrawal_fee => PUBLIC;
             mint_bot_badge => PUBLIC;
+            set_buyback_fund => PUBLIC;
 
             // Single admin operations
             authorize_admin_operation => PUBLIC;
@@ -141,8 +143,10 @@ mod fund_manager {
         fund_units_vault: FungibleVault,
         fund_units_to_distribute: Decimal,
         oracle_component: Option<OracleInterfaceScryptoStub>,
-        withdrawal_fee: Decimal,
+        withdrawal_fee: u8,
         number_of_admins: u8,
+        buyback_fund_percentage: u8,
+        buyback_fund_account: Global<Account>,
     }
 
     impl FundManager {
@@ -150,6 +154,9 @@ mod fund_manager {
         pub fn new(
             validator: Global<Validator>,
             claim_nft_address: ResourceAddress,
+            withdrawal_fee: u8,
+            buyback_fund_percentage: u8,
+            buyback_fund_account: Global<Account>,
         ) -> Global<FundManager> {
             let (address_reservation, component_address) =
                 Runtime::allocate_component_address(FundManager::blueprint_id());
@@ -248,8 +255,17 @@ mod fund_manager {
 
             let account_locker = Blueprint::<AccountLocker>::instantiate(
                 OwnerRole::Fixed(rule!(require(admin_badge_address))),  // owner_role
-                rule!(require(global_caller(component_address))),       // storer_role
-                rule!(require(admin_badge_address)),                    // storer_updater_role
+                AccessRule::Protected(                                  // storer_role
+                    CompositeRequirement::AnyOf(vec![
+                        CompositeRequirement::BasicRequirement(
+                            BasicRequirement::Require(
+                                global_caller(component_address)
+                            )
+                        ),
+                        require(admin_badge_address),
+                    ])
+                ),
+                rule!(require(fund_manager_badge_address)),             // storer_updater_role
                 rule!(deny_all),                                        // recoverer_role
                 rule!(require(fund_manager_badge_address)),             // recoverer_updater_role
                 None
@@ -273,8 +289,10 @@ mod fund_manager {
                 fund_units_vault: FungibleVault::new(fund_unit_resource_manager.address()),
                 fund_units_to_distribute: Decimal::ZERO,
                 oracle_component: None,
-                withdrawal_fee: dec![0.2],
+                withdrawal_fee: withdrawal_fee,
                 number_of_admins: 0,
+                buyback_fund_percentage: buyback_fund_percentage,
+                buyback_fund_account: buyback_fund_account,
             }
                 .instantiate()
                 .prepare_to_globalize(OwnerRole::Fixed(rule!(require(admin_badge_address))))
@@ -292,7 +310,7 @@ mod fund_manager {
             fund_units_initial_supply: Decimal,
         ) -> NonFungibleBucket {
             assert!(
-                self.admin_badge_resource_manager.total_supply().unwrap() == Decimal::ZERO,
+                self.number_of_admins == 0,
                 "Component already initialised",
             );
 
@@ -332,7 +350,7 @@ mod fund_manager {
         pub fn mint_bot_badge(
             &mut self,
             admin_proof: Proof,
-            new_bot_account: Global<Account>,
+            mut new_bot_account: Global<Account>,
         ) {
             self.check_operation_authorization(
                 self.get_admin_id(admin_proof),
@@ -344,10 +362,9 @@ mod fund_manager {
 
             let bot_badge = self.bot_badge_resource_manager.mint(Decimal::ONE);
 
-            self.account_locker.store(
-                new_bot_account,
+            new_bot_account.try_deposit_or_abort(
                 bot_badge.into(),
-                true,
+                None
             );
         }
 
@@ -394,7 +411,7 @@ mod fund_manager {
             let now = Clock::current_time_rounded_to_seconds().seconds_since_unix_epoch;
 
             self.authorization_vector.retain(|authorization| {
-                authorization.timestamp > now + AUTHORIZATION_TIMEOUT
+                authorization.timestamp + AUTHORIZATION_TIMEOUT > now
             });
         }
 
@@ -404,7 +421,7 @@ mod fund_manager {
             allowed_admin_id: u8,
             authorized_operation: AuthorizedOperation,
             protocol_name: Option<String>,
-            withdrawal_fee: Option<Decimal>,
+            percentage: Option<u8>,
             account_address: Option<Global<Account>>,
         ) {
             let allower_admin_id = self.get_admin_id(admin_proof);
@@ -428,7 +445,7 @@ mod fund_manager {
                     allowed_admin_id: allowed_admin_id,
                     authorized_operation: authorized_operation,
                     protocol_name: protocol_name,
-                    withdrawal_fee: withdrawal_fee,
+                    percentage: percentage,
                     account_address: account_address,
                 }
             );
@@ -439,7 +456,7 @@ mod fund_manager {
             admin_id: u8,
             authorized_operation: AuthorizedOperation,
             protocol_name: Option<String>,
-            withdrawal_fee: Option<Decimal>,
+            percentage: Option<u8>,
             account_address: Option<Global<Account>>,
         ) {
             self.purge_authorization_vector();
@@ -450,7 +467,7 @@ mod fund_manager {
                     authorization.allowed_admin_id == admin_id &&
                         authorization.authorized_operation == authorized_operation &&
                         authorization.protocol_name == protocol_name &&
-                        authorization.withdrawal_fee == withdrawal_fee &&
+                        authorization.percentage == percentage &&
                         authorization.account_address == account_address
                 })
                 .count();
@@ -469,7 +486,7 @@ mod fund_manager {
             let gross_value = self.total_value / self.fund_unit_resource_manager.total_supply().unwrap();
 
             (
-                gross_value * (Decimal::ONE - self.withdrawal_fee), // net value
+                (gross_value * (100 - self.withdrawal_fee)) / 100, // net value
                 gross_value
             )
         }
@@ -554,7 +571,7 @@ mod fund_manager {
         pub fn mint_admin_badge(
             &mut self,
             admin_proof: Proof,
-            new_admin_account: Global<Account>,
+            mut new_admin_account: Global<Account>,
         ) {
             self.check_operation_authorization(
                 self.get_admin_id(admin_proof),
@@ -571,10 +588,9 @@ mod fund_manager {
                 Admin {},
             );
 
-            self.account_locker.store(
-                new_admin_account,
+            new_admin_account.try_deposit_or_abort(
                 admin_badge.into(),
-                true,
+                None
             );
         }
 
@@ -653,6 +669,14 @@ mod fund_manager {
             );
 
             let mut bucket = self.validator.claim_xrd(claim_nft_bucket);
+
+            let buyback_fund_bucket = bucket.take(
+                (bucket.amount() * self.buyback_fund_percentage) / 100
+            );
+            self.buyback_fund_account.try_deposit_or_abort(
+                buyback_fund_bucket.into(),
+                None
+            );
 
             let xrd_amount = bucket.amount();
 
@@ -1143,22 +1167,22 @@ mod fund_manager {
         pub fn set_withdrawal_fee(
             &mut self,
             admin_proof: Proof,
-            fee: Decimal,
+            percentage: u8,
         ) {
             self.check_operation_authorization(
                 self.get_admin_id(admin_proof),
                 AuthorizedOperation::SetWithdrawalFee,
                 None,
-                Some(fee),
+                Some(percentage),
                 None,
             );
 
             assert!(
-                fee >= Decimal::ZERO && fee < Decimal::ONE,
-                "Fee must be a number from 0 to 1"
+                percentage < 100,
+                "Fee must be a number from 0 to 100"
             );
 
-            self.withdrawal_fee = fee;
+            self.withdrawal_fee = percentage;
         }
 
         pub fn set_oracle_component(
@@ -1175,6 +1199,29 @@ mod fund_manager {
             );
 
             self.oracle_component = Some(component);
+        }
+
+        pub fn set_buyback_fund(
+            &mut self,
+            admin_proof: Proof,
+            percentage: u8,
+            account: Global<Account>,
+        ) {
+            self.check_operation_authorization(
+                self.get_admin_id(admin_proof),
+                AuthorizedOperation::SetBuybackFund,
+                None,
+                Some(percentage),
+                Some(account),
+            );
+
+            assert!(
+                percentage < 100,
+                "Fee must be a number from 0 to 100"
+            );
+
+            self.buyback_fund_percentage = percentage;
+            self.buyback_fund_account = account;
         }
     }
 }

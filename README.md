@@ -188,8 +188,7 @@ CALL_METHOD
 `<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
 
 ### finish\_unstake
-Compleses the unstake of LSUs and invests the resulting XRD in one of the available DeFi protocols.  
-It also mints new fund units to reward stakers.  
+Compleses the unstake of LSUs and invests the resulting XRD in one of the available DeFi protocols. It also sends part of the XRD to the account managing the buyback fund and mints new fund units to reward stakers.  
 This method emits a `LsuUnstakeCompletedEvent` reporting:  
 - the amount of unstaked XRD  
 - the name of the DeFi protocol it invested in  
@@ -345,19 +344,20 @@ CALL_METHOD
 `<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
 `<ADMIN_BADGE_ID>` is the numeric identifier of the admin badge to be allowed (obviously must be different from `<MY_ADMIN_BADGE_ID>`).   
 `<AUTHORIZED_OPERATION>` a number representing the operation to authorize:  
-- 0 -> `withdraw_validator_badge`  
-- 1 -> `add_defi_protocol`  
-- 2 -> `remove_defi_protocol`  
-- 3 -> `set_dex_component`  
-- 4 -> `decrease_min_authorizers`  
-- 5 -> `increase_min_authorizers`  
-- 6 -> `mint_admin_badge`  
-- 7 -> `set_oracle_component`  
-- 8 -> `withdraw_fund_manager_badge`  
-- 9 -> `set_withdrawal_fee`  
-- 10 -> `mint_bot_badge`  
+0 -> `withdraw_validator_badge`  
+1 -> `add_defi_protocol`  
+2 -> `remove_defi_protocol`  
+3 -> `set_dex_component`  
+4 -> `decrease_min_authorizers`  
+5 -> `increase_min_authorizers`  
+6 -> `mint_admin_badge`  
+7 -> `set_oracle_component`  
+8 -> `withdraw_fund_manager_badge`  
+9 -> `set_withdrawal_fee`  
+10 -> `mint_bot_badge`  
+11 -> `set_buyback_fund`  
 `<PROTOCOL_NAME>` is the name of the protocol to add/remove for `add_defi_protocol` and `remove_defi_protocol` operations, `None` for all the other operations.  
-`<WITHDRAWAL_FEE>` is the new withdrawal fee percentage to set for `set_withdrawal_fee` operation, `None` for all the other operations.  
+`<PERCENTAGE>` is the percentage to set for `set_withdrawal_fee` or `set_buyback_fund` operations, `None` for all the other operations.  
 `<RECEIVER_ACCOUNT>` is the account address that will receive the badge for the `mint_admin_badge` and `mint_bot_badge` operations, `None` for all the other operations.  
 
 ### withdraw\_validator\_badge
@@ -718,7 +718,7 @@ CALL_METHOD
 
 `<ACCOUNT>` is the admin account.
 `<FUND_MANAGER_BADGE>` is the resource address of the fund manager badge.   
-`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
 `<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
 `<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
 
@@ -739,7 +739,7 @@ CALL_METHOD
     Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
     "set_withdrawal_fee"
     Proof("admin_proof")
-    Decimal("<FEE>")
+    Decimal("<PERCENTAGE>")
 ;
 ```
 
@@ -747,7 +747,42 @@ CALL_METHOD
 `<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
 `<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
 `<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
-`<FEE>` is the percentage fee to set.  
+`<PERCENTAGE>` is the percentage fee to set.  
+
+### set\_buyback\_fund
+Updates the percentage of XRD allocated to the buyback fund and the account that manages it.  
+
+``` 
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "set_buyback_fund"
+    Proof("admin_proof")
+    Decimal("<PERCENTAGE>")
+    Address("<RECEIVER_ACCOUNT>")
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+`<PERCENTAGE>` is the percentage fee to set.  
+`<RECEIVER_ACCOUNT>` is the account address that will manage the buyback fund.  
+
+### deposit\_coin
+TODO
+
+### deposit\_protocol\_token
+TODO
 
 ## Disclaimer
 Untested software, for educational purposes only, no warranty.  
