@@ -308,7 +308,10 @@ mod fund_manager {
             number_of_admin_badges: u8,
             min_authorizers: u8,
             fund_units_initial_supply: Decimal,
-        ) -> NonFungibleBucket {
+        ) -> (
+            NonFungibleBucket, // Admin badges
+            FungibleBucket, // Fund units initial supply
+        ) {
             assert!(
                 self.number_of_admins == 0,
                 "Component already initialised",
@@ -337,14 +340,12 @@ mod fund_manager {
                 );
             }
 
-            self.fund_units_to_distribute = fund_units_initial_supply;
-            self.fund_units_vault.put(
-                self.fund_unit_resource_manager.mint(fund_units_initial_supply)
-            );
-            
             self.number_of_admins = number_of_admin_badges;
 
-            admin_badges_bucket
+            (
+                admin_badges_bucket,
+                self.fund_unit_resource_manager.mint(fund_units_initial_supply)
+            )
         }
 
         pub fn mint_bot_badge(
@@ -866,7 +867,8 @@ mod fund_manager {
             coin_bucket: FungibleBucket,
             other_coin_bucket: Option<FungibleBucket>,
             morpher_data: HashMap<ResourceAddress, (String, String)>,
-        ) {
+            mint_fund_units: bool,
+        ) -> Option<FungibleBucket> {
             let mut buckets_value = coin_bucket.amount() * self.oracle_component.unwrap().get_price(
                 coin_bucket.resource_address(),
                 morpher_data.clone(),
@@ -880,6 +882,8 @@ mod fund_manager {
                         morpher_data.clone()
                     );
             }
+
+            let (_, fund_unit_gross_value) = self.fund_unit_value();
 
             let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).expect("Protocol not found");
 
@@ -904,6 +908,12 @@ mod fund_manager {
 
             defi_protocol.value += buckets_value;
             self.total_value += buckets_value;
+
+            if mint_fund_units {
+                Some(self.fund_unit_resource_manager.mint(buckets_value / fund_unit_gross_value))
+            } else {
+                None
+            }
         }
 
         pub fn deposit_protocol_token(

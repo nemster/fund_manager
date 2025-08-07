@@ -309,6 +309,30 @@ CALL_METHOD
 `<PRICE>` dollar value of the coin for the FixedPrice oracle. In case of a FixedMultiplier oracle the whole line should be `None`.  
 `<PRICE_MULTIPLIER>` multiplier to apply to the price of the reference coin for the FixedMultiplier oracle. In case of a FixedPrice oracle the whole line should be `None`.  
 
+### get\_incentives
+Withdraws WEFT incentives from WEFT Finance to the WEFT wrapper component.  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_amount"
+    Address("<BOT_BADGE>")
+    Decimal("1")
+;
+CALL_METHOD
+    Address("<WEFT_WRAPPER_ADDRESS>")
+    "get_incentives"
+    <INCENTIVE_TYPE>u8
+    Decimal("<AMOUNT>")
+;
+```
+
+`<ACCOUNT>` is the bot account.  
+`<BOT_BADGE>` is the resource address of the badge held by the bot account.  
+`<WEFT_WRAPPER_ADDRESS>` the component address of the weft wrapper.  
+`<INCENTIVE_TYPE>` WEFT Finance supports different type of incentives, for liquidity providers this must be 4.  
+`<AMOUNT>` the amount of WEFT to withdraw from the WEFT component; it can be read from the WEFT Claimer NFT in the Account used by the wrapper.  
+
 ## Admin callable methods
 
 ### authorize\_admin\_operation
@@ -779,7 +803,61 @@ CALL_METHOD
 `<RECEIVER_ACCOUNT>` is the account address that will manage the buyback fund.  
 
 ### deposit\_coin
-TODO
+Deposit coins (eventually other coins too) in a DeFi protocol and eventually get the equivalent amount of fund units.  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "withdraw"
+    Address("<COIN_ADDRESS>")
+    Decimal("<COIN_AMOUNT>")
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("<COIN_ADDRESS>")
+    Bucket("coin_bucket")
+; 
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "withdraw"
+    Address("<OTHER_COIN_ADDRESS>")
+    Decimal("<OTHER_COIN_AMOUNT>")
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("<OTHER_COIN_ADDRESS>")
+    Bucket("other_coin_bucket")
+; 
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "deposit_coin"
+    "<PROTOCOL_NAME>"
+    Bucket("coin_bucket")
+    Some(Bucket("other_coin_bucket"))
+    Map<ResourceAddress, Tuple>(
+        Address("<COIN_ADDRESS>") => ("<MORPHER_MESSAGE>", "<MORPHER_SIGNATURE>"),
+        ...
+    )
+    <MINT_FUND_UNITS>
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<COIN_ADDRESS>` the resource address of the coin to deposit.  
+`<COIN_AMOUNT>` the amount of coins to deposit.  
+`<OTHER_COIN_ADDRESS>` the resource address of the other coin to deposit (if any).  
+`<OTHER_COIN_AMOUNT>` the amount of other coins to deposit (if any).  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+`<PROTOCOL_NAME>` is the name of the protocol to deposit coins in.  
+`<MORPHER_MESSAGE>` the message for the Morpher oracle regarding the deposited coin(s), if needed by the DeFi protocol.  
+`<MORPHER_SIGNATURE>` the signature of `<MORPHER_MESSAGE>`.  
+`<MINT_FUND_UNITS>` whether to mint fund units of the same value of the deposited coins (`true` or `false`).  
 
 ### deposit\_protocol\_token
 TODO
