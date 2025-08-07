@@ -758,6 +758,7 @@ mod fund_manager {
                 defi_protocol.value += bucket_value;
             }
 
+            // TODO: properly update protocol and total value, not just incrementally
             self.total_value += bucket_value;
 
             self.fund_units_to_distribute = self.total_value / fund_unit_gross_value;
@@ -849,10 +850,12 @@ mod fund_manager {
                 self.fund_manager_badge_vault.authorize_with_amount(
                     1,
                     || {
-                        let bucket = old_defi_protocol.unwrap().wrapper.withdraw_protocol_token(None);
+                        let (bucket, _, _) = old_defi_protocol.unwrap().wrapper.withdraw_protocol_token(None);
                         new_defi_protocol.wrapper.deposit_protocol_token(bucket);
                     }
                 );
+
+                // TODO: update total and protocol value
             }
 
             self.defi_protocols.insert(
@@ -906,6 +909,7 @@ mod fund_manager {
                 )
             );
 
+            // TODO: update the protocol and total value, not just add the bucket value
             defi_protocol.value += buckets_value;
             self.total_value += buckets_value;
 
@@ -921,6 +925,8 @@ mod fund_manager {
             defi_protocol_name: String,
             protocol_token_bucket: Bucket,
             morpher_data: HashMap<ResourceAddress, (String, String)>,
+            mint_fund_units: bool,
+        // TODO: ) -> FungibleBucket {
         ) {
             let mut added_value = Decimal::ZERO;
 
@@ -937,11 +943,15 @@ mod fund_manager {
 
             let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
 
-            let (option_amount1, option_amount2) = self.fund_manager_badge_vault.authorize_with_amount(
+            let (amount1, option_amount2) = self.fund_manager_badge_vault.authorize_with_amount(
                 1,
                 || defi_protocol.wrapper.deposit_protocol_token(protocol_token_bucket)
             );
 
+            // TODO: completely update total and protocol value, not just add the new values to
+            // them
+
+            /*
             if option_amount1.is_some() {
                 added_value += option_amount1.unwrap() * coin1_price;
             } else {
@@ -958,6 +968,11 @@ mod fund_manager {
 
             defi_protocol.value += added_value;
             self.total_value += added_value;
+            */
+
+            if mint_fund_units {
+                // TODO
+            }
         }
 
         pub fn remove_defi_protocol(
@@ -978,27 +993,33 @@ mod fund_manager {
             let mut defi_protocol = self.defi_protocols.remove(&name)
                 .expect("Protocol not found");
 
+            // TODO: subtract the updated protocol value from the total, not the old protocol value
             self.total_value -= defi_protocol.value;
 
-            self.fund_manager_badge_vault.authorize_with_amount(
+            let (token_bucket, _, _) = self.fund_manager_badge_vault.authorize_with_amount(
                 1,
                 || defi_protocol.wrapper.withdraw_protocol_token(None)
-            )
+            );
+
+            token_bucket
         }
 
         pub fn update_defi_protocols_info(
             &mut self,
-            defi_protocols_value: HashMap<String, Decimal>,
+            defi_protocols_value: IndexSet<String>,
             defi_protocols_desired_percentage: HashMap<String, u8>,
         ) {
             let mut value_change = Decimal::ZERO;
 
-            for (name, value) in defi_protocols_value.iter() {
+            for name in defi_protocols_value.iter() {
                 let mut defi_protocol = self.defi_protocols.get_mut(&name).expect("Not found");
 
+                // TODO: properly update protocol and total value
+                /*
                 value_change += *value - defi_protocol.value;
 
                 defi_protocol.value = *value;
+                */
             }
 
             self.total_value += value_change;
@@ -1100,7 +1121,7 @@ mod fund_manager {
 
             let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
 
-            let (mut coin_bucket, mut other_coin_bucket) = self.fund_manager_badge_vault.authorize_with_amount(
+            let (mut coin_bucket, mut other_coin_bucket, _, _) = self.fund_manager_badge_vault.authorize_with_amount(
                 1,
                 || defi_protocol.wrapper.withdraw_coin(
                     Some(withdrawable_value / coin_value),
@@ -1113,6 +1134,7 @@ mod fund_manager {
                 coin_bucket_value += other_coin_bucket.as_ref().unwrap().amount() * other_coin_value.unwrap();
             }
 
+            // TODO: properly update protocol and total value, not just decrement them
             self.total_value -= coin_bucket_value;
             defi_protocol.value -= coin_bucket_value;
 

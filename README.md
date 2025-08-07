@@ -262,12 +262,12 @@ CALL_METHOD
 CALL_METHOD
     Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
     "update_defi_protocols_info"
-    Map<String, Decimal>(
-        Address("<PROTOCOL_NAME>") => Decimal("<VALUE>"),
+    Set<String>(
+        "<PROTOCOL_NAME>",
         ...
     )
     Map<String, Decimal>(
-        Address("<PROTOCOL_NAME>") => <DESIRED_PERCENTAGE>u8,
+        "<PROTOCOL_NAME>" => <DESIRED_PERCENTAGE>u8,
         ...
     )
 ;

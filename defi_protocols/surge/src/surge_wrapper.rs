@@ -43,6 +43,8 @@ mod surge_wrapper {
             withdraw_protocol_token => restrict_to: [fund_manager];
             deposit_coin => restrict_to: [fund_manager];
             withdraw_coin => restrict_to: [fund_manager];
+
+            get_coin_amounts => PUBLIC;
         }
     }
 
@@ -83,31 +85,46 @@ mod surge_wrapper {
         fn deposit_protocol_token(
             &mut self,
             token: Bucket,
-        ) -> (Option<Decimal>, Option<Decimal>) {
-            let token_amount = token.amount();
-
+        ) -> (
+            Decimal,                // Total coin amount
+            Option<Decimal>         // None
+        ) {
             self.token_vault.put(FungibleBucket(token));
 
-            let pool_details = self.exchange_component.get_pool_details();
-
-            (
-                Some(pool_details.base_tokens_amount * (token_amount / pool_details.lp_supply)),
-                None
-            )
+            self.get_coin_amounts()
         }
 
         fn withdraw_protocol_token(
             &mut self,
             amount: Option<Decimal>,
-        ) -> Bucket {
+        ) -> (
+            Bucket,                 // LP tokens
+            Decimal,                // Total coin amount
+            Option<Decimal>         // None
+        ) {
             match amount {
                 Some(amount) => match amount > self.token_vault.amount() {
-                    true => self.token_vault.take_all(),
-                    false => self.token_vault.take(amount),
+                    true => {
+                        let token_bucket = self.token_vault.take_all();
+
+                        let (coin_amount, _) = self.get_coin_amounts();
+
+                        (token_bucket.into(), coin_amount, None)
+                    },
+                    false => {
+                        let token_bucket = self.token_vault.take(amount);
+
+                        let (coin_amount, _) = self.get_coin_amounts();
+
+                        (token_bucket.into(), coin_amount, None)
+                    },
                 },
-                None => self.token_vault.take_all(),
+                None => (
+                    self.token_vault.take_all().into(),
+                    Decimal::ZERO,
+                    None
+                ),
             }
-                .into()
         }
 
         fn deposit_coin(
@@ -116,6 +133,9 @@ mod surge_wrapper {
             _other_coin: Option<FungibleBucket>,
             _message: Option<String>,
             _signature: Option<String>,
+        ) -> (
+            Decimal,                // Total coin amount
+            Option<Decimal>         // None
         ) {
             let wrapped_coin_bucket = self.wrapper_component.wrap(coin.into());
 
@@ -124,39 +144,76 @@ mod surge_wrapper {
                     self.exchange_component.add_liquidity(wrapped_coin_bucket)
                 )
             );
+
+            self.get_coin_amounts()
         }
 
         fn withdraw_coin(
             &mut self,
             amount: Option<Decimal>,
             _other_coin_to_coin_price_ratio: Option<Decimal>,
-        ) -> (FungibleBucket, Option<FungibleBucket>) {
-            let token_bucket = match amount {
+        ) -> (
+            FungibleBucket,
+            Option<FungibleBucket>,
+            Decimal,                // Total coin amount
+            Option<Decimal>         // None
+        ) {
+            let (token_bucket, remaining_coin_amount)  = match amount {
                 Some(amount) => {
                     let pool_details = self.exchange_component.get_pool_details();
 
-                    let token_amount = pool_details.lp_supply * (amount / pool_details.base_tokens_amount);
+                    let requested_token_amount = pool_details.lp_supply * (amount / pool_details.base_tokens_amount);
 
-                    match token_amount > self.token_vault.amount() {
-                        true => self.token_vault.take_all(),
-                        false => self.token_vault.take(token_amount),
+                    let available_token_amount = self.token_vault.amount();
+
+                    match requested_token_amount > available_token_amount {
+                        true => (
+                            self.token_vault.take_all(),
+                            Decimal::ZERO
+                        ),
+                        false => (
+                            self.token_vault.take(requested_token_amount),
+                            pool_details.base_tokens_amount *
+                                ((available_token_amount - requested_token_amount) / pool_details.lp_supply)
+                        ),
                     }
                 },
-                None => self.token_vault.take_all(),
+                None => (
+                    self.token_vault.take_all(),
+                    Decimal::ZERO
+                ),
             };
 
             let wrapped_coin_bucket = self.exchange_component.remove_liquidity(
                 token_bucket.into(),
             );
 
+            let coin_bucket = FungibleBucket(
+                self.wrapper_component.unwrap(
+                    wrapped_coin_bucket,
+                    self.coin_address
+                )
+            );
+
             (
-                FungibleBucket(
-                    self.wrapper_component.unwrap(
-                        wrapped_coin_bucket,
-                        self.coin_address
-                    )
-                ),
+                coin_bucket,
                 None,
+                remaining_coin_amount,
+                None
+            )
+        }
+
+        fn get_coin_amounts(&mut self) -> (
+            Decimal,                // Total coin amount
+            Option<Decimal>         // None
+        ) {
+            let pool_details = self.exchange_component.get_pool_details();
+
+            let token_amount = self.token_vault.amount();
+
+            (
+                pool_details.base_tokens_amount * (token_amount / pool_details.lp_supply),
+                None
             )
         }
     }

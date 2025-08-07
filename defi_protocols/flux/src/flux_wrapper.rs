@@ -55,6 +55,8 @@ mod flux_wrapper {
             withdraw_protocol_token => restrict_to: [fund_manager];
             deposit_coin => restrict_to: [fund_manager];
             withdraw_coin => restrict_to: [fund_manager];
+
+            get_coin_amounts => PUBLIC;
         }
     }
 
@@ -97,31 +99,41 @@ mod flux_wrapper {
         fn deposit_protocol_token(
             &mut self,
             token: Bucket,
-        ) -> (Option<Decimal>, Option<Decimal>) {
-            let token_amount = token.amount();
-
+        ) -> (
+            Decimal,
+            Option<Decimal>
+        ) {
             self.token_vault.put(FungibleBucket(token));
 
-            let amounts = self.pool.get_redemption_value(token_amount);
-
-            (
-                amounts.get(&self.fusd_address).copied(),
-                amounts.get(&self.coin_address).copied(),
-            )
+            self.get_coin_amounts()
         }
 
         fn withdraw_protocol_token(
             &mut self,
             amount: Option<Decimal>,
-        ) -> Bucket {
+        ) -> (
+            Bucket,             // LP tokens
+            Decimal,            // Total fUSD amount
+            Option<Decimal>     // Total coin amount
+        ) {
             match amount {
-                None => self.token_vault.take_all().into(),
+                None => (
+                    self.token_vault.take_all().into(),
+                    Decimal::ZERO,
+                    Some(Decimal::ZERO),
+                ),
                 Some(mut amount) => {
                     if amount > self.token_vault.amount() {
                         amount = self.token_vault.amount();
                     }
 
-                    self.token_vault.take(amount).into()
+                    let (deposited_fusd, deposited_coin) = self.get_coin_amounts();
+
+                    (
+                        self.token_vault.take(amount).into(),
+                        deposited_fusd,
+                        deposited_coin,
+                    )
                 },
             }
         }
@@ -132,6 +144,9 @@ mod flux_wrapper {
             _other_coin: Option<FungibleBucket>,
             message: Option<String>,
             signature: Option<String>,
+        ) -> (
+            Decimal,                // Total fUSD amount
+            Option<Decimal>         // Total other coin amount
         ) {
             let (token_bucket, _, _) = self.component_address.contribute_to_pool(
                 self.coin_address,
@@ -142,13 +157,20 @@ mod flux_wrapper {
             );
 
             self.token_vault.put(FungibleBucket(token_bucket));
+            
+            self.get_coin_amounts()
         }
 
         fn withdraw_coin(
             &mut self,
             amount: Option<Decimal>,
             other_coin_to_coin_price_ratio: Option<Decimal>,
-        ) -> (FungibleBucket, Option<FungibleBucket>) {
+        ) -> (
+            FungibleBucket,
+            Option<FungibleBucket>,
+            Decimal,                    // FUSD amount remaining
+            Option<Decimal>             // Other coin amount remaining
+        ) {
             match amount {
                 Some(amount) => {
                     let amounts = self.pool.get_redemption_value(Decimal::ONE);
@@ -167,7 +189,14 @@ mod flux_wrapper {
                         self.token_vault.take(token_amount).into()
                     );
 
-                    (FungibleBucket(buckets.0), Some(FungibleBucket(buckets.1)))
+                    let (deposited_fusd, deposited_coin) = self.get_coin_amounts();
+
+                    (
+                        FungibleBucket(buckets.0),
+                        Some(FungibleBucket(buckets.1)),
+                        deposited_fusd,
+                        deposited_coin,
+                    )
                 },
 
                 None => {
@@ -176,9 +205,28 @@ mod flux_wrapper {
                         self.token_vault.take_all().into()
                     );
 
-                    (FungibleBucket(buckets.0), Some(FungibleBucket(buckets.1)))
+                    (
+                        FungibleBucket(buckets.0),
+                        Some(FungibleBucket(buckets.1)),
+                        Decimal::ZERO,
+                        Some(Decimal::ZERO),
+                    )
                 },
             }
+        }
+
+        fn get_coin_amounts(&mut self) -> (
+            Decimal,                // Total fUSD amount
+            Option<Decimal>         // Total other coin amount
+        ) {
+            let amounts = self.pool.get_redemption_value(
+                self.token_vault.amount()
+            );
+
+            (
+                *amounts.get(&self.fusd_address).unwrap(),
+                Some(*amounts.get(&self.coin_address).unwrap()),
+            )
         }
     }
 }
