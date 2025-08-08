@@ -31,6 +31,8 @@ mod ociswap_lp_pool2_wrapper {
             withdraw_protocol_token => restrict_to: [fund_manager];
             deposit_coin => restrict_to: [fund_manager];
             withdraw_coin => restrict_to: [fund_manager];
+
+            get_coin_amounts => PUBLIC;
         }
     }
 
@@ -73,33 +75,46 @@ mod ociswap_lp_pool2_wrapper {
         fn deposit_protocol_token(
             &mut self,
             token: Bucket,
-        ) -> (Option<Decimal>, Option<Decimal>) {
-            let amounts = self.pool.get_redemption_value(
-                token.amount()
-            );
-
+        ) -> (
+            Decimal,
+            Option<Decimal>
+        ) {
             self.lp_token_vault.put(FungibleBucket(token));
 
-            (
-                amounts.get(&self.a_vault.resource_address()).copied(),
-                amounts.get(&self.b_vault.resource_address()).copied(),
-            )
+            self.get_coin_amounts()
         }
 
         fn withdraw_protocol_token(
             &mut self,
             amount: Option<Decimal>,
-        ) -> Bucket {
+        ) -> (
+            Bucket,
+            Decimal,
+            Option<Decimal>
+        ) {
             match amount {
                 Some(amount) => {
                     match amount > self.lp_token_vault.amount() {
-                        true => self.lp_token_vault.take_all(),
-                        false => self.lp_token_vault.take(amount),
+                        true => (
+                            self.lp_token_vault.take_all().into(),
+                            self.a_vault.amount(),
+                            Some(self.b_vault.amount())
+                        ),
+                        false => {
+                            let token_bucket = self.lp_token_vault.take(amount);
+
+                            let (a_amount, b_amount) = self.get_coin_amounts();
+
+                            (token_bucket.into(), a_amount, b_amount)
+                        },
                     }
                 },
-                None => self.lp_token_vault.take_all(),
+                None => (
+                    self.lp_token_vault.take_all().into(),
+                    self.a_vault.amount(),
+                    Some(self.b_vault.amount())
+                ),
             }
-                .into()
         }
 
         fn deposit_coin(
@@ -108,6 +123,9 @@ mod ociswap_lp_pool2_wrapper {
             mut other_coin: Option<FungibleBucket>,
             _message: Option<String>,
             _signature: Option<String>,
+        ) -> (
+            Decimal,
+            Option<Decimal>
         ) {
             if other_coin.is_none() {
                 coin.put(self.a_vault.take_all());
@@ -172,56 +190,81 @@ mod ociswap_lp_pool2_wrapper {
                 },
                 None => {},
             }
+
+            self.get_coin_amounts()
         }
 
         fn withdraw_coin(
             &mut self,
             amount: Option<Decimal>,
             other_coin_to_coin_price_ratio: Option<Decimal>,
-        ) -> (FungibleBucket, Option<FungibleBucket>) {
+        ) -> (
+            FungibleBucket,
+            Option<FungibleBucket>,
+            Decimal,
+            Option<Decimal>
+        ) {
             match amount {
                 Some(mut amount) => {
-                    // Return any unused coin first
+                    let mut a_amount: Decimal;
+                    let mut b_amount: Decimal;
+
+                    // Collect any unused a coin first and initialize a_amount with the amount that remains
+                    // in a_vault
                     let mut a_bucket = match self.a_vault.amount() > Decimal::ZERO {
                         true => match amount > self.a_vault.amount() {
                             true => {
                                 amount -= self.a_vault.amount();
 
+                                a_amount = Decimal::ZERO;
+
                                 self.a_vault.take_all()
                             },
                             false => {
-                                return (
-                                    self.a_vault.take_advanced(
-                                        amount,
-                                        WithdrawStrategy::Rounded(RoundingMode::ToZero)
-                                    ),
-                                    None
+                                let a_bucket = self.a_vault.take_advanced(
+                                    amount,
+                                    WithdrawStrategy::Rounded(RoundingMode::ToZero)
                                 );
+
+                                a_amount = self.a_vault.amount();
+
+                                a_bucket
                             },
                         },
-                        false => FungibleBucket::new(self.a_vault.resource_address()),
+                        false => {
+                            a_amount = Decimal::ZERO;
+
+                            FungibleBucket::new(self.a_vault.resource_address())
+                        },
                     };
 
+                    // Collect any unused b coin first and initialize b_amount with the amount that remains
+                    // in b_vault
                     let mut b_bucket = match self.b_vault.amount() > Decimal::ZERO {
                         true => match amount > self.b_vault.amount() * other_coin_to_coin_price_ratio.unwrap() {
                             true => {
                                 amount -= self.b_vault.amount() * other_coin_to_coin_price_ratio.unwrap();
 
+                                b_amount = Decimal::ZERO;
+
                                 self.b_vault.take_all()
                             },
                             false => {
-                                return (
-                                    a_bucket,
-                                    Some(
-                                        self.b_vault.take_advanced(
-                                            amount / other_coin_to_coin_price_ratio.unwrap(),
-                                            WithdrawStrategy::Rounded(RoundingMode::ToZero)
-                                        )
-                                    )
+                                let b_bucket = self.b_vault.take_advanced(
+                                    amount / other_coin_to_coin_price_ratio.unwrap(),
+                                    WithdrawStrategy::Rounded(RoundingMode::ToZero)
                                 );
+
+                                b_amount = self.b_vault.amount();
+
+                                b_bucket
                             },
                         },
-                        false => FungibleBucket::new(self.b_vault.resource_address()),
+                        false => {
+                            b_amount = Decimal::ZERO;
+
+                            FungibleBucket::new(self.b_vault.resource_address())
+                        },
                     };
 
                     if self.lp_token_vault.amount() > Decimal::ZERO {
@@ -229,9 +272,11 @@ mod ociswap_lp_pool2_wrapper {
                             self.lp_token_vault.amount()
                         );
 
-                        let reedemeble_a_amount_equivalent =
-                            *amounts.get(&self.a_vault.resource_address()).unwrap() +
-                            *amounts.get(&self.b_vault.resource_address()).unwrap() * other_coin_to_coin_price_ratio.unwrap();
+                        let reedemeble_a_amount = *amounts.get(&self.a_vault.resource_address()).unwrap();
+                        let reedemeble_b_amount = *amounts.get(&self.b_vault.resource_address()).unwrap();
+
+                        let reedemeble_a_amount_equivalent = reedemeble_a_amount +
+                            reedemeble_b_amount * other_coin_to_coin_price_ratio.unwrap();
 
                         let (a, b) = match reedemeble_a_amount_equivalent > amount {
                             true => self.component_address.remove_liquidity(
@@ -245,11 +290,19 @@ mod ociswap_lp_pool2_wrapper {
                             ),
                         };
 
+                        a_amount += reedemeble_a_amount - a.amount();
+                        b_amount += reedemeble_b_amount - b.amount();
+
                         a_bucket.put(FungibleBucket(a));
                         b_bucket.put(FungibleBucket(b));
                     }
 
-                    (a_bucket, Some(b_bucket))
+                    (
+                        a_bucket,
+                        Some(b_bucket),
+                        a_amount,
+                        Some(b_amount)
+                    )
                 },
                 None => {
                     let mut a_bucket = self.a_vault.take_all();
@@ -264,9 +317,34 @@ mod ociswap_lp_pool2_wrapper {
                         b_bucket.put(FungibleBucket(b));
                     }
 
-                    (a_bucket, Some(b_bucket))
+                    (
+                        a_bucket,
+                        Some(b_bucket),
+                        Decimal::ZERO,
+                        Some(Decimal::ZERO)
+                    )
                 },
             }
+        }
+
+        fn get_coin_amounts(&mut self) -> (
+            Decimal,                // Total coin amount
+            Option<Decimal>         // Total other coin amount
+        ) {
+            let amounts = self.pool.get_redemption_value(
+                self.lp_token_vault.amount()
+            );
+
+            let a_amount = *amounts.get(&self.a_vault.resource_address()).unwrap() +
+                self.a_vault.amount();
+
+            let b_amount = *amounts.get(&self.b_vault.resource_address()).unwrap() +
+                self.b_vault.amount();
+
+            (
+                a_amount,
+                Some(b_amount),
+            )
         }
     }
 }

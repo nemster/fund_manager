@@ -55,6 +55,9 @@ mod weft_wrapper {
 
             // Collect WEFT incentives (WEFT coins)
             get_incentives => restrict_to: [bot];
+
+            // Return coin and WEFT coin amounts
+            get_coin_amounts => PUBLIC;
         }
     }
 
@@ -183,19 +186,14 @@ mod weft_wrapper {
         // the component is registered
         fn deposit_protocol_token(
             &mut self,
-            token: Bucket, // Example token: w2-xUSDC
+            token: Bucket          // Example token: w2-xUSDC
         ) -> (
-            Option<Decimal>, // Amount of coins corresponding to the deposited tokens
-            Option<Decimal> // Always None
+            Decimal,                // Total coin amount
+            Option<Decimal>         // Total WEFT coin amount
         ) {
-            let token_amount = token.amount();
-
             self.account.deposit(token);
 
-            (
-                Some(token_amount / self.get_token_coin_ratio()),
-                None
-            )
+            self.get_coin_amounts()
         }
 
         // Use this method to withdraw tokens from this component; the fund_manager can do that
@@ -204,12 +202,15 @@ mod weft_wrapper {
             &mut self,
             amount: Option<Decimal>, // The number of tokens to withdraw or None to withdraw all
                                      // of them
-        ) -> Bucket // Withdrawn tokens
-        {
+        ) -> (
+            Bucket,                 // Withdrawn tokens
+            Decimal,                // Total coin amount
+            Option<Decimal>         // Total WEFT coin amount
+        ) {
             // Number of tokens in the Account
             let available_token_amount = self.account.balance(self.token_address);
 
-            match amount {
+            let token_bucket = match amount {
                 // Withdraw them all
                 None => self.account_badge_vault.authorize_with_non_fungibles(
                     &self.account_badge_vault.non_fungible_local_ids(1),
@@ -234,7 +235,15 @@ mod weft_wrapper {
                         )
                     )
                 },
-            }
+            };
+
+            let (coin_amount, weft_amount) = self.get_coin_amounts();
+
+            (
+                token_bucket,
+                coin_amount,
+                weft_amount
+            )
         }
 
         // The fund_manager invokes this method to deposit coins in the WEFT protocol.
@@ -246,6 +255,9 @@ mod weft_wrapper {
             other_coin: Option<FungibleBucket>, // Eventual WEFT coins
             _message: Option<String>, // Unused
             _signature: Option<String>, // Unused
+        ) -> (
+            Decimal,                // Total coin amount
+            Option<Decimal>         // Total WEFT coin amount
         ) {
             // Pass the bucket of coins to the WEFT component and expect a vector conteining a
             // bucket of tokens
@@ -271,6 +283,8 @@ mod weft_wrapper {
                     self.account.deposit(bucket.into());
                 },
             }
+
+            self.get_coin_amounts()
         }
 
         // The fund_manager invokes this method when an user wants to exchange his fund units.
@@ -284,17 +298,22 @@ mod weft_wrapper {
                                                              // of WEFT coins instead of coins
         ) -> (
             FungibleBucket, // Coin bucket
-            Option<FungibleBucket> // Eventual WEFT coin bucket
+            Option<FungibleBucket>, // Eventual WEFT coin bucket
+            Decimal,                // Total coin amount
+            Option<Decimal>         // Total WEFT coin amount
         ) {
             // Get the number of available tokens and WEFT coins
             let available_token_amount = self.account.balance(self.token_address);
-            let available_weft = self.account.balance(self.weft_coin_address);
+            let mut available_weft = self.account.balance(self.weft_coin_address);
 
             let weft_bucket: Bucket;
 
             match amount {
                 // If amount is specified
                 Some(mut amount) => {
+
+                    let token_coin_ratio = self.get_token_coin_ratio();
+                    let mut available_coin = available_token_amount / token_coin_ratio;
 
                     // If there are enough WEFT coins to cover the amount equivalent value, those
                     // will be returned togheter with an empty coin bucket
@@ -307,7 +326,14 @@ mod weft_wrapper {
                             )
                         );
 
-                        return (FungibleBucket::new(self.coin_address), Some(FungibleBucket(weft_bucket)));
+                        available_weft -= weft_bucket.amount();
+
+                        return (
+                            FungibleBucket::new(self.coin_address),
+                            Some(FungibleBucket(weft_bucket)),
+                            available_coin,
+                            Some(available_weft)
+                        );
 
                     } else {
 
@@ -322,15 +348,15 @@ mod weft_wrapper {
 
                         // Subtract the WEFT coin equivalent value withdrawn from the amount
                         amount -= available_weft * other_coin_to_coin_price_ratio.unwrap();
-                    }
 
-                    let token_coin_ratio = self.get_token_coin_ratio();
+                        available_weft = Decimal::ZERO;
+                    }
 
                     // Check if the available tokens are enough to cover the requested amount of
                     // coins
-                    let token_amount = match amount < available_token_amount / token_coin_ratio {
+                    let token_amount = match amount < available_coin {
 
-                        // if true we will try to get the correct amount of tokens
+                        // if true we get the correct amount of tokens
                         true => amount * token_coin_ratio,
 
                         // If not we will withdraw all of the tokens
@@ -350,8 +376,15 @@ mod weft_wrapper {
                         .pop()
                         .unwrap();
 
+                    available_coin -= coin_bucket.amount();
+                    
                     // Return coins and WEFT coins
-                    (FungibleBucket(coin_bucket), Some(FungibleBucket(weft_bucket)))
+                    (
+                        FungibleBucket(coin_bucket),
+                        Some(FungibleBucket(weft_bucket)),
+                        available_coin,
+                        Some(available_weft)
+                    )
                 },
 
                 // If no amount was specified
@@ -383,9 +416,24 @@ mod weft_wrapper {
                     );
 
                     // Return all of the coins and WEFT coins
-                    (FungibleBucket(coin_bucket), Some(FungibleBucket(weft_bucket)))
+                    (
+                        FungibleBucket(coin_bucket),
+                        Some(FungibleBucket(weft_bucket)),
+                        Decimal::ZERO,
+                        Some(Decimal::ZERO)
+                    )
                 },
             }
+        }
+
+        fn get_coin_amounts(&mut self) -> (
+            Decimal,                // Total coin amount
+            Option<Decimal>         // Total WEFT coin amount
+        ) {
+            (
+                self.account.balance(self.token_address) / self.get_token_coin_ratio(),
+                Some(self.account.balance(self.weft_coin_address))
+            )
         }
     }
 }

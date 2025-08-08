@@ -7,12 +7,19 @@ define_interface! {
         fn deposit_protocol_token(
             &mut self,
             token: Bucket,
-        ) -> (Option<Decimal>, Option<Decimal>);
+        ) -> (
+            Decimal,                // Total coin amount
+            Option<Decimal>         // Total other coin amount
+        );
 
         fn withdraw_protocol_token(
             &mut self,
             amount: Option<Decimal>,
-        ) -> Bucket;
+        ) -> (
+            Bucket,                 // Tokens
+            Decimal,                // Total coin amount
+            Option<Decimal>         // Total other coin amount
+        );
 
         fn deposit_coin(
             &mut self,
@@ -20,13 +27,26 @@ define_interface! {
             other_coin: Option<FungibleBucket>,
             message: Option<String>,
             signature: Option<String>,
+        ) -> (
+            Decimal,                // Total coin amount
+            Option<Decimal>         // Total other coin amount
         );
 
         fn withdraw_coin(
             &mut self,
             amount: Option<Decimal>,
             other_coin_to_coin_price_ratio: Option<Decimal>,
-        ) -> (FungibleBucket, Option<FungibleBucket>);
+        ) -> (
+            FungibleBucket,         // Coins
+            Option<FungibleBucket>, // Other coins
+            Decimal,                // Total coin amount
+            Option<Decimal>         // Total other coin amount
+        );
+
+        fn get_coin_amounts(&mut self) -> (
+            Decimal,                // Total coin amount
+            Option<Decimal>         // Total other coin amount
+        );
     }
 }
 

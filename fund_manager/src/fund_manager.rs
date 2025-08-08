@@ -59,17 +59,26 @@ struct LsuUnstakeCompletedEvent {
     xrd_amount: Decimal,
     defi_protocol_name: String,
     fund_units_to_distribute: Decimal,
+    protocol_value: Decimal,
 }
 
 #[derive(ScryptoSbor, ScryptoEvent)]
 struct WithdrawFromFundEvent {
     fund_unit_amount: Decimal,
     defi_protocol_name: String,
+    protocol_value: Decimal,
 }
 
 #[derive(ScryptoSbor, ScryptoEvent)]
-struct MissingInfoEvent {
+struct AdminDepositEvent {
     defi_protocol_name: String,
+    protocol_value: Decimal,
+}
+
+#[derive(ScryptoSbor, ScryptoEvent)]
+struct ProtocolValueUpdateEvent {
+    defi_protocol_name: String,
+    protocol_value: Decimal,
 }
 
 #[blueprint]
@@ -77,7 +86,8 @@ struct MissingInfoEvent {
     LsuUnstakeStartedEvent,
     LsuUnstakeCompletedEvent,
     WithdrawFromFundEvent,
-    MissingInfoEvent,
+    AdminDepositEvent,
+    ProtocolValueUpdateEvent,
 )]
 #[types(
     String,
@@ -680,12 +690,16 @@ mod fund_manager {
             );
 
             let xrd_amount = bucket.amount();
+            let xrd_price = self.oracle_component.unwrap().get_price(
+                XRD,
+                morpher_data.clone()
+            );
 
             let (_, fund_unit_gross_value) = self.fund_unit_value();
 
             let defi_protocol_name = self.find_where_to_deposit_to();
 
-            let defi_protocol = self.defi_protocols.get(&defi_protocol_name).unwrap();
+            let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
 
             let (message, signature) = match defi_protocol.needed_morpher_data {
                 Some(resource_address) => {
@@ -696,17 +710,11 @@ mod fund_manager {
                 None => (None, None),
             };
 
-            let bucket_value = xrd_amount * self.oracle_component.unwrap().get_price(
-                defi_protocol.coin,
-                morpher_data
-            );
+            let coin_amount: Decimal;
+            let other_coin_amount: Option<Decimal>;
 
             if defi_protocol.coin == XRD {
-                drop(defi_protocol);
-
-                let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
-
-                self.fund_manager_badge_vault.authorize_with_amount(
+                (coin_amount, other_coin_amount) = self.fund_manager_badge_vault.authorize_with_amount(
                     1,
                     || defi_protocol.wrapper.deposit_coin(
                         bucket,
@@ -716,15 +724,10 @@ mod fund_manager {
                     )
                 );
 
-                defi_protocol.value += bucket_value;
             } else if defi_protocol.other_coin == Some(XRD) {
                 let defi_protocol_coin = defi_protocol.coin;
 
-                drop(defi_protocol);
-
-                let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
-
-                self.fund_manager_badge_vault.authorize_with_amount(
+                (coin_amount, other_coin_amount) = self.fund_manager_badge_vault.authorize_with_amount(
                     1,
                     || defi_protocol.wrapper.deposit_coin(
                         FungibleBucket::new(defi_protocol_coin),
@@ -734,18 +737,13 @@ mod fund_manager {
                     )
                 );
 
-                defi_protocol.value += bucket_value;
             } else {
-                drop(defi_protocol);
-
-                let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
-
                 bucket = self.fund_manager_badge_vault.authorize_with_amount(
                     1,
                     || FungibleBucket(self.dex.unwrap().swap(bucket.into(), defi_protocol.coin))
                 );
 
-                self.fund_manager_badge_vault.authorize_with_amount(
+                (coin_amount, other_coin_amount) = self.fund_manager_badge_vault.authorize_with_amount(
                     1,
                     || defi_protocol.wrapper.deposit_coin(
                         bucket,
@@ -754,14 +752,30 @@ mod fund_manager {
                         signature,
                     )
                 );
-
-                defi_protocol.value += bucket_value;
             }
 
-            self.total_value += bucket_value;
+            let mut new_protocol_value = match defi_protocol.coin {
+                XRD => coin_amount * xrd_price,
+                _ => coin_amount * self.oracle_component.unwrap().get_price(
+                    defi_protocol.coin,
+                    morpher_data.clone()
+                ),
+            };
+            if other_coin_amount.is_some() {
+                if defi_protocol.other_coin.unwrap() == XRD {
+                    new_protocol_value += other_coin_amount.unwrap() * xrd_price;
+                } else {
+                    new_protocol_value += other_coin_amount.unwrap() * self.oracle_component.unwrap().get_price(
+                        defi_protocol.other_coin.unwrap(),
+                        morpher_data
+                    );
+                }
+            }
 
-            self.fund_units_to_distribute = self.total_value / fund_unit_gross_value;
+            self.total_value += new_protocol_value - defi_protocol.value;
+            defi_protocol.value = new_protocol_value;
 
+            self.fund_units_to_distribute = xrd_amount * xrd_price / fund_unit_gross_value;
             self.fund_units_vault.put(
                 self.fund_unit_resource_manager.mint(self.fund_units_to_distribute + Decimal::ONE)
             );
@@ -771,6 +785,7 @@ mod fund_manager {
                     xrd_amount: xrd_amount,
                     defi_protocol_name: defi_protocol_name,
                     fund_units_to_distribute: self.fund_units_to_distribute,
+                    protocol_value: new_protocol_value,
                 }
             );
         }
@@ -849,7 +864,7 @@ mod fund_manager {
                 self.fund_manager_badge_vault.authorize_with_amount(
                     1,
                     || {
-                        let bucket = old_defi_protocol.unwrap().wrapper.withdraw_protocol_token(None);
+                        let (bucket, _, _) = old_defi_protocol.unwrap().wrapper.withdraw_protocol_token(None);
                         new_defi_protocol.wrapper.deposit_protocol_token(bucket);
                     }
                 );
@@ -869,19 +884,11 @@ mod fund_manager {
             morpher_data: HashMap<ResourceAddress, (String, String)>,
             mint_fund_units: bool,
         ) -> Option<FungibleBucket> {
-            let mut buckets_value = coin_bucket.amount() * self.oracle_component.unwrap().get_price(
+            let coin_price = self.oracle_component.unwrap().get_price(
                 coin_bucket.resource_address(),
                 morpher_data.clone(),
             );
-
-            if other_coin_bucket.is_some() {
-                buckets_value +=
-                    other_coin_bucket.as_ref().unwrap().amount() *
-                    self.oracle_component.unwrap().get_price(
-                        other_coin_bucket.as_ref().unwrap().resource_address(),
-                        morpher_data.clone()
-                    );
-            }
+            let mut buckets_value = coin_bucket.amount() * coin_price;
 
             let (_, fund_unit_gross_value) = self.fund_unit_value();
 
@@ -896,7 +903,23 @@ mod fund_manager {
                 None => (None, None),
             };
 
-            self.fund_manager_badge_vault.authorize_with_amount(
+            let other_coin_price = match defi_protocol.other_coin {
+                None => None,
+                Some(other_coin) => {
+                    let other_coin_price = self.oracle_component.unwrap().get_price(
+                        other_coin,
+                        morpher_data
+                    );
+
+                    if other_coin_bucket.is_some() {
+                        buckets_value += other_coin_bucket.as_ref().unwrap().amount() * other_coin_price;
+                    }
+
+                    Some(other_coin_price)
+                },
+            };
+
+            let (coin_amount, other_coin_amount) = self.fund_manager_badge_vault.authorize_with_amount(
                 1,
                 || defi_protocol.wrapper.deposit_coin(
                     coin_bucket,
@@ -906,8 +929,20 @@ mod fund_manager {
                 )
             );
 
-            defi_protocol.value += buckets_value;
-            self.total_value += buckets_value;
+            let mut new_protocol_value = coin_amount * coin_price;
+            if other_coin_amount.is_some() {
+                new_protocol_value += other_coin_amount.unwrap() * other_coin_price.unwrap();
+            }
+
+            self.total_value += new_protocol_value - defi_protocol.value;
+            defi_protocol.value = new_protocol_value;
+
+            Runtime::emit_event(
+                AdminDepositEvent {
+                    defi_protocol_name: defi_protocol_name,
+                    protocol_value: new_protocol_value,
+                }
+            );
 
             if mint_fund_units {
                 Some(self.fund_unit_resource_manager.mint(buckets_value / fund_unit_gross_value))
@@ -921,43 +956,59 @@ mod fund_manager {
             defi_protocol_name: String,
             protocol_token_bucket: Bucket,
             morpher_data: HashMap<ResourceAddress, (String, String)>,
-        ) {
-            let mut added_value = Decimal::ZERO;
-
-            let defi_protocol = self.defi_protocols.get(&defi_protocol_name).expect("Protocol not found");
-
-            let coin1_price = self.oracle_component.unwrap().get_price(defi_protocol.coin, morpher_data.clone());
-
-            let coin2_price = match defi_protocol.other_coin {
-                Some(coin2) => Some(self.oracle_component.unwrap().get_price(coin2, morpher_data)),
-                None => None,
-            };
-
-            drop(defi_protocol);
-
+            mint_fund_units: bool,
+        ) -> Option<FungibleBucket> {
             let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
 
-            let (option_amount1, option_amount2) = self.fund_manager_badge_vault.authorize_with_amount(
+            let (old_coin_amount, old_other_coin_amount) = defi_protocol.wrapper.get_coin_amounts();
+
+            let (coin_amount, other_coin_amount) = self.fund_manager_badge_vault.authorize_with_amount(
                 1,
                 || defi_protocol.wrapper.deposit_protocol_token(protocol_token_bucket)
             );
 
-            if option_amount1.is_some() {
-                added_value += option_amount1.unwrap() * coin1_price;
-            } else {
-                Runtime::emit_event(
-                    MissingInfoEvent {
-                        defi_protocol_name: defi_protocol_name,
-                    }
+            let coin_price = self.oracle_component.unwrap().get_price(
+                defi_protocol.coin,
+                morpher_data.clone()
+            );
+
+            let mut protocol_value = coin_price * old_coin_amount;
+            let mut new_protocol_value = coin_price * coin_amount;
+
+            if defi_protocol.other_coin.is_some() {
+                let other_coin_price = self.oracle_component.unwrap().get_price(
+                    defi_protocol.other_coin.unwrap(),
+                    morpher_data
                 );
+
+                protocol_value += other_coin_price * old_other_coin_amount.unwrap();
+                new_protocol_value += other_coin_price * other_coin_amount.unwrap();
             }
 
-            if option_amount2.is_some() {
-                added_value += option_amount2.unwrap() * coin2_price.unwrap();
-            }
+            self.total_value += new_protocol_value - defi_protocol.value;
+            defi_protocol.value = new_protocol_value;
 
-            defi_protocol.value += added_value;
-            self.total_value += added_value;
+            Runtime::emit_event(
+                AdminDepositEvent {
+                    defi_protocol_name: defi_protocol_name,
+                    protocol_value: new_protocol_value,
+                }
+            );
+
+            match mint_fund_units {
+                false => None,
+                true => {
+                    drop(defi_protocol);
+
+                    let (_, fund_unit_gross_value) = self.fund_unit_value();
+
+                    Some(
+                        self.fund_unit_resource_manager.mint(
+                            (new_protocol_value - protocol_value) / fund_unit_gross_value
+                        )
+                    )
+                },
+            }
         }
 
         pub fn remove_defi_protocol(
@@ -980,25 +1031,68 @@ mod fund_manager {
 
             self.total_value -= defi_protocol.value;
 
-            self.fund_manager_badge_vault.authorize_with_amount(
+            let (token_bucket, _, _) = self.fund_manager_badge_vault.authorize_with_amount(
                 1,
                 || defi_protocol.wrapper.withdraw_protocol_token(None)
-            )
+            );
+
+            token_bucket
         }
 
         pub fn update_defi_protocols_info(
             &mut self,
-            defi_protocols_value: HashMap<String, Decimal>,
+            defi_protocols_value: IndexSet<String>,
             defi_protocols_desired_percentage: HashMap<String, u8>,
+            morpher_data: HashMap<ResourceAddress, (String, String)>,
         ) {
             let mut value_change = Decimal::ZERO;
 
-            for (name, value) in defi_protocols_value.iter() {
-                let mut defi_protocol = self.defi_protocols.get_mut(&name).expect("Not found");
+            let mut prices: HashMap<ResourceAddress, Decimal> = HashMap::new();
 
-                value_change += *value - defi_protocol.value;
+            for name in defi_protocols_value.iter() {
+                let mut defi_protocol = self.defi_protocols.get_mut(&name).unwrap();
 
-                defi_protocol.value = *value;
+                let (coin_amount, other_coin_amount) = defi_protocol.wrapper.get_coin_amounts();
+
+                let mut new_protocol_value = match prices.get(&defi_protocol.coin) {
+                    Some(coin_price) => *coin_price * coin_amount,
+                    None => {
+                        let coin_price = self.oracle_component.unwrap().get_price(
+                            defi_protocol.coin,
+                            morpher_data.clone()
+                        );
+
+                        prices.insert(defi_protocol.coin, coin_price);
+
+                        coin_price * coin_amount
+                    },
+                };
+
+                if defi_protocol.other_coin.is_some() {
+                    new_protocol_value += match prices.get(&defi_protocol.other_coin.unwrap()) {
+                        Some(other_coin_price) => *other_coin_price * other_coin_amount.unwrap(),
+                        None => {
+                            let other_coin_price = self.oracle_component.unwrap().get_price(
+                                defi_protocol.other_coin.unwrap(),
+                                morpher_data.clone()
+                            );
+
+                            prices.insert(defi_protocol.other_coin.unwrap(), other_coin_price);
+
+                            other_coin_price * other_coin_amount.unwrap()
+                        },
+                    };
+                }
+
+                Runtime::emit_event(
+                    ProtocolValueUpdateEvent {
+                        defi_protocol_name: name.clone(),
+                        protocol_value: new_protocol_value,
+                    }
+                );
+
+                value_change += new_protocol_value - defi_protocol.value;
+                defi_protocol.value = new_protocol_value;
             }
 
             self.total_value += value_change;
@@ -1083,38 +1177,47 @@ mod fund_manager {
                 fund_units_bucket.amount() * fund_unit_net_value
             );
 
-            let defi_protocol = self.defi_protocols.get(&defi_protocol_name).unwrap();
+            let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
 
-            let coin_value = self.oracle_component.unwrap().get_price(defi_protocol.coin, morpher_data.clone());
+            let coin_price = self.oracle_component.unwrap().get_price(
+                defi_protocol.coin,
+                morpher_data.clone()
+            );
 
-            let (other_coin_to_coin_price_ratio, other_coin_value) = match defi_protocol.other_coin {
+            let (other_coin_to_coin_price_ratio, other_coin_price) = match defi_protocol.other_coin {
                 Some(other_coin) => {
-                    let other_coin_price = self.oracle_component.unwrap().get_price(other_coin, morpher_data);
+                    let other_coin_price = self.oracle_component.unwrap().get_price(
+                        other_coin,
+                        morpher_data
+                    );
 
-                    (Some(other_coin_price / coin_value), Some(other_coin_price))
+                    (Some(other_coin_price / coin_price), Some(other_coin_price))
                 },
                 None => (None, None),
             };
 
-            drop(defi_protocol);
+            let (mut coin_bucket, mut other_coin_bucket, coin_amount, other_coin_amount) = 
+                self.fund_manager_badge_vault.authorize_with_amount(
+                    1,
+                    || defi_protocol.wrapper.withdraw_coin(
+                        Some(withdrawable_value / coin_price),
+                        other_coin_to_coin_price_ratio,
+                    )
+                );
 
-            let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
-
-            let (mut coin_bucket, mut other_coin_bucket) = self.fund_manager_badge_vault.authorize_with_amount(
-                1,
-                || defi_protocol.wrapper.withdraw_coin(
-                    Some(withdrawable_value / coin_value),
-                    other_coin_to_coin_price_ratio,
-                )
-            );
-
-            let mut coin_bucket_value = coin_bucket.amount() * coin_value;
+            let mut coin_bucket_value = coin_bucket.amount() * coin_price;
             if other_coin_bucket.is_some() {
-                coin_bucket_value += other_coin_bucket.as_ref().unwrap().amount() * other_coin_value.unwrap();
+                coin_bucket_value += other_coin_bucket.as_ref().unwrap().amount() * other_coin_price.unwrap();
             }
 
-            self.total_value -= coin_bucket_value;
-            defi_protocol.value -= coin_bucket_value;
+            let mut new_protocol_value = coin_amount * coin_price;
+            if defi_protocol.other_coin.is_some() {
+                new_protocol_value += other_coin_price.unwrap() * other_coin_amount.unwrap();
+            }
+
+            self.total_value += new_protocol_value - defi_protocol.value;
+
+            defi_protocol.value = new_protocol_value;
 
             if swap_to.is_some() {
                 if swap_to.unwrap() != defi_protocol.coin {
@@ -1144,6 +1247,7 @@ mod fund_manager {
                 WithdrawFromFundEvent {
                     fund_unit_amount: fund_units_to_burn,
                     defi_protocol_name: defi_protocol_name,
+                    protocol_value: new_protocol_value,
                 }
             );
 
