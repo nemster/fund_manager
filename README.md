@@ -14,6 +14,14 @@ The software also contains the `DefiProtocol` interface that can be used to talk
 - `WeftWrapper` for managing liquidity in Weft Finance.  
 - `RootFinanceWRapper` for managing liquidity provided to Root Finance.  
 
+## Fund value
+It is possible to query the value of the investment of all of the DeFi protocols by calling the `fund_details` method of the `FundManager` component.  
+On each deposit or withdraw operation on a DeFi protocol, the `FundManager` updates the value of the investment in that protocol and emits appropriate one of these events: `LsuUnstakeCompletedEvent`, `WithdrawFromFundEvent`, `AdminDepositEvent`.  
+If a protocol is not used for a while its value can be obsolete because of price change of the invested coins or because of the yelds; in this case the bot can invoke the `update_defi_protocols_info` method to have the value updated. This method also emits the `ProtocolValueUpdateEvent`.  
+
+The value of a fund unit can be obtained by dividing the total value of the fund by the fund unit current supply (gross value) and applying the withdrawal fee (net value).  
+The `fund_unit_value` method returns both values.  
+
 ## Actors and badges
 
 ### Unauthenticated user
@@ -54,6 +62,7 @@ Exchange fund units for any coin in the fund or a specific coin.
 The method emits the `WithdrawFromFundEvent` that contains:  
 - the amount of fund units burnt  
 - the name of the DeFi protocols the withdraw happened from  
+- the remaining value of the DeFi protocol it withdrew from  
 This method returns one or two buckets of coins used by a DeFi protocol or the requested coin.  
 
 ```
@@ -193,6 +202,7 @@ This method emits a `LsuUnstakeCompletedEvent` reporting:
 - the amount of unstaked XRD  
 - the name of the DeFi protocol it invested in  
 - the number of new fund units that will be distributed  
+- the new total value of the DeFi protocol it invested in
 
 ```
 CALL_METHOD
@@ -250,7 +260,10 @@ CALL_METHOD
 `<MORE_STAKERS>` must be `false` if the airdrop is completed, `true` if there will be more calls to this method.  
 
 ### update\_defi\_protocols\_info
-This method can update the estimation of the dollar value of the investment in each DeFi protocol and/or the desired percentage of value to invest in each DeFi protocol.  
+This method can ask FundManager to update the estimation of the dollar value of the investment in some DeFi protocols and/or the desired percentage of value to invest in each DeFi protocol.  
+It emits a `ProtocolValueUpdateEvent` for each coin whose value is updated. The event contains:  
+- the name of the protocol  
+- the updated value of the coins invested in the protocol  
 
 ```
 CALL_METHOD
@@ -804,6 +817,9 @@ CALL_METHOD
 
 ### deposit\_coin
 Deposit coins (eventually other coins too) in a DeFi protocol and eventually get the equivalent amount of fund units.  
+This metod emits a AdminDepositEvent event containing:  
+- the name of the protocol the coins were invested in  
+- the new total value of the protocol  
 
 ```
 CALL_METHOD
@@ -860,7 +876,51 @@ CALL_METHOD
 `<MINT_FUND_UNITS>` whether to mint fund units of the same value of the deposited coins (`true` or `false`).  
 
 ### deposit\_protocol\_token
-TODO
+Deposit tokens in a DeFi protocol and eventually get the equivalent amount of fund units.  
+This metod emits a AdminDepositEvent event containing:  
+- the name of the protocol the tokens were deposited in  
+- the new total value of the protocol  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "withdraw"
+    Address("<TOKEN_ADDRESS>")
+    Decimal("<TOKEN_AMOUNT>")
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("<TOKEN_ADDRESS>")
+    Bucket("token_bucket")
+; 
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "deposit_protocol_token"
+    "<PROTOCOL_NAME>"
+    Bucket("token_bucket")
+    Map<ResourceAddress, Tuple>(
+        Address("<COIN_ADDRESS>") => ("<MORPHER_MESSAGE>", "<MORPHER_SIGNATURE>"),
+        ...
+    )
+    <MINT_FUND_UNITS>
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<TOKEN_ADDRESS>` the resource address of the token to deposit.  
+`<TOKEN_AMOUNT>` the amount of token to deposit.  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+`<PROTOCOL_NAME>` is the name of the protocol to deposit coins in.  
+`<MORPHER_MESSAGE>` the message for the Morpher oracle, if needed by the DeFi protocol.  
+`<MORPHER_SIGNATURE>` the signature of `<MORPHER_MESSAGE>`.  
+`<MINT_FUND_UNITS>` whether to mint fund units of the same value of the deposited coins (`true` or `false`).  
 
 ## Disclaimer
 Untested software, for educational purposes only, no warranty.  
