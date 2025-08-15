@@ -15,6 +15,8 @@ use scrypto_interface::*;
  * Instead of using a Vault to hold tokens this blueprint uses an Account so that the WEFT
  * incentive system is happy. */
 
+static NON_FUNGIBLES_PER_WITHDRAW: u32 = 100;
+
 #[blueprint_with_traits]
 mod weft_wrapper {
 
@@ -40,6 +42,7 @@ mod weft_wrapper {
         roles {
             fund_manager => updatable_by: []; // The fund_manager component
             bot => updatable_by: [fund_manager]; // The backend
+            admin => updatable_by: [fund_manager]; // Any admin
         },
         methods {
             // DefiProtocolInterfaceTrait implementation
@@ -53,6 +56,9 @@ mod weft_wrapper {
             withdraw_account_badge => restrict_to: [fund_manager];
             deposit_account_badge => restrict_to: [fund_manager];
 
+            // Withdraw any unexpected coin in the account
+            whithdraw_unexpected_coin => restrict_to: [admin];
+
             // Collect WEFT incentives (WEFT coins)
             get_incentives => restrict_to: [bot];
 
@@ -63,7 +69,6 @@ mod weft_wrapper {
 
     struct WeftWrapper {
         coin_address: ResourceAddress, // Example coin: xUSDC
-        minimum_coin_amount: Decimal, // Minimum amount of the coin according to divisibility
         token_address: ResourceAddress, // Example token: w2-xUSDC
         weft_claimer_nft_address: ResourceAddress, // The badge used to collect incentives
 
@@ -90,20 +95,14 @@ mod weft_wrapper {
             claimer_component_address: Global<WeftTokenClaimer>, // WEFT component that handles
                                                                  // incentives
             fund_manager_badge_address: ResourceAddress, // God's badge
+            admin_badge_address: ResourceAddress, // Admins' badge
             bot_badge_address: ResourceAddress, // Backend's badge
+            account: Global<Account>, // The account that will be used as a vault
+            account_badge: NonFungibleBucket, // The badge to manage the account
         ) -> Global<WeftWrapper> {
-            // Find coin divisibility
-            let coin_divisibility = ResourceManager::from_address(coin_address)
-                .resource_type()
-                .divisibility()
-                .unwrap();
-
-            // Instantiate the Account and save the badge to manage it
-            let (account, account_badge) = Blueprint::<Account>::create();
 
             // Instantiate the component, globalize and return it
             Self {
-                minimum_coin_amount: Decimal::ONE / 10.pow(coin_divisibility),
                 account: account,
                 account_badge_vault: NonFungibleVault::with_bucket(account_badge),
                 coin_address: coin_address,
@@ -114,9 +113,10 @@ mod weft_wrapper {
                 weft_claimer_nft_address: weft_claimer_nft_address,
             }
                 .instantiate()
-                .prepare_to_globalize(OwnerRole::None)
+                .prepare_to_globalize(OwnerRole::Fixed(rule!(require(admin_badge_address))))
                 .roles(roles!(
                     fund_manager => rule!(require(fund_manager_badge_address));
+                    admin => rule!(require(admin_badge_address));
                     bot => rule!(require(bot_badge_address));
                 ))
                 .globalize()
@@ -141,12 +141,13 @@ mod weft_wrapper {
             );
 
             // Get incentives and deposit them in the Account
-            self.account.deposit(
+            self.account.try_deposit_or_abort(
                 self.claimer_component_address.claim(
                     incentive_type,
                     amount,
                     claimer_proof.into()
-                )
+                ),
+                None
             );
         }
 
@@ -178,6 +179,49 @@ mod weft_wrapper {
                 .checked_truncate(RoundingMode::ToZero)
                 .unwrap()
         }
+
+        // Withdraw any unexpected fungible or non fungible in the account
+        pub fn whithdraw_unexpected_coin(
+            &mut self,
+            coin_address: ResourceAddress,
+        ) -> Bucket {
+            assert!(
+                coin_address != self.coin_address &&
+                coin_address != self.token_address &&
+                coin_address != self.weft_claimer_nft_address &&
+                coin_address != self.weft_coin_address,
+                "You can't withdraw this coin",
+            );
+
+            match coin_address.is_fungible() {
+                true => {
+                    let balance = self.account.balance(coin_address);
+
+                    self.account_badge_vault.authorize_with_non_fungibles(
+                        &self.account_badge_vault.non_fungible_local_ids(1),
+                        || self.account.withdraw(
+                            coin_address,
+                            balance,
+                        )
+                    )
+                },
+                false => {
+                    let ids = self.account.non_fungible_local_ids(
+                        coin_address,
+                        NON_FUNGIBLES_PER_WITHDRAW,
+                    );
+
+                    self.account_badge_vault.authorize_with_non_fungibles(
+                        &self.account_badge_vault.non_fungible_local_ids(1),
+                        || self.account.withdraw_non_fungibles(
+                            coin_address,
+                            ids,
+                        )
+                    )
+                        .into()
+                }
+            }
+        }
     }
 
     impl DefiProtocolInterfaceTrait for WeftWrapper {
@@ -191,7 +235,7 @@ mod weft_wrapper {
             Decimal,                // Total coin amount
             Option<Decimal>         // Total WEFT coin amount
         ) {
-            self.account.deposit(token);
+            self.account.try_deposit_or_abort(token, None);
 
             self.get_coin_amounts()
         }
@@ -268,7 +312,7 @@ mod weft_wrapper {
                 .unwrap();
 
             // Deposit the tokens  in the Account
-            self.account.deposit(token_bucket.into());
+            self.account.try_deposit_or_abort(token_bucket.into(), None);
 
             // If other_coin is provided, ensure that this is a bucket of WEFT and deposit them in
             // the Account
@@ -280,7 +324,7 @@ mod weft_wrapper {
                         "Unknown coin"
                     );
 
-                    self.account.deposit(bucket.into());
+                    self.account.try_deposit_or_abort(bucket.into(), None);
                 },
             }
 
@@ -426,6 +470,7 @@ mod weft_wrapper {
             }
         }
 
+        // Get the number of available coins and WEFT coins
         fn get_coin_amounts(&mut self) -> (
             Decimal,                // Total coin amount
             Option<Decimal>         // Total WEFT coin amount
