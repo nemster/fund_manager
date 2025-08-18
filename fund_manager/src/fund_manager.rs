@@ -122,6 +122,9 @@ mod fund_manager {
             deposit_coin => restrict_to: [OWNER];
             deposit_protocol_token => restrict_to: [OWNER];
             deposit_fund_manager_badge => restrict_to: [OWNER];
+            register_validator => restrict_to: [OWNER];
+            signal_protocol_update_readiness => restrict_to: [OWNER];
+            update_node_key => restrict_to: [OWNER];
 
             start_unlock_owner_stake_units => restrict_to: [bot];
             start_unstake => restrict_to: [bot];
@@ -1336,6 +1339,42 @@ mod fund_manager {
 
             self.buyback_fund_percentage = percentage;
             self.buyback_fund_account = account;
+        }
+
+        pub fn register_validator(
+            &mut self,
+            register: bool
+        ) {
+            self.validator_badge_vault.authorize_with_non_fungibles(
+                &self.validator_badge_vault.non_fungible_local_ids(1),
+                || if register {
+                    self.validator.register();
+                } else {
+                    self.validator.unregister();
+                }
+            )
+        }
+        
+        pub fn signal_protocol_update_readiness(
+            &mut self,
+            vote: String,
+        ) {
+            self.validator_badge_vault.authorize_with_non_fungibles(
+                &self.validator_badge_vault.non_fungible_local_ids(1),
+                || self.validator.signal_protocol_update_readiness(vote)
+            );
+        }
+
+        pub fn update_node_key(
+            &mut self,
+            key: String,
+        ) {
+            self.validator_badge_vault.authorize_with_non_fungibles(
+                &self.validator_badge_vault.non_fungible_local_ids(1),
+                || self.validator.update_key(
+                    Secp256k1PublicKey::from_str(&key).expect("Invalid key")
+                )
+            );
         }
     }
 }

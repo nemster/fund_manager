@@ -922,6 +922,103 @@ CALL_METHOD
 `<MORPHER_SIGNATURE>` the signature of `<MORPHER_MESSAGE>`.  
 `<MINT_FUND_UNITS>` whether to mint fund units of the same value of the deposited coins (`true` or `false`).  
 
+### register\_validator
+Registers or unregisters the Validator.  
+An admin does't need other admins' authorization to call this method.  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "register_validator"
+    <REGISTER>
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+`<REGISTER>` `true` for registerning the Validator, `false` to unregister it.  
+
+### signal\_protocol\_update\_readiness
+Votes for a Radix protcol update.  
+An admin does't need other admins' authorization to call this method.  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "signal_protocol_update_readiness"
+    "<VOTE>"
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+`<VOTE>` is the code name of the update.  
+
+### update\_node\_key
+Associates the Validator with a Radix node.  
+An admin does't need other admins' authorization to call this method.  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "update_node_key"
+    "<KEY>"
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+`<KEY>` is a string representation of the node key.  
+
+### whithdraw\_unexpected\_coin
+Since the DeFi wrappers use Accounts to store DeFi protocols tokens it's possible that someone sends unexpected coins to one of these accounts; this method allows an admin to withdraw these coins. It can't be used to withdraw any coin that the DeFi protocol wrapper is supposed to handle.  
+The coin can be both a fungible or a non fungible; in case of a fungible the full balance will be withdrawn, in case of a non fungible up do 100 NFTs will be withdrawn in one transaction.  
+An admin does't need other admins' authorization to call this method.  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+;
+CALL_METHOD
+    Address("<ANY_DEFI_WRAPPER_COMPONENT_ADDRESS>")
+    "whithdraw_unexpected_coin"
+    Address("<COIN_ADDRESS>")
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<ANY_DEFI_WRAPPER_COMPONENT_ADDRESS>` the address of one of the DeFi protocol wrappers.  
+`<COIN_ADDRESS>` is the resource address of the coin to withdraw.  
+
 ## Disclaimer
 Untested software, for educational purposes only, no warranty.  
 
