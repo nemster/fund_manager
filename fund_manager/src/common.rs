@@ -4,21 +4,21 @@ use scrypto_interface::*;
 define_interface! {
     DefiProtocol impl [ScryptoStub, Trait, ScryptoTestStub] {
 
-        fn deposit_protocol_token(
+        fn deposit_all(
             &mut self,
             token: Bucket,
+            coin: Option<FungibleBucket>,
+            other_coin: Option<FungibleBucket>,
         ) -> (
             Decimal,                // Total coin amount
             Option<Decimal>         // Total other coin amount
         );
 
-        fn withdraw_protocol_token(
-            &mut self,
-            amount: Option<Decimal>,
-        ) -> (
+        // Withdraw all of the protocol tokens and coins from the component
+        fn withdraw_all(&mut self) -> (
             Bucket,                 // Tokens
-            Decimal,                // Total coin amount
-            Option<Decimal>         // Total other coin amount
+            Option<FungibleBucket>, // Coins
+            Option<FungibleBucket>  // Other coins
         );
 
         fn deposit_coin(
@@ -34,7 +34,7 @@ define_interface! {
 
         fn withdraw_coin(
             &mut self,
-            amount: Option<Decimal>,
+            amount: Decimal,
             other_coin_to_coin_price_ratio: Option<Decimal>,
         ) -> (
             FungibleBucket,         // Coins
@@ -47,6 +47,9 @@ define_interface! {
             Decimal,                // Total coin amount
             Option<Decimal>         // Total other coin amount
         );
+
+        // Get the control of the Account; to use when a wrapper is definitively dismissed
+        fn withdraw_account_badge(&mut self) -> NonFungibleBucket;
     }
 }
 

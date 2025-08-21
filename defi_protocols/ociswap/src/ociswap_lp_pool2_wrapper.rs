@@ -30,13 +30,10 @@ mod ociswap_lp_pool2_wrapper {
             admin => updatable_by: [fund_manager];
         },
         methods {
-            deposit_protocol_token => restrict_to: [fund_manager];
-            withdraw_protocol_token => restrict_to: [fund_manager];
+            deposit_all => restrict_to: [fund_manager];
+            withdraw_all => restrict_to: [fund_manager];
             deposit_coin => restrict_to: [fund_manager];
             withdraw_coin => restrict_to: [fund_manager];
-
-            // The fund_manager component will never call these methods, they can only be used in
-            // case of an emergency by the admins
             withdraw_account_badge => restrict_to: [fund_manager];
             deposit_account_badge => restrict_to: [fund_manager];
 
@@ -85,13 +82,6 @@ mod ociswap_lp_pool2_wrapper {
                     admin => rule!(require(admin_badge_address));
                 ))
                 .globalize()
-        }
-
-        // Emergency procedure to get the control of the Account
-        pub fn withdraw_account_badge(&mut self) -> NonFungibleBucket {
-            self.account_badge_vault.take_non_fungible(
-                &self.account_badge_vault.non_fungible_local_id()
-            )
         }
 
         // Give the control of the Account back to the component
@@ -179,36 +169,61 @@ mod ociswap_lp_pool2_wrapper {
 
     impl DefiProtocolInterfaceTrait for OciswapLpPool2Wrapper {
 
-        fn deposit_protocol_token(
+        fn deposit_all(
             &mut self,
             token: Bucket,
+            coin: Option<FungibleBucket>,
+            other_coin: Option<FungibleBucket>,
         ) -> (
             Decimal,
             Option<Decimal>
         ) {
-            self.account.try_deposit_or_abort(token, None);
+            if coin.is_some() || other_coin.is_some() {
+                let mut buckets = vec![token];
+
+                if coin.is_some() {
+                    buckets.push(coin.unwrap().into());
+                }
+
+                if other_coin.is_some() {
+                    buckets.push(other_coin.unwrap().into());
+                }
+
+                self.account.try_deposit_batch_or_abort(buckets, None);
+            } else {
+                self.account.try_deposit_or_abort(token, None);
+            }
 
             self.get_coin_amounts()
         }
 
-        fn withdraw_protocol_token(
+        fn withdraw_all(
             &mut self,
-            amount: Option<Decimal>,
         ) -> (
             Bucket,
-            Decimal,
-            Option<Decimal>
+            Option<FungibleBucket>,
+            Option<FungibleBucket>
         ) {
-            let amount = amount.unwrap_or(Decimal::MAX);
-
             let (lp_token_bucket, _) = self.take_from_account(
                 self.lp_token_address,
-                amount,
+                Decimal::MAX,
             );
 
-            let (a_amount, b_amount) = self.get_coin_amounts();
+            let (a_bucket, _) = self.take_from_account(
+                self.a_address,
+                Decimal::MAX,
+            );
 
-            (lp_token_bucket, a_amount, b_amount)
+            let (b_bucket, _) = self.take_from_account(
+                self.b_address,
+                Decimal::MAX,
+            );
+
+            (
+                lp_token_bucket,
+                Some(FungibleBucket(a_bucket)),
+                Some(FungibleBucket(b_bucket)),
+            )
         }
 
         fn deposit_coin(
@@ -296,7 +311,7 @@ mod ociswap_lp_pool2_wrapper {
 
         fn withdraw_coin(
             &mut self,
-            amount: Option<Decimal>,
+            amount: Decimal,
             other_coin_to_coin_price_ratio: Option<Decimal>,
         ) -> (
             FungibleBucket,
@@ -306,13 +321,11 @@ mod ociswap_lp_pool2_wrapper {
         ) {
             let (mut a_bucket, mut remaining_a_amount) = self.take_from_account(
                 self.a_address,
-                amount.unwrap_or(Decimal::MAX),
+                amount,
             );
 
-            let b_amount_to_withdraw = match amount {
-                Some(amount) => (amount - a_bucket.amount()) / other_coin_to_coin_price_ratio.unwrap(),
-                None => Decimal::MAX,
-            };
+            let b_amount_to_withdraw = (amount - a_bucket.amount())
+                / other_coin_to_coin_price_ratio.unwrap();
             let (mut b_bucket, mut remaining_b_amount) = self.take_from_account(
                 self.b_address,
                 b_amount_to_withdraw,
@@ -321,27 +334,23 @@ mod ociswap_lp_pool2_wrapper {
             let lp_token_available_amount = self.account.balance(self.lp_token_address);
             if lp_token_available_amount > Decimal::ZERO {
 
-                let lp_token_amount_to_withdraw = match amount {
-                    Some(amount) => {
-                        let amounts = self.pool.get_redemption_value(lp_token_available_amount);
+                let amounts = self.pool.get_redemption_value(lp_token_available_amount);
 
-                        let reedemeble_a_amount = *amounts.get(&self.a_address).unwrap();
-                        let reedemeble_b_amount = *amounts.get(&self.b_address).unwrap();
+                let reedemeble_a_amount = *amounts.get(&self.a_address).unwrap();
+                let reedemeble_b_amount = *amounts.get(&self.b_address).unwrap();
 
-                        remaining_a_amount += reedemeble_a_amount;
-                        remaining_b_amount += reedemeble_b_amount;
+                remaining_a_amount += reedemeble_a_amount;
+                remaining_b_amount += reedemeble_b_amount;
 
-                        let reedemeble_a_amount_equivalent = reedemeble_a_amount +
-                            reedemeble_b_amount * other_coin_to_coin_price_ratio.unwrap();
+                let reedemeble_a_amount_equivalent = reedemeble_a_amount +
+                    reedemeble_b_amount * other_coin_to_coin_price_ratio.unwrap();
 
-                        let a_amount_equivalent_to_withdraw = amount
-                            - a_bucket.amount()
-                            - b_bucket.amount() * other_coin_to_coin_price_ratio.unwrap();
+                let a_amount_equivalent_to_withdraw = amount
+                    - a_bucket.amount()
+                    - b_bucket.amount() * other_coin_to_coin_price_ratio.unwrap();
 
-                        lp_token_available_amount * (a_amount_equivalent_to_withdraw / reedemeble_a_amount_equivalent)
-                    }
-                    None => Decimal::MAX,
-                };
+                let lp_token_amount_to_withdraw = lp_token_available_amount
+                    * (a_amount_equivalent_to_withdraw / reedemeble_a_amount_equivalent);
 
                 let (lp_token_bucket, _) = self.take_from_account(
                     self.lp_token_address,
@@ -364,6 +373,13 @@ mod ociswap_lp_pool2_wrapper {
                 Some(FungibleBucket(b_bucket)),
                 remaining_a_amount,
                 Some(remaining_b_amount)
+            )
+        }
+
+        // Get the control of the Account
+        fn withdraw_account_badge(&mut self) -> NonFungibleBucket {
+            self.account_badge_vault.take_non_fungible(
+                &self.account_badge_vault.non_fungible_local_id()
             )
         }
 

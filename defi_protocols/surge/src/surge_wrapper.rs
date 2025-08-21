@@ -42,13 +42,10 @@ mod surge_wrapper {
             admin => updatable_by: [fund_manager];
         },
         methods {
-            deposit_protocol_token => restrict_to: [fund_manager];
-            withdraw_protocol_token => restrict_to: [fund_manager];
+            deposit_all => restrict_to: [fund_manager];
+            withdraw_all => restrict_to: [fund_manager];
             deposit_coin => restrict_to: [fund_manager];
             withdraw_coin => restrict_to: [fund_manager];
-
-            // The fund_manager component will never call these methods, they can only be used in
-            // case of an emergency by the admins
             withdraw_account_badge => restrict_to: [fund_manager];
             deposit_account_badge => restrict_to: [fund_manager];
 
@@ -95,13 +92,6 @@ mod surge_wrapper {
                     admin => rule!(require(admin_badge_address));
                 ))
                 .globalize()
-        }
-
-        // Emergency procedure to get the control of the Account
-        pub fn withdraw_account_badge(&mut self) -> NonFungibleBucket {
-            self.account_badge_vault.take_non_fungible(
-                &self.account_badge_vault.non_fungible_local_id()
-            )
         }
 
         // Give the control of the Account back to the component
@@ -187,46 +177,37 @@ mod surge_wrapper {
 
     impl DefiProtocolInterfaceTrait for SurgeWrapper {
 
-        fn deposit_protocol_token(
+        fn deposit_all(
             &mut self,
             token: Bucket,
+            coin: Option<FungibleBucket>,
+            _other_coin: Option<FungibleBucket>, // None
         ) -> (
             Decimal,                // Total coin amount
             Option<Decimal>         // None
         ) {
             self.account.try_deposit_or_abort(token, None);
 
-            self.get_coin_amounts()
+            if coin.is_some() {
+                self.deposit_coin(coin.unwrap(), None, None, None)
+            } else {
+                self.get_coin_amounts()
+            }
         }
 
-        fn withdraw_protocol_token(
+        fn withdraw_all(
             &mut self,
-            amount: Option<Decimal>,
         ) -> (
             Bucket,                 // LP tokens
-            Decimal,                // Total coin amount
-            Option<Decimal>         // None
+            Option<FungibleBucket>,
+            Option<FungibleBucket>,
         ) {
-            match amount {
-                Some(amount) => {
-                    let (token_bucket, _) = self.take_from_account(
-                        self.token_address,
-                        amount
-                    );
+            let (token_bucket, _) = self.take_from_account(
+                self.token_address,
+                Decimal::MAX
+            );
 
-                    let (coin_amount, _) = self.get_coin_amounts();
-
-                    (token_bucket, coin_amount, None)
-                },
-                None => {
-                    let (token_bucket, _) = self.take_from_account(
-                        self.token_address,
-                        Decimal::MAX
-                    );
-
-                    (token_bucket, Decimal::ZERO, None)
-                },
-            }
+            (token_bucket, None, None)
         }
 
         fn deposit_coin(
@@ -253,7 +234,7 @@ mod surge_wrapper {
 
         fn withdraw_coin(
             &mut self,
-            amount: Option<Decimal>,
+            amount: Decimal,
             _other_coin_to_coin_price_ratio: Option<Decimal>,
         ) -> (
             FungibleBucket,
@@ -261,30 +242,18 @@ mod surge_wrapper {
             Decimal,                // Total coin amount
             Option<Decimal>         // None
         ) {
-            let (token_bucket, remaining_coin_amount)  = match amount {
-                Some(amount) => {
-                    let (token_bucket, remaining_tokens) = self.take_from_account(
-                        self.token_address,
-                        amount
-                    );
+            let (token_bucket, remaining_tokens) = self.take_from_account(
+                self.token_address,
+                amount
+            );
 
-                    let pool_details = self.exchange_component.get_pool_details();
-
-                    let remaining_coin_amount = pool_details.base_tokens_amount
-                        * (remaining_tokens / pool_details.lp_supply);
+            let pool_details = self.exchange_component.get_pool_details();
+            let remaining_coin_amount = pool_details.base_tokens_amount
+                * (remaining_tokens / pool_details.lp_supply);
                     
-                    (token_bucket, remaining_coin_amount)
-                },
-                None => self.take_from_account(
-                    self.token_address,
-                    Decimal::MAX
-                ),
-            };
-
             let wrapped_coin_bucket = self.exchange_component.remove_liquidity(
                 token_bucket,
             );
-
             let coin_bucket = FungibleBucket(
                 self.wrapper_component.unwrap(
                     wrapped_coin_bucket,
@@ -311,6 +280,12 @@ mod surge_wrapper {
             (
                 pool_details.base_tokens_amount * (token_amount / pool_details.lp_supply),
                 None
+            )
+        }
+
+        fn withdraw_account_badge(&mut self) -> NonFungibleBucket {
+            self.account_badge_vault.take_non_fungible(
+                &self.account_badge_vault.non_fungible_local_id()
             )
         }
     }

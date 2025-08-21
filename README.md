@@ -16,8 +16,8 @@ The software also contains the `DefiProtocol` interface that can be used to talk
 
 ## Fund value
 It is possible to query the value of the investment of all of the DeFi protocols by calling the `fund_details` method of the `FundManager` component.  
-On each deposit or withdraw operation on a DeFi protocol, the `FundManager` updates the value of the investment in that protocol and emits appropriate one of these events: `LsuUnstakeCompletedEvent`, `WithdrawFromFundEvent`, `AdminDepositEvent`.  
-If a protocol is not used for a while its value can be obsolete because of price change of the invested coins or because of the yelds; in this case the bot can invoke the `update_defi_protocols_info` method to have the value updated. This method also emits the `ProtocolValueUpdateEvent`.  
+On each deposit or withdraw operation on a DeFi protocol, the `FundManager` updates the value of the investment in that protocol and emits appropriate one of these events: `LsuUnstakeCompletedEvent`, `WithdrawFromFundEvent`, `AdminDepositEvent`, `RemovedProtocolEvent`.  
+If a protocol is not used for a while its value can be obsolete because of price change of the invested coins or because of the yelds; in this case the bot can invoke the `update_defi_protocols_value` method to have the value updated. This method also emits the `ProtocolValueUpdateEvent`.  
 
 The value of a fund unit can be obtained by dividing the total value of the fund by the fund unit current supply (gross value) and applying the withdrawal fee (net value).  
 The `fund_unit_value` method returns both values.  
@@ -63,6 +63,7 @@ The method emits the `WithdrawFromFundEvent` that contains:
 - the amount of fund units burnt  
 - the name of the DeFi protocols the withdraw happened from  
 - the remaining value of the DeFi protocol it withdrew from  
+- the new total value of the fund
 This method returns one or two buckets of coins used by a DeFi protocol or the requested coin.  
 
 ```
@@ -203,6 +204,7 @@ This method emits a `LsuUnstakeCompletedEvent` reporting:
 - the name of the DeFi protocol it invested in  
 - the number of new fund units that will be distributed  
 - the new total value of the DeFi protocol it invested in
+- the new total value of the fund
 
 ```
 CALL_METHOD
@@ -259,11 +261,12 @@ CALL_METHOD
 `<AMOUNT>` the number of fund units to send to `<RECIPIENT_ADDRESS>`.  
 `<MORE_STAKERS>` must be `false` if the airdrop is completed, `true` if there will be more calls to this method.  
 
-### update\_defi\_protocols\_info
+### update\_defi\_protocols\_value
 This method can ask FundManager to update the estimation of the dollar value of the investment in some DeFi protocols and/or the desired percentage of value to invest in each DeFi protocol.  
-It emits a `ProtocolValueUpdateEvent` for each coin whose value is updated. The event contains:  
+It emits a `ProtocolValueUpdateEvent` for each DeFi protocol position whose value is updated. The event contains:  
 - the name of the protocol  
 - the updated value of the coins invested in the protocol  
+- the updated total value of the fund
 
 ```
 CALL_METHOD
@@ -274,11 +277,41 @@ CALL_METHOD
 ;
 CALL_METHOD
     Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
-    "update_defi_protocols_info"
+    "update_defi_protocols_value"
     Set<String>(
         "<PROTOCOL_NAME>",
         ...
     )
+    Map<ResourceAddress, Tuple>(
+        Address("<COIN_RESOURCE_ADDRESS>") => ("<MORPHER_MESSAGE>", "<MORPHER_SIGNATURE>"),
+        ...
+    )
+;
+```
+
+`<ACCOUNT>` is the bot account.  
+`<BOT_BADGE>` is the resource address of the badge held by the bot account.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
+`<PROTOCOL_NAME>` is one of the DeFi protocols whose information need to be updates. 
+`<COIN_RESOURCE_ADDRESS>` the resource address of a coin that is listed on the Morpher oracle.  
+`<MORPHER_MESSAGE>` the message for the Morpher oracle regarding `<COIN_RESOURCE_ADDRESS>`.  
+`<MORPHER_SIGNATURE>` the signature of `<MORPHER_MESSAGE>`.  
+
+### update\_defi\_protocols\_percentage
+This method sets the desired percentage of value to invest in each DeFi protocol. 
+The method doesn't actually move any funds; it only influences the future deposit and withdraws.  
+FundManager doesn't check that the sum of the percentages is 100; each percentage should be considered as a share of the sum of the percentages.  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_amount"
+    Address("<BOT_BADGE>")
+    Decimal("1")
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "update_defi_protocols_percentage"
     Map<String, Decimal>(
         "<PROTOCOL_NAME>" => <DESIRED_PERCENTAGE>u8,
         ...
@@ -289,10 +322,8 @@ CALL_METHOD
 `<ACCOUNT>` is the bot account.  
 `<BOT_BADGE>` is the resource address of the badge held by the bot account.  
 `<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
-`<PROTOCOL_NAME>` is one of the DeFi protocols whose information need to be updates.  
-`<VALUE>` the dollar value of the investment in `<PROTOCOL_NAME>`.  
+`<PROTOCOL_NAME>` is one of the DeFi protocols whose information need to be updates.   
 `<DESIRED_PERCENTAGE>` the desired percentage of the fund value to be invested in `<PROTOCOL_NAME>`.  
-
 
 ### update\_price
 Updates the price for the FixedPrice or the FixedMultiplier oracles.  
@@ -504,7 +535,11 @@ CALL_METHOD
 
 ### remove\_defi\_protocol
 This method allows an authorized admin to remove a DeFi protocol wrapper from the FundManager.  
-Warning: the admin will receive all of the liquidity (tokens) in the protocol so it's advisable to set the desired percentage to zero and let users withdraw the liquidity before authorizing this operation.  
+Warning: the admin will receive all of the liquidity in the protocol so it's advisable to set the desired percentage to zero and let users withdraw the liquidity before authorizing this operation.  
+This method emits the `RemovedProtocolEvent` that shows:  
+- the name of the protocol being removed  
+- the updated fund total value  
+Returns: the account owner badge (complete control over the Account used internally by the wrapper).  
 
 ```
 CALL_METHOD
@@ -820,6 +855,7 @@ Deposit coins (eventually other coins too) in a DeFi protocol and eventually get
 This metod emits a AdminDepositEvent event containing:  
 - the name of the protocol the coins were invested in  
 - the new total value of the protocol  
+- the new total value of the fund
 
 ```
 CALL_METHOD

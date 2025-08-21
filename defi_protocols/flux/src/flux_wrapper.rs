@@ -54,13 +54,10 @@ mod flux_wrapper {
             admin => updatable_by: [fund_manager];
         },
         methods {
-            deposit_protocol_token => restrict_to: [fund_manager];
-            withdraw_protocol_token => restrict_to: [fund_manager];
+            deposit_all => restrict_to: [fund_manager];
+            withdraw_all => restrict_to: [fund_manager];
             deposit_coin => restrict_to: [fund_manager];
             withdraw_coin => restrict_to: [fund_manager];
-
-            // The fund_manager component will never call these methods, they can only be used in
-            // case of an emergency by the admins
             withdraw_account_badge => restrict_to: [fund_manager];
             deposit_account_badge => restrict_to: [fund_manager];
 
@@ -111,13 +108,6 @@ mod flux_wrapper {
                 .globalize()
         }
 
-        // Emergency procedure to get the control of the Account
-        pub fn withdraw_account_badge(&mut self) -> NonFungibleBucket {
-            self.account_badge_vault.take_non_fungible(
-                &self.account_badge_vault.non_fungible_local_id()
-            )
-        }
-
         // Give the control of the Account back to the component
         pub fn deposit_account_badge(&mut self, badge_bucket: NonFungibleBucket) {
             assert!(
@@ -142,15 +132,12 @@ mod flux_wrapper {
 
             match coin_address.is_fungible() {
                 true => {
-                    let balance = self.account.balance(coin_address);
+                    let (coin_bucket, _) = self.take_from_account(
+                      coin_address,
+                        Decimal::MAX,
+                    );
 
-                    self.account_badge_vault.authorize_with_non_fungibles(
-                        &self.account_badge_vault.non_fungible_local_ids(1),
-                        || self.account.withdraw(
-                            coin_address,
-                            balance,
-                        )
-                    )
+                    coin_bucket
                 },
                 false => {
                     let ids = self.account.non_fungible_local_ids(
@@ -170,13 +157,54 @@ mod flux_wrapper {
             }
         }
 
+        // Private method to withdraw from the Account
+        fn take_from_account(
+            &mut self,
+            resource_address: ResourceAddress,
+            mut amount: Decimal,
+        ) -> (
+            Bucket,     // Bucket of the requested coin
+            Decimal     // Remaining amount
+        ) {
+            let available_amount = self.account.balance(resource_address);
+            if amount > available_amount {
+                amount = available_amount;
+            } else {
+                let divisibility = ResourceManager::from_address(resource_address)
+                    .resource_type()
+                    .divisibility()
+                    .unwrap();
+
+                amount = amount.checked_round(divisibility, RoundingMode::ToNegativeInfinity).unwrap();
+            }
+
+            match amount > Decimal::ZERO {
+                true => {
+                    let bucket = self.account_badge_vault.authorize_with_non_fungibles(
+                        &self.account_badge_vault.non_fungible_local_ids(1),
+                        || self.account.withdraw(
+                            resource_address,
+                            amount,
+                        )
+                    );
+
+                    (bucket, available_amount - amount)
+                },
+                false => (
+                    Bucket::new(resource_address),
+                    available_amount,
+                ),
+            }
+        }
     }
 
     impl DefiProtocolInterfaceTrait for FluxWrapper {
 
-        fn deposit_protocol_token(
+        fn deposit_all(
             &mut self,
             token: Bucket,
+            _coin: Option<FungibleBucket>,
+            _other_coin: Option<FungibleBucket>,
         ) -> (
             Decimal,
             Option<Decimal>
@@ -186,55 +214,23 @@ mod flux_wrapper {
             self.get_coin_amounts()
         }
 
-        fn withdraw_protocol_token(
+        fn withdraw_all(
             &mut self,
-            amount: Option<Decimal>,
         ) -> (
             Bucket,             // LP tokens
-            Decimal,            // Total fUSD amount
-            Option<Decimal>     // Total coin amount
+            Option<FungibleBucket>,
+            Option<FungibleBucket>,
         ) {
-            let available_tokens = self.account.balance(self.token_address);
+            let (token_bucket, _) = self.take_from_account(
+                self.token_address,
+                Decimal::MAX,
+            );
 
-            match amount {
-                None => {
-
-                    let token_bucket = self.account_badge_vault.authorize_with_non_fungibles(
-                        &self.account_badge_vault.non_fungible_local_ids(1),
-                        || self.account.withdraw(
-                            self.token_address,
-                            available_tokens,
-                        )
-                    );
-
-                    (
-                        token_bucket,
-                        Decimal::ZERO,
-                        Some(Decimal::ZERO),
-                    )
-                },
-                Some(mut amount) => {
-                    if amount > available_tokens {
-                        amount = available_tokens;
-                    }
-
-                    let (deposited_fusd, deposited_coin) = self.get_coin_amounts();
-
-                    let token_bucket = self.account_badge_vault.authorize_with_non_fungibles(
-                        &self.account_badge_vault.non_fungible_local_ids(1),
-                        || self.account.withdraw(
-                            self.token_address,
-                            amount,
-                        )
-                    );
-
-                    (
-                        token_bucket,
-                        deposited_fusd,
-                        deposited_coin,
-                    )
-                },
-            }
+            (
+                token_bucket,
+                None,
+                None,
+            )
         }
 
         fn deposit_coin(
@@ -262,7 +258,7 @@ mod flux_wrapper {
 
         fn withdraw_coin(
             &mut self,
-            amount: Option<Decimal>,
+            amount: Decimal,
             other_coin_to_coin_price_ratio: Option<Decimal>,
         ) -> (
             FungibleBucket,
@@ -270,65 +266,38 @@ mod flux_wrapper {
             Decimal,                    // FUSD amount remaining
             Option<Decimal>             // Other coin amount remaining
         ) {
-            let available_tokens = self.account.balance(self.token_address);
+            let amounts = self.pool.get_redemption_value(Decimal::ONE);
 
-            match amount {
-                Some(amount) => {
-                    let amounts = self.pool.get_redemption_value(Decimal::ONE);
+            // Amount of coins withdrawn by returning one pool unit
+            let fusd_per_token = *amounts.get(&self.fusd_address).unwrap_or(&Decimal::ZERO);
+            let coin_per_token = *amounts.get(&self.coin_address).unwrap_or(&Decimal::ZERO);
 
-                    // Amount of coins withdrawn by returning one pool unit
-                    let fusd_amount = amounts.get(&self.fusd_address).unwrap_or(&Decimal::ZERO);
-                    let coin_amount = amounts.get(&self.coin_address).unwrap_or(&Decimal::ZERO);
+            let token_amount = amount / (fusd_per_token + coin_per_token * other_coin_to_coin_price_ratio.unwrap());
 
-                    let mut token_amount = amount / (*fusd_amount + *coin_amount * other_coin_to_coin_price_ratio.unwrap());
-                    if token_amount > available_tokens {
-                        token_amount = available_tokens;
-                    }
-                    let token_bucket = self.account_badge_vault.authorize_with_non_fungibles(
-                        &self.account_badge_vault.non_fungible_local_ids(1),
-                        || self.account.withdraw(
-                            self.token_address,
-                            token_amount,
-                        )
-                    );
+            let (token_bucket, remaining_tokens) = self.take_from_account(
+                self.token_address,
+                token_amount,
+            );
+            let buckets = self.component_address.withdraw_from_pool(
+                self.coin_address,
+                token_bucket
+            );
 
-                    let buckets = self.component_address.withdraw_from_pool(
-                        self.coin_address,
-                        token_bucket
-                    );
+            let remaining_fusd = remaining_tokens * fusd_per_token;
+            let remaining_coin = remaining_tokens * coin_per_token;
 
-                    let (deposited_fusd, deposited_coin) = self.get_coin_amounts();
+            (
+                FungibleBucket(buckets.0),
+                Some(FungibleBucket(buckets.1)),
+                remaining_fusd,
+                Some(remaining_coin),
+            )
+        }
 
-                    (
-                        FungibleBucket(buckets.0),
-                        Some(FungibleBucket(buckets.1)),
-                        deposited_fusd,
-                        deposited_coin,
-                    )
-                },
-
-                None => {
-                    let token_bucket = self.account_badge_vault.authorize_with_non_fungibles(
-                        &self.account_badge_vault.non_fungible_local_ids(1),
-                        || self.account.withdraw(
-                            self.token_address,
-                            available_tokens,
-                        )
-                    );
-
-                    let buckets = self.component_address.withdraw_from_pool(
-                        self.coin_address,
-                        token_bucket
-                    );
-
-                    (
-                        FungibleBucket(buckets.0),
-                        Some(FungibleBucket(buckets.1)),
-                        Decimal::ZERO,
-                        Some(Decimal::ZERO),
-                    )
-                },
-            }
+        fn withdraw_account_badge(&mut self) -> NonFungibleBucket {
+            self.account_badge_vault.take_non_fungible(
+                &self.account_badge_vault.non_fungible_local_id()
+            )
         }
 
         fn get_coin_amounts(&mut self) -> (

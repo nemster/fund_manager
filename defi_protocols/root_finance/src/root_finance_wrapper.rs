@@ -39,13 +39,10 @@ mod root_finance_wrapper {
             admin => updatable_by: [fund_manager];
         },
         methods {
-            deposit_protocol_token => restrict_to: [fund_manager];
-            withdraw_protocol_token => restrict_to: [fund_manager];
+            deposit_all => restrict_to: [fund_manager];
+            withdraw_all => restrict_to: [fund_manager];
             deposit_coin => restrict_to: [fund_manager];
             withdraw_coin => restrict_to: [fund_manager];
-
-            // The fund_manager component will never call these methods, they can only be used in
-            // case of an emergency by the admins
             withdraw_account_badge => restrict_to: [fund_manager];
             deposit_account_badge => restrict_to: [fund_manager];
 
@@ -93,13 +90,6 @@ mod root_finance_wrapper {
                     admin => rule!(require(admin_badge_address));
                 ))
                 .globalize()
-        }
-
-        // Emergency procedure to get the control of the Account
-        pub fn withdraw_account_badge(&mut self) -> NonFungibleBucket {
-            self.account_badge_vault.take_non_fungible(
-                &self.account_badge_vault.non_fungible_local_id()
-            )
         }
 
         // Give the control of the Account back to the component
@@ -182,9 +172,11 @@ mod root_finance_wrapper {
 
     impl DefiProtocolInterfaceTrait for RootFinanceWrapper {
 
-        fn deposit_protocol_token(
+        fn deposit_all(
             &mut self,
             token: Bucket,
+            coin: Option<FungibleBucket>,
+            _other_coin: Option<FungibleBucket>,
         ) -> (
             Decimal,                // Total coin amount
             Option<Decimal>         // None
@@ -196,16 +188,19 @@ mod root_finance_wrapper {
 
             self.account.try_deposit_or_abort(token, None);
 
-            self.get_coin_amounts()
+            if coin.is_some() {
+                self.deposit_coin(coin.unwrap(), None, None, None)
+            } else {
+                self.get_coin_amounts()
+            }
         }
 
-        fn withdraw_protocol_token(
+        fn withdraw_all(
             &mut self,
-            _amount: Option<Decimal>,
         ) -> (
             Bucket,
-            Decimal,                // Total coin amount
-            Option<Decimal>         // None
+            Option<FungibleBucket>,
+            Option<FungibleBucket>,
         ) {
             let ids = self.account.non_fungible_local_ids(
                 self.token_address,
@@ -221,8 +216,8 @@ mod root_finance_wrapper {
 
             (
                 token_bucket.into(),
-                Decimal::ZERO,
-                None
+                None,
+                None,
             )
         }
 
@@ -248,7 +243,7 @@ mod root_finance_wrapper {
 
         fn withdraw_coin(
             &mut self,
-            mut amount: Option<Decimal>,
+            mut amount: Decimal,
             _other_coin_to_coin_price_ratio: Option<Decimal>,
         ) -> (
             FungibleBucket,
@@ -265,17 +260,15 @@ mod root_finance_wrapper {
                 .checked_truncate(RoundingMode::ToNegativeInfinity)
                 .unwrap();
 
-            if amount.is_none() {
-                amount = Some(available_amount)
-            } else if amount.unwrap() > available_amount {
-                amount = Some(available_amount);
+            if amount > available_amount {
+                amount = available_amount;
             }
 
             let coin_bucket = self.component_address.remove_collateral(
                 proof.into(),
                 vec![(
                     self.coin_address,
-                    amount.unwrap(),
+                    amount,
                     false
                 )]
             )
@@ -285,8 +278,14 @@ mod root_finance_wrapper {
             (
                 FungibleBucket(coin_bucket),
                 None,
-                available_amount - amount.unwrap(),
+                available_amount - amount,
                 None
+            )
+        }
+
+        fn withdraw_account_badge(&mut self) -> NonFungibleBucket {
+            self.account_badge_vault.take_non_fungible(
+                &self.account_badge_vault.non_fungible_local_id()
             )
         }
 

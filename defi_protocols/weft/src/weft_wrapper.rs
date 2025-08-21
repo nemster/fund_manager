@@ -46,8 +46,8 @@ mod weft_wrapper {
         },
         methods {
             // DefiProtocolInterfaceTrait implementation
-            deposit_protocol_token => restrict_to: [fund_manager];
-            withdraw_protocol_token => restrict_to: [fund_manager];
+            deposit_all => restrict_to: [fund_manager];
+            withdraw_all => restrict_to: [fund_manager];
             deposit_coin => restrict_to: [fund_manager];
             withdraw_coin => restrict_to: [fund_manager];
             
@@ -151,22 +151,6 @@ mod weft_wrapper {
             );
         }
 
-        // Emergency procedure to get the control of the Account
-        pub fn withdraw_account_badge(&mut self) -> NonFungibleBucket {
-            self.account_badge_vault.take_non_fungible(
-                &self.account_badge_vault.non_fungible_local_id()
-            )
-        }
-
-        // Give the control of the Account back to the component
-        pub fn deposit_account_badge(&mut self, badge_bucket: NonFungibleBucket) {
-            assert!(
-                self.account_badge_vault.amount() == Decimal::ZERO && badge_bucket.amount() == Decimal::ONE,
-                "Only one badge can be deposited",
-            );
-
-            self.account_badge_vault.put(badge_bucket);
-        }
 
         fn get_token_coin_ratio(&mut self) -> Decimal {
             let mut resources = IndexSet::new();
@@ -180,7 +164,7 @@ mod weft_wrapper {
                 .unwrap()
         }
 
-        // Withdraw any unexpected fungible or non fungible in the account
+        // Withdraw any unexpected fungible or non fungible from the account
         pub fn whithdraw_unexpected_coin(
             &mut self,
             coin_address: ResourceAddress,
@@ -195,16 +179,13 @@ mod weft_wrapper {
 
             match coin_address.is_fungible() {
                 true => {
-                    let balance = self.account.balance(coin_address);
+                    let (bucket, _) = self.take_from_account(
+                        coin_address,
+                        Decimal::MAX,
+                    );
 
-                    self.account_badge_vault.authorize_with_non_fungibles(
-                        &self.account_badge_vault.non_fungible_local_ids(1),
-                        || self.account.withdraw(
-                            coin_address,
-                            balance,
-                        )
-                    )
-                },
+                    bucket
+                }
                 false => {
                     let ids = self.account.non_fungible_local_ids(
                         coin_address,
@@ -222,71 +203,106 @@ mod weft_wrapper {
                 }
             }
         }
+
+        // Private method to withdraw from the Account
+        fn take_from_account(
+            &mut self,
+            resource_address: ResourceAddress,
+            mut amount: Decimal,
+        ) -> (
+            Bucket,     // Bucket of the requested coin
+            Decimal     // Remaining amount
+        ) {
+            let available_amount = self.account.balance(resource_address);
+            if amount > available_amount {
+                amount = available_amount;
+            } else {
+                let divisibility = ResourceManager::from_address(resource_address)
+                    .resource_type()
+                    .divisibility()
+                    .unwrap();
+
+                amount = amount.checked_round(divisibility, RoundingMode::ToNegativeInfinity).unwrap();
+            }
+
+            match amount > Decimal::ZERO {
+                true => {
+                    let bucket = self.account_badge_vault.authorize_with_non_fungibles(
+                        &self.account_badge_vault.non_fungible_local_ids(1),
+                        || self.account.withdraw(
+                            resource_address,
+                            amount,
+                        )
+                    );
+
+                    (bucket, available_amount - amount)
+                },
+                false => (
+                    Bucket::new(resource_address),
+                    available_amount,
+                ),
+            }
+        }
+
+        // Give the control of the Account back to the component
+        pub fn deposit_account_badge(&mut self, badge_bucket: NonFungibleBucket) {
+            assert!(
+                self.account_badge_vault.amount() == Decimal::ZERO && badge_bucket.amount() == Decimal::ONE,
+                "Only one badge can be deposited",
+            );
+
+            self.account_badge_vault.put(badge_bucket);
+        }
     }
 
     impl DefiProtocolInterfaceTrait for WeftWrapper {
 
-        // Use this method to deposit tokens in this component; the fund_manager can do that when
-        // the component is registered
-        fn deposit_protocol_token(
+        // Use this method to deposit tokens and coins in this component
+        fn deposit_all(
             &mut self,
-            token: Bucket          // Example token: w2-xUSDC
+            token: Bucket,
+            coin: Option<FungibleBucket>,
+            other_coin: Option<FungibleBucket>,
         ) -> (
             Decimal,                // Total coin amount
             Option<Decimal>         // Total WEFT coin amount
         ) {
             self.account.try_deposit_or_abort(token, None);
 
-            self.get_coin_amounts()
+            if coin.is_some() {
+                self.deposit_coin(coin.unwrap(), other_coin, None, None)
+            } else if other_coin.is_some() {
+                self.deposit_coin(FungibleBucket::new(self.coin_address), other_coin, None, None)
+            } else {
+                self.get_coin_amounts()
+            }
         }
 
-        // Use this method to withdraw tokens from this component; the fund_manager can do that
-        // when the component is unregistered
-        fn withdraw_protocol_token(
+        // Use this method to withdraw all of the protocol tokens and coins from this component
+        fn withdraw_all(
             &mut self,
-            amount: Option<Decimal>, // The number of tokens to withdraw or None to withdraw all
-                                     // of them
         ) -> (
-            Bucket,                 // Withdrawn tokens
-            Decimal,                // Total coin amount
-            Option<Decimal>         // Total WEFT coin amount
+            Bucket,                 // Tokens
+            Option<FungibleBucket>, // Coins
+            Option<FungibleBucket>  // WEFT coins
         ) {
-            // Number of tokens in the Account
-            let available_token_amount = self.account.balance(self.token_address);
 
-            let token_bucket = match amount {
-                // Withdraw them all
-                None => self.account_badge_vault.authorize_with_non_fungibles(
-                    &self.account_badge_vault.non_fungible_local_ids(1),
-                    || self.account.withdraw(
-                        self.token_address,
-                        available_token_amount
-                    )
-                ),
-                // Withdraw the specified amount
-                Some(mut amount) => {
-                    // Make sure that the specified amount is no bigger than the number of tokens
-                    // in the Account
-                    if amount > available_token_amount {
-                        amount = available_token_amount;
-                    }
+            // Withdraw tokens
+            let (token_bucket, _) = self.take_from_account(
+                self.token_address,
+                Decimal::MAX,
+            );
 
-                    self.account_badge_vault.authorize_with_non_fungibles(
-                        &self.account_badge_vault.non_fungible_local_ids(1),
-                        || self.account.withdraw(
-                            self.token_address,
-                            amount
-                        )
-                    )
-                },
-            };
-
-            let (coin_amount, weft_amount) = self.get_coin_amounts();
+            // Withdraw WEFT coins
+            let (weft_bucket, _) = self.take_from_account(
+                self.weft_coin_address,
+                Decimal::MAX,
+            );
 
             (
                 token_bucket,
-                coin_amount,
-                weft_amount
+                None,
+                Some(FungibleBucket(weft_bucket))
             )
         }
 
@@ -336,7 +352,7 @@ mod weft_wrapper {
         // If available the WEFT coins will be preferred.
         fn withdraw_coin(
             &mut self,
-            amount: Option<Decimal>, // Amount of coins to withdraw or None to withdraw them all
+            mut amount: Decimal,    // Amount of coins to withdraw
             other_coin_to_coin_price_ratio: Option<Decimal>, // WEFT/coin price ratio (this is
                                                              // used to return an equivalent amount
                                                              // of WEFT coins instead of coins
@@ -346,128 +362,38 @@ mod weft_wrapper {
             Decimal,                // Total coin amount
             Option<Decimal>         // Total WEFT coin amount
         ) {
-            // Get the number of available tokens and WEFT coins
-            let available_token_amount = self.account.balance(self.token_address);
-            let mut available_weft = self.account.balance(self.weft_coin_address);
 
-            let weft_bucket: Bucket;
+            // Get WEFT coins up to a value equivalent to amount coins
+            let (weft_bucket, remaining_weft) = self.take_from_account(
+                self.weft_coin_address,
+                amount / other_coin_to_coin_price_ratio.unwrap()
+            );
 
-            match amount {
-                // If amount is specified
-                Some(mut amount) => {
+            // Update the amount to be withdrawn
+            amount -= weft_bucket.amount() * other_coin_to_coin_price_ratio.unwrap();
 
-                    let token_coin_ratio = self.get_token_coin_ratio();
-                    let mut available_coin = available_token_amount / token_coin_ratio;
+            let token_coin_ratio = self.get_token_coin_ratio();
 
-                    // If there are enough WEFT coins to cover the amount equivalent value, those
-                    // will be returned togheter with an empty coin bucket
-                    if available_weft >= amount / other_coin_to_coin_price_ratio.unwrap() {
-                        weft_bucket = self.account_badge_vault.authorize_with_non_fungibles(
-                            &self.account_badge_vault.non_fungible_local_ids(1),
-                            || self.account.withdraw(
-                                self.weft_coin_address,
-                                amount / other_coin_to_coin_price_ratio.unwrap()
-                            )
-                        );
+            // Get tokens up to a value equivalent to amount
+            let (token_bucket, remaining_tokens) = self.take_from_account(
+                self.token_address,
+                amount * token_coin_ratio
+            );
 
-                        available_weft -= weft_bucket.amount();
+            // Send the tokens to the WEFT component to get the coins
+            let coin_bucket = self.component_address.withdraw(
+                vec![token_bucket]
+            )
+                .pop()
+                .unwrap();
 
-                        return (
-                            FungibleBucket::new(self.coin_address),
-                            Some(FungibleBucket(weft_bucket)),
-                            available_coin,
-                            Some(available_weft)
-                        );
-
-                    } else {
-
-                        // There are not enough WEFT coins, get them all
-                        weft_bucket = self.account_badge_vault.authorize_with_non_fungibles(
-                            &self.account_badge_vault.non_fungible_local_ids(1),
-                            || self.account.withdraw(
-                                self.weft_coin_address,
-                                available_weft
-                            )
-                        );
-
-                        // Subtract the WEFT coin equivalent value withdrawn from the amount
-                        amount -= available_weft * other_coin_to_coin_price_ratio.unwrap();
-
-                        available_weft = Decimal::ZERO;
-                    }
-
-                    // Check if the available tokens are enough to cover the requested amount of
-                    // coins
-                    let token_amount = match amount < available_coin {
-
-                        // if true we get the correct amount of tokens
-                        true => amount * token_coin_ratio,
-
-                        // If not we will withdraw all of the tokens
-                        false => available_token_amount,
-                    };
-
-                    // Get the tokens
-                    let token_bucket = self.account_badge_vault.authorize_with_non_fungibles(
-                        &self.account_badge_vault.non_fungible_local_ids(1),
-                        || self.account.withdraw(self.token_address, token_amount)
-                    );
-
-                    // Send the tokens to the WEFT component to get the coins
-                    let coin_bucket = self.component_address.withdraw(
-                        vec![token_bucket]
-                    )
-                        .pop()
-                        .unwrap();
-
-                    available_coin -= coin_bucket.amount();
-                    
-                    // Return coins and WEFT coins
-                    (
-                        FungibleBucket(coin_bucket),
-                        Some(FungibleBucket(weft_bucket)),
-                        available_coin,
-                        Some(available_weft)
-                    )
-                },
-
-                // If no amount was specified
-                None => {
-
-                    // Get all of the tokens from the Account
-                    let token_bucket = self.account_badge_vault.authorize_with_non_fungibles(
-                        &self.account_badge_vault.non_fungible_local_ids(1),
-                        || self.account.withdraw(
-                            self.token_address,
-                            available_token_amount
-                        )
-                    );
-
-                    // Send the tokens to the WEFT component to get the coins
-                    let coin_bucket = self.component_address.withdraw(
-                        vec![token_bucket]
-                    )
-                        .pop()
-                        .unwrap();
-
-                    // Get all of the WEFT coins from the Account
-                    weft_bucket = self.account_badge_vault.authorize_with_non_fungibles(
-                        &self.account_badge_vault.non_fungible_local_ids(1),
-                        || self.account.withdraw(
-                            self.weft_coin_address,
-                            available_weft
-                        )
-                    );
-
-                    // Return all of the coins and WEFT coins
-                    (
-                        FungibleBucket(coin_bucket),
-                        Some(FungibleBucket(weft_bucket)),
-                        Decimal::ZERO,
-                        Some(Decimal::ZERO)
-                    )
-                },
-            }
+            // Return all of the coins and WEFT coins
+            (
+                FungibleBucket(coin_bucket),
+                Some(FungibleBucket(weft_bucket)),
+                remaining_tokens / token_coin_ratio,
+                Some(remaining_weft),
+            )
         }
 
         // Get the number of available coins and WEFT coins
@@ -478,6 +404,13 @@ mod weft_wrapper {
             (
                 self.account.balance(self.token_address) / self.get_token_coin_ratio(),
                 Some(self.account.balance(self.weft_coin_address))
+            )
+        }
+
+        // Get the control of the Account
+        fn withdraw_account_badge(&mut self) -> NonFungibleBucket {
+            self.account_badge_vault.take_non_fungible(
+                &self.account_badge_vault.non_fungible_local_id()
             )
         }
     }
