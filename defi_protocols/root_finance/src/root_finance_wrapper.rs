@@ -2,12 +2,12 @@ use scrypto::prelude::*;
 use crate::common::*;
 use scrypto_interface::*;
 
-#[derive(ScryptoSbor)]
+// Non fungible data in the Root receipt
+#[derive(ScryptoSbor, Debug)]
 enum CDPType {
     Standard
 }
-
-#[derive(ScryptoSbor, NonFungibleData)]
+#[derive(ScryptoSbor, NonFungibleData, Debug)]
 struct CollaterizedDebtPositionData {
     key_image_url: String,
     name: String,
@@ -20,16 +20,37 @@ struct CollaterizedDebtPositionData {
     liquidable: Option<Decimal>
 }
 
+// How many NFTs can be withdrawn in a single operation
 static NON_FUNGIBLES_PER_WITHDRAW: u32 = 100;
 
+// This blueprint is a wrapper to talk to the Root Finance protocol using the DefiProtocolInterface
+// interface.
+// Here "coin" is the coin used to provide liquidity to the protocol; to
+// provide multiple coins, multiple instances of this component are required.
+// "other coin" is not used.
+// "token" is the Root receipt: an NFT representing the added liquidity
 #[blueprint_with_traits]
 mod root_finance_wrapper {
 
     extern_blueprint! {
         "package_tdx_2_1pk07dw324vwcvr75dk2p39yjt33jc6ndvd5zmn8p5k66a6zwjshdnr",
         LendingMarket {
-            fn remove_collateral(&mut self, cdp_proof: Proof, withdraw_details: Vec<(ResourceAddress, Decimal, bool)>) -> Vec<Bucket>;
+            fn remove_collateral(
+                &mut self,
+                cdp_proof: Proof,
+                withdraw_details:
+                Vec<(ResourceAddress, Decimal, bool)>
+            ) -> Vec<Bucket>;
+
             fn add_collateral(&mut self, cdp_proof: Proof, deposits: Vec<Bucket>);
+
+            fn create_cdp(
+                &mut self,
+                _name: Option<String>,
+                _description: Option<String>,
+                _key_image_url: Option<String>,
+                deposits: Vec<Bucket>,
+            ) -> Bucket;
         }
     }
 
@@ -39,43 +60,46 @@ mod root_finance_wrapper {
             admin => updatable_by: [fund_manager];
         },
         methods {
+            // FundManager callable methods
             deposit_all => restrict_to: [fund_manager];
             withdraw_all => restrict_to: [fund_manager];
             deposit_coin => restrict_to: [fund_manager];
             withdraw_coin => restrict_to: [fund_manager];
             withdraw_account_badge => restrict_to: [fund_manager];
-            deposit_account_badge => restrict_to: [fund_manager];
 
-            // Withdraw any unexpected coin in the account
+            // Single admin callable methods
+            deposit_account_badge => restrict_to: [admin];
             whithdraw_unexpected_coin => restrict_to: [admin];
 
             // TODO: how to manage root points?
 
+            // Public method
             get_coin_amounts => PUBLIC;
         }
     }
 
     struct RootFinanceWrapper {
-        coin_address: ResourceAddress,
-        token_address: ResourceAddress,
-
+        coin_address: ResourceAddress,  // The coin managed by the Root Finance component
+        token_address: ResourceAddress, // The Root receipt representing the added liquidity
         account: Global<Account>, // The account to hold the Root receipt and eventual incentives
-        account_badge_vault: NonFungibleVault, // Badge to manage the Account
-
-        component_address: Global<LendingMarket>,
+        account_badge_vault: NonFungibleVault,      // Badge to manage the Account
+        component_address: Global<LendingMarket>,   // Root Finance component
     }
 
     impl RootFinanceWrapper {
 
+        // Instantiate a RootFinanceWrapper component
         pub fn new(
-            coin_address: ResourceAddress, // Example coin: xUSDC
-            token_address: ResourceAddress, // Root receipt
-            account: Global<Account>, // The account to hold the Root receipt
-            account_badge: NonFungibleBucket, // Badge to manage the Account
-            component_address: Global<LendingMarket>,
-            fund_manager_badge_address: ResourceAddress,
-            admin_badge_address: ResourceAddress,
+            coin_address: ResourceAddress,              // Example coin: xUSDC
+            token_address: ResourceAddress,             // Root receipt address
+            account: Global<Account>,                   // The account to hold the Root receipt
+            account_badge: NonFungibleBucket,           // Badge to manage the Account
+            component_address: Global<LendingMarket>,   // Root finance component
+            fund_manager_badge_address: ResourceAddress,    // God's badge
+            admin_badge_address: ResourceAddress,       // Admins' badge
         ) -> Global<RootFinanceWrapper> {
+
+            // Instantiate and globalize the component
             Self {
                 coin_address: coin_address,
                 token_address: token_address,
@@ -105,15 +129,18 @@ mod root_finance_wrapper {
         // Withdraw any unexpected fungible or non fungible in the account
         pub fn whithdraw_unexpected_coin(
             &mut self,
-            coin_address: ResourceAddress,
+            coin_address: ResourceAddress, // The fungible or non fungible to withdraw
         ) -> Bucket {
+
+            // Make sure the admin isn't stealing from the fund
             assert!(
-                coin_address != self.coin_address &&
                 coin_address != self.token_address,
                 "You can't withdraw this coin",
             );
 
             match coin_address.is_fungible() {
+
+                // If the resource to withdraw is fungible, withdraw the whole available amount
                 true => {
                     let balance = self.account.balance(coin_address);
 
@@ -125,6 +152,8 @@ mod root_finance_wrapper {
                         )
                     )
                 },
+
+                // If the resource is not fungible, withdraw up to NON_FUNGIBLES_PER_WITHDRAW NFTs
                 false => {
                     let ids = self.account.non_fungible_local_ids(
                         coin_address,
@@ -143,12 +172,16 @@ mod root_finance_wrapper {
             }
         }
 
+        // Private method to create a proof of the Root receipt in the account
         fn create_root_receipt_proof(&self) -> Proof {
+
+            // Get the non fungible local id of the Root receipt
             let ids = self.account.non_fungible_local_ids(
                 self.token_address,
                 1,
             );
 
+            // The account badge is needed to create a proof of the NFT in the account
             self.account_badge_vault.authorize_with_non_fungibles(
                 &self.account_badge_vault.non_fungible_local_ids(1),
                 || self.account.create_proof_of_non_fungibles(
@@ -159,6 +192,7 @@ mod root_finance_wrapper {
                 .into()
         }
 
+        // Private method to get information about the investmaent
         fn root_receipt_non_fungible_data(&self) -> CollaterizedDebtPositionData {
             let id = self.account.non_fungible_local_ids(
                 self.token_address,
@@ -172,11 +206,12 @@ mod root_finance_wrapper {
 
     impl DefiProtocolInterfaceTrait for RootFinanceWrapper {
 
+        // Deposit a Root receipt and eventually coins
         fn deposit_all(
             &mut self,
-            token: Bucket,
-            coin: Option<FungibleBucket>,
-            _other_coin: Option<FungibleBucket>,
+            token: Bucket,                          // Root receipt bucket
+            coin: Option<FungibleBucket>,           // Coin bucket
+            _other_coin: Option<FungibleBucket>,    // Not supported
         ) -> (
             Decimal,                // Total coin amount
             Option<Decimal>         // None
@@ -186,8 +221,10 @@ mod root_finance_wrapper {
                 "There's already a Root receipt in the account",
             );
 
+            // Deposit the Root receipt
             self.account.try_deposit_or_abort(token, None);
 
+            // Deposit eventual coin in the Root component
             if coin.is_some() {
                 self.deposit_coin(coin.unwrap(), None, None, None)
             } else {
@@ -195,17 +232,26 @@ mod root_finance_wrapper {
             }
         }
 
+        // Withdraw the Root receipt
         fn withdraw_all(
             &mut self,
         ) -> (
-            Bucket,
-            Option<FungibleBucket>,
-            Option<FungibleBucket>,
+            Bucket,                 // Root receipt
+            Option<FungibleBucket>, // None
+            Option<FungibleBucket>, // None
         ) {
+            // If there's no Root receipt in the Account, there's nothing to withdraw
+            if self.account.balance(self.token_address) == Decimal::ZERO {
+                return (Bucket::new(self.token_address), None, None);
+            }
+
+            // Get the non fungible local id of the Root receipt
             let ids = self.account.non_fungible_local_ids(
                 self.token_address,
                 1,
             );
+
+            // Get the Root receipt from the Account
             let token_bucket = self.account_badge_vault.authorize_with_non_fungibles(
                 &self.account_badge_vault.non_fungible_local_ids(1),
                 || self.account.withdraw_non_fungibles(
@@ -221,38 +267,76 @@ mod root_finance_wrapper {
             )
         }
 
+        // Invest coin in the Root Finance component
         fn deposit_coin(
             &mut self,
-            coin: FungibleBucket,
-            _other_coin: Option<FungibleBucket>,
-            _message: Option<String>,
-            _signature: Option<String>,
+            coin: FungibleBucket,                   // Coins to invest
+            _other_coin: Option<FungibleBucket>,    // Not supperted
+            _message: Option<String>,               // Not used
+            _signature: Option<String>,             // Not used
         ) -> (
             Decimal,                // Total coin amount
             Option<Decimal>         // None
         ) {
-            let proof = self.create_root_receipt_proof();
+            if self.account.balance(self.token_address) == Decimal::ZERO {
 
-            self.component_address.add_collateral(
-                proof.into(),
-                vec![coin.into()],
-            );
+                let coin_amount = coin.amount();
 
-            self.get_coin_amounts()
+                // If there's no Root receipt in the Account, we have to mint one and deposit it in
+                // the Account
+                self.account.try_deposit_or_abort(
+                    self.component_address.create_cdp(
+                        None,
+                        None,
+                        None,
+                        vec![coin.into()],
+                    ),
+                    None
+                );
+           
+                (coin_amount, None)
+
+            } else {
+
+                // Create a Root receipt proof
+                let proof = self.create_root_receipt_proof();
+
+                // Add collateral associated to the Root receipt position
+                self.component_address.add_collateral(
+                    proof.into(),
+                    vec![coin.into()],
+                );
+
+                // Return the total number of coin invested
+                self.get_coin_amounts()
+            }
         }
 
+        // Get coins out of the Root Finance component
         fn withdraw_coin(
             &mut self,
-            mut amount: Decimal,
-            _other_coin_to_coin_price_ratio: Option<Decimal>,
+            mut amount: Decimal,                                // Coin amount to withdraw
+            _other_coin_to_coin_price_ratio: Option<Decimal>,   // Not used
         ) -> (
-            FungibleBucket,
-            Option<FungibleBucket>,
-            Decimal,                // Total coin amount
+            FungibleBucket,         // Coin bucket
+            Option<FungibleBucket>, // None
+            Decimal,                // Remaining coin amount
             Option<Decimal>         // None
         ) {
+            // If there's no Root receipt, there are no invested coins
+            if self.account.balance(self.token_address) == Decimal::ZERO {
+                return (
+                    FungibleBucket::new(self.coin_address),
+                    None,
+                    Decimal::ZERO,
+                    None
+                );
+            }
+
+            // Create a Root receipt proof
             let proof = self.create_root_receipt_proof();
 
+            // Read the available amount of coins from the Root receipt non fungible data
             let non_fungible_data = self.root_receipt_non_fungible_data();
             let available_amount = non_fungible_data.collaterals.get_index(0)
                 .expect("No coins in this Root receipt")
@@ -260,10 +344,12 @@ mod root_finance_wrapper {
                 .checked_truncate(RoundingMode::ToNegativeInfinity)
                 .unwrap();
 
+            // It's not possible to withdraw more than the whole available amount
             if amount > available_amount {
                 amount = available_amount;
             }
 
+            // Get back the coins from the Root component
             let coin_bucket = self.component_address.remove_collateral(
                 proof.into(),
                 vec![(
@@ -283,16 +369,26 @@ mod root_finance_wrapper {
             )
         }
 
+        // Withdraw the badge used to manage the Account; this component will no loger be able to
+        // work correctly.
+        // This method is called by the FundManager when a DeFi protocol position is removed from
+        // the list.
         fn withdraw_account_badge(&mut self) -> NonFungibleBucket {
             self.account_badge_vault.take_non_fungible(
                 &self.account_badge_vault.non_fungible_local_id()
             )
         }
 
+        // Get the numebr of coins that can be withdrawn from this component
         fn get_coin_amounts(&mut self) -> (
             Decimal,                // Total coin amount
             Option<Decimal>         // None
         ) {
+            // If there's no Root receipt, there are no invested coins
+            if self.account.balance(self.token_address) == Decimal::ZERO {
+                return (Decimal::ZERO, None);
+            }
+
             let non_fungible_data = self.root_receipt_non_fungible_data();
 
             match non_fungible_data.collaterals.len() {
