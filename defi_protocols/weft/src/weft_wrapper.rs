@@ -50,13 +50,10 @@ mod weft_wrapper {
             withdraw_all => restrict_to: [fund_manager];
             deposit_coin => restrict_to: [fund_manager];
             withdraw_coin => restrict_to: [fund_manager];
-            
-            // The fund_manager component will never call these methods, they can only be used in
-            // case of an emergency by withdrawing the fund_manager_badge
             withdraw_account_badge => restrict_to: [fund_manager];
-            deposit_account_badge => restrict_to: [fund_manager];
 
-            // Withdraw any unexpected coin in the account
+            // Admin callable methods
+            deposit_account_badge => restrict_to: [admin];
             whithdraw_unexpected_coin => restrict_to: [admin];
 
             // Collect WEFT incentives (WEFT coins)
