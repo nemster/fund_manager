@@ -58,9 +58,10 @@ define_interface! {
 
         fn swap(
             &mut self,
-            input_bucket: Bucket,
-            output_resource: ResourceAddress,
-        ) -> Bucket;
+            input_bucket: Bucket,           // Bucket of coins to swap
+            output_resource: ResourceAddress,   // Output coins resource address
+            use_remainings: bool,           // Whether to use remainings of previous partial swaps
+        ) -> Bucket;                        // Bucket of output_resource
     }
 }
 
@@ -69,8 +70,8 @@ define_interface! {
 
         fn get_price(
             &mut self,
-            coin_address: ResourceAddress,
-            morpher_data: HashMap<ResourceAddress, (String, String)>,
-        ) -> Decimal;
+            coin_address: ResourceAddress,  // The coin to get the price of
+            morpher_data: HashMap<ResourceAddress, (String, String)>,   // Eventual Morpher data
+        ) -> Decimal;                       // coin price
     }
 }

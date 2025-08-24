@@ -971,7 +971,13 @@ mod fund_manager {
             } else {
                 bucket = self.fund_manager_badge_vault.authorize_with_amount(
                     1,
-                    || FungibleBucket(self.dex.unwrap().swap(bucket.into(), defi_protocol.coin))
+                    || FungibleBucket(
+                        self.dex.unwrap().swap(
+                            bucket.into(),
+                            defi_protocol.coin,
+                            true
+                        )
+                    )
                 );
 
                 (coin_amount, other_coin_amount) = self.fund_manager_badge_vault.authorize_with_amount(
@@ -1572,7 +1578,13 @@ mod fund_manager {
                 if swap_to.unwrap() != defi_protocol.coin {
                     coin_bucket = self.fund_manager_badge_vault.authorize_with_amount(
                         1,
-                        || FungibleBucket(self.dex.unwrap().swap(coin_bucket.into(), swap_to.unwrap()))
+                        || FungibleBucket(
+                            self.dex.unwrap().swap(
+                                coin_bucket.into(),
+                                swap_to.unwrap(),
+                                false
+                            )
+                        )
                     );
                 }
                 if other_coin_bucket.is_some() && swap_to.unwrap() != defi_protocol.other_coin.unwrap() {
@@ -1580,7 +1592,11 @@ mod fund_manager {
                         self.fund_manager_badge_vault.authorize_with_amount(
                             1,
                             || FungibleBucket(
-                                self.dex.unwrap().swap(other_coin_bucket.unwrap().into(), swap_to.unwrap())
+                                self.dex.unwrap().swap(
+                                    other_coin_bucket.unwrap().into(),
+                                    swap_to.unwrap(),
+                                    false
+                                )
                             )
                         )
                     );
@@ -1607,6 +1623,7 @@ mod fund_manager {
             );
 
             // Burn the fund units and return all of the buckets to the caller
+            // TODO: burn them all if the difference is small?
             if fund_units_to_burn < fund_units_bucket.amount() {
                 fund_units_bucket.take(fund_units_to_burn).burn();
 

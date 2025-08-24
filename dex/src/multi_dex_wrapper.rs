@@ -2,10 +2,6 @@ use scrypto::prelude::*;
 use crate::common::*;
 use scrypto_interface::*;
 
-// Fail the transaction if more than 1 / this ratio of the source coin has been returned by
-// the dex
-static ACCEPTABLE_REMAININGS_RATIO: u8 = 10;
-
 // Couple of coins managed by a dex
 #[derive(ScryptoSbor, Debug)]
 struct CoinsCouple {
@@ -33,6 +29,9 @@ struct DexPool {
 // involving different pool types.
 // 
 // Only one pool for ordered coin couple is supported (a->b pool can be different from b->a pool).
+//
+// Some pools can leave remainings of unswapped input coins; those remainigs are saved in the
+// remainings KVS. The remainings can be withdrawn from the admins or used in the next swaps.
 #[blueprint_with_traits]
 #[types(
     CoinsCouple,
@@ -49,6 +48,7 @@ mod multi_dex_wrapper {
         methods {
             swap => restrict_to: [fund_manager];
             add_pool => restrict_to: [OWNER];
+            take_from_remainings => restrict_to: [OWNER];
         }
     }
 
@@ -132,33 +132,20 @@ mod multi_dex_wrapper {
             }
         }
 
-        // Private method to withdraw from the remainings vaults
-        fn take_from_remainings(
+        // Withdraw from one of the remainings vaults
+        pub fn take_from_remainings(
             &mut self,
             resource: ResourceAddress,
-            amount: Decimal,
         ) -> Option<Bucket> {
 
-            // Get the remainings vault for the given resource; return None if not found
-            let mut vault = self.remainings.get_mut(&resource);
+            // Find the remainings vault for the given resource; return None if not found
+            let vault = self.remainings.get_mut(&resource);
             if vault.is_none() {
                 return None;
             }
 
-            // If amount is bigger than the available amount get the full available amount from
-            // the Vault
-            let available_amount = vault.as_mut().unwrap().amount();
-            if available_amount < amount {
-                return Some(vault.unwrap().take_all());
-            }
-
-            // otherwise pay attention to divisibility
-            return Some(
-                vault.unwrap().take_advanced(
-                    amount,
-                    WithdrawStrategy::Rounded(RoundingMode::ToZero)
-                )
-            );
+            // otherwise return a bucket with the full amount
+            return Some(vault.unwrap().take_all());
         }
     }
 
@@ -169,18 +156,17 @@ mod multi_dex_wrapper {
             &mut self,
             mut input_bucket: Bucket,           // Bucket of coins to swap
             output_resource: ResourceAddress,   // Output coins resource address
+            add_remainings: bool,   // Whether to use remainings of previous partial swaps
         ) -> Bucket {
-            let input_bucket_amount = input_bucket.amount();
             let input_resource = input_bucket.resource_address();
 
-            // If there are remainings of the input resource from the previous swaps, add (part of)
-            // them to the input_bucket
-            let remainings_bucket = self.take_from_remainings(
-                input_resource,
-                input_bucket_amount / ACCEPTABLE_REMAININGS_RATIO,
-            );
-            if remainings_bucket.is_some() {
-                input_bucket.put(remainings_bucket.unwrap());
+            // If add_remainings is set and there are old remainings of the input resource from the
+            // previous swaps, add them to the input_bucket
+            if add_remainings {
+                let remainings_bucket = self.take_from_remainings(input_resource);
+                if remainings_bucket.is_some() {
+                    input_bucket.put(remainings_bucket.unwrap());
+                }
             }
 
             // Find the dex pool to use for the swap
@@ -190,11 +176,11 @@ mod multi_dex_wrapper {
             };
             let pool = self.pools.get_mut(&coins_couple);
 
-            let output_bucket: Bucket;
+            let mut output_bucket: Bucket;
             let mut remainings_bucket: Option<Bucket> = None;
 
             match pool {
-                Some(dex_pool) => {
+                Some(ref dex_pool) => {
                     match dex_pool.pool_type {
 
                         // Ociswap latest pools only returns the output_bucket, no remainings
@@ -227,6 +213,8 @@ mod multi_dex_wrapper {
                             remainings_bucket = Some(input_bucket);
                         },
                     }
+
+                    drop(pool);
                 },
 
                 // If there's no direct input -> output pool try doing input -> XRD, XRD -> output
@@ -235,8 +223,8 @@ mod multi_dex_wrapper {
                         drop(pool);
 
                         // Call recursivelly twice this method for the 2 phase swap
-                        let xrd_bucket = self.swap(input_bucket, XRD);
-                        output_bucket = self.swap(xrd_bucket, output_resource);
+                        let xrd_bucket = self.swap(input_bucket, XRD, false);
+                        output_bucket = self.swap(xrd_bucket, output_resource, false);
 
                     } else {
                         Runtime::panic("Pool not found".to_string());
@@ -245,11 +233,6 @@ mod multi_dex_wrapper {
             };
 
             if remainings_bucket.is_some() {
-                // Check if there are too much remainings
-                assert!(
-                    remainings_bucket.as_ref().unwrap().amount() < input_bucket_amount / ACCEPTABLE_REMAININGS_RATIO,
-                    "Swap failed",
-                );
 
                 // Put remainings in the vault 
                 let remainings_vault = self.remainings.get_mut(&input_resource);
@@ -263,6 +246,15 @@ mod multi_dex_wrapper {
                             Vault::with_bucket(remainings_bucket.unwrap())
                         );
                     },
+                }
+            }
+
+            // If add_remainings is set and there are old remainings of the output resource from the
+            // previous swaps, add them to the output_bucket
+            if add_remainings {
+                let remainings_bucket = self.take_from_remainings(output_resource);
+                if remainings_bucket.is_some() {
+                    output_bucket.put(remainings_bucket.unwrap());
                 }
             }
 
