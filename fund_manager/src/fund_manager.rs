@@ -15,6 +15,9 @@ static AUTHORIZATION_TIMEOUT: i64 = 172800; // Two days
 // Maximum size for authorizations list and DeFi protocols list.
 static MAX_VECTOR_SIZE: usize = 50;
 
+// Acceptable value ratio that can be lost or gained when withdrawing
+static ACCEPTABLE_VALUE_DIFFERENCE: Decimal = dec!("0.1");
+
 // Admin badge NonFungibleData. Each one is just identified by a numeric id.
 #[derive(ScryptoSbor, NonFungibleData)]
 struct Admin {
@@ -559,6 +562,8 @@ mod fund_manager {
             self.authorization_vector.retain(|authorization| {
                 authorization.timestamp + AUTHORIZATION_TIMEOUT > now
             });
+
+            // TODO: save state space by creating a new vector if len == 0 and capacity is big?
         }
 
         // An admin can invoke this method to authorize another admin to perform a multisignature
@@ -1520,12 +1525,14 @@ mod fund_manager {
                 "Wrong coin",
             );
 
+
             // Get the value of a fund unit
             let (fund_unit_net_value, fund_unit_gross_value) = self.fund_unit_value();
 
             // Find the DeFi protocol position to withdraw from
+            let fund_unit_amount = fund_units_bucket.amount();
             let (defi_protocol_name, withdrawable_value) = self.find_where_to_withdraw_from(
-                fund_units_bucket.amount() * fund_unit_net_value
+                fund_unit_amount * fund_unit_net_value
             );
             let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).unwrap();
 
@@ -1607,9 +1614,14 @@ mod fund_manager {
 
             // Compute the amount of fund units to burn
             let mut fund_units_to_burn = coin_bucket_value / fund_unit_gross_value;
-            if fund_units_to_burn > fund_units_bucket.amount() {
-                // TODO: abort the transaction if the difference is too big?
-                fund_units_to_burn = fund_units_bucket.amount();
+            if fund_units_to_burn > fund_unit_amount {
+                assert!(
+                    fund_units_to_burn < fund_unit_amount * (1 + ACCEPTABLE_VALUE_DIFFERENCE),
+                    "Too much value withdrawn"
+                );
+                fund_units_to_burn = fund_unit_amount;
+            } else if fund_units_to_burn > fund_unit_amount * (1 - ACCEPTABLE_VALUE_DIFFERENCE) {
+                fund_units_to_burn = fund_unit_amount;
             }
 
             // Emit the WithdrawFromFundEvent event
@@ -1623,8 +1635,7 @@ mod fund_manager {
             );
 
             // Burn the fund units and return all of the buckets to the caller
-            // TODO: burn them all if the difference is small?
-            if fund_units_to_burn < fund_units_bucket.amount() {
+            if fund_units_to_burn < fund_unit_amount {
                 fund_units_bucket.take(fund_units_to_burn).burn();
 
                 (coin_bucket, other_coin_bucket, Some(fund_units_bucket))
