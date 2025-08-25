@@ -389,7 +389,7 @@ CALL_METHOD
     Address("<ACCOUNT>")
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
@@ -437,7 +437,7 @@ CALL_METHOD
     Address("<ACCOUNT>")
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
@@ -478,7 +478,7 @@ CALL_METHOD
     Address("<ACCOUNT>")
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 CALL_METHOD
     Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
@@ -502,7 +502,7 @@ CALL_METHOD
     Address("<ACCOUNT>")
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
@@ -546,7 +546,7 @@ CALL_METHOD
     Address("<ACCOUNT>")
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
@@ -578,7 +578,7 @@ CALL_METHOD
     Address("<ACCOUNT>")
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
@@ -606,7 +606,7 @@ CALL_METHOD
     Address("<ACCOUNT>")
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
@@ -632,7 +632,7 @@ CALL_METHOD
     Address("<ACCOUNT>")
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
@@ -657,7 +657,7 @@ CALL_METHOD
     Address("<ACCOUNT>")
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
@@ -684,7 +684,7 @@ CALL_METHOD
     Address("<ACCOUNT>")
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
@@ -711,7 +711,7 @@ CALL_METHOD
     Address("<ACCOUNT>")
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
@@ -739,7 +739,7 @@ CALL_METHOD
     Address("<ACCOUNT>")
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
@@ -779,7 +779,7 @@ CALL_METHOD
     Address("<ACCOUNT>") 
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 CALL_METHOD
     Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
@@ -802,7 +802,7 @@ CALL_METHOD
     Address("<ACCOUNT>")
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof") 
@@ -829,7 +829,7 @@ CALL_METHOD
     Address("<ACCOUNT>")
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
@@ -882,7 +882,7 @@ CALL_METHOD
     Address("<ACCOUNT>")
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 CALL_METHOD
     Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
@@ -932,7 +932,7 @@ CALL_METHOD
     Address("<ACCOUNT>")
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 CALL_METHOD
     Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
@@ -967,7 +967,7 @@ CALL_METHOD
     Address("<ACCOUNT>")
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 CALL_METHOD
     Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
@@ -991,7 +991,7 @@ CALL_METHOD
     Address("<ACCOUNT>")
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 CALL_METHOD
     Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
@@ -1015,7 +1015,7 @@ CALL_METHOD
     Address("<ACCOUNT>")
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 CALL_METHOD
     Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
@@ -1040,7 +1040,7 @@ CALL_METHOD
     Address("<ACCOUNT>")
     "create_proof_of_non_fungibles"
     Address("<ADMIN_BADGE>")
-    Array<NonFungibleLocalId>(NonFungibleLocalId("<MY_ADMIN_BADGE_ID>"));
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
 ;
 CALL_METHOD
     Address("<ANY_DEFI_WRAPPER_COMPONENT_ADDRESS>")

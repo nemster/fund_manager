@@ -40,6 +40,25 @@ pub enum AuthorizedOperation {
     MintBotBadge                = 10,   // mint_bot_badge method
     SetBuybackFund              = 11,   // set_buyback_fund method
 }
+impl From<u8> for AuthorizedOperation {
+    fn from(orig: u8) -> Self {
+        match orig {
+            0  => return AuthorizedOperation::WithdrawValidatorBadge,
+            1  => return AuthorizedOperation::AddDefiProtocol,
+            2  => return AuthorizedOperation::RemoveDefiProtocol,
+            3  => return AuthorizedOperation::SetDexComponent,
+            4  => return AuthorizedOperation::DecreaseMinAuthorizers,
+            5  => return AuthorizedOperation::IncreaseMinAuthorizers,
+            6  => return AuthorizedOperation::MintAdminBadge,
+            7  => return AuthorizedOperation::SetOracleComponent,
+            8  => return AuthorizedOperation::WithdrawFundManagerBadge,
+            9  => return AuthorizedOperation::SetWithdrawalFee,
+            10 => return AuthorizedOperation::MintBotBadge,
+            11 => return AuthorizedOperation::SetBuybackFund,
+            _  => Runtime::panic("Unknown operation".to_string()),
+        };
+    }
+}
 
 // This struct represents the authorization from one admin (allower_admin_id) to another admin
 // (allowed_admin_id) to perform an operation (authorized_operation).
@@ -572,7 +591,7 @@ mod fund_manager {
             &mut self,
             admin_proof: Proof,
             allowed_admin_id: u8, // The id of badge of the admin to authorize
-            authorized_operation: AuthorizedOperation,
+            authorized_operation: u8, // AuthorizedOperation
             protocol_name: Option<String>,
             percentage: Option<u8>,
             account_address: Option<Global<Account>>,
@@ -602,7 +621,7 @@ mod fund_manager {
                     .filter(|&authorization| {
                         authorization.allower_admin_id == allower_admin_id &&
                         authorization.allowed_admin_id == allowed_admin_id &&
-                        authorization.authorized_operation == authorized_operation &&
+                        authorization.authorized_operation == authorized_operation.into() &&
                         authorization.protocol_name == protocol_name &&
                         authorization.percentage == percentage &&
                         authorization.account_address == account_address
@@ -618,7 +637,7 @@ mod fund_manager {
                     timestamp: Clock::current_time_rounded_to_seconds().seconds_since_unix_epoch,
                     allower_admin_id: allower_admin_id,
                     allowed_admin_id: allowed_admin_id,
-                    authorized_operation: authorized_operation,
+                    authorized_operation: authorized_operation.into(),
                     protocol_name: protocol_name,
                     percentage: percentage,
                     account_address: account_address,
