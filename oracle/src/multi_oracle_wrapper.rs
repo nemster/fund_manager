@@ -252,10 +252,10 @@ mod multi_oracle_wrapper {
                         .seconds_since_unix_epoch.try_into().unwrap();
                     let intervals = vec![(interval_end - self.observation_time, interval_end)];
 
-                    // Ociswap returns the sware root of the requested price
-                    let price_sqrt = component.call::<Vec<(u64, u64)>, Vec<ObservationInterval>>(
+                    // Ociswap returns the square root of the requested price
+                    let price_sqrt = component.call::<(Vec<(u64, u64)>, ), Vec<ObservationInterval>>(
                         "observation_intervals",
-                        &intervals
+                        &(intervals, ),
                     )[0].price_sqrt;
 
                     // Is it a/b or b/a price?

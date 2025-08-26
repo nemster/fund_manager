@@ -186,18 +186,18 @@ mod multi_dex_wrapper {
                         // Ociswap latest pools only returns the output_bucket, no remainings
                         PoolType::OciswapPool2 => {
                             output_bucket = dex_pool.component
-                                .call::<Bucket, Bucket>(
+                                .call::<(Bucket, ), Bucket>(
                                     "swap",
-                                    &input_bucket
+                                    &(input_bucket, )
                                 );
                         },
 
                         // DefiPlaza return the output bucket and eventually a remainings bucket
                         PoolType::DefiPlazaPool => {
                             (output_bucket, remainings_bucket) = dex_pool.component
-                                .call::<Bucket, (Bucket, Option<Bucket>)>(
+                                .call::<(Bucket, ), (Bucket, Option<Bucket>)>(
                                     "swap",
-                                    &input_bucket
+                                    &(input_bucket, )
                                 );
                         },
 
@@ -205,9 +205,9 @@ mod multi_dex_wrapper {
                         // of buckets
                         _ => {
                             (output_bucket, input_bucket) = dex_pool.component
-                                .call::<Bucket, (Bucket, Bucket)>(
+                                .call::<(Bucket, ), (Bucket, Bucket)>(
                                     "swap",
-                                    &input_bucket
+                                    &(input_bucket, )
                                 );
 
                             remainings_bucket = Some(input_bucket);
