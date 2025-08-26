@@ -686,6 +686,8 @@ mod fund_manager {
 
         // Get the net and gross (withdrawal fee included) USD value of a fund unit
         pub fn fund_unit_value(&self) -> (Decimal, Decimal) {
+            // TODO: return a default value if total_value or the fund units supply is zero!
+
             let gross_value = self.total_value / self.fund_unit_resource_manager.total_supply().unwrap();
 
             (

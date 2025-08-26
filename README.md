@@ -82,8 +82,8 @@ CALL_METHOD
     "withdraw"
     Bucket("fund_units")
     Some(Address("<WANTED_COIN_RESOURCE_ADDRESS>"))
-    Map<ResourceAddress, Tuple>(
-        Address("<COIN_RESOURCE_ADDRESS>") => ("<MORPHER_MESSAGE>", "<MORPHER_SIGNATURE>"),
+    Map<Address, Tuple>(
+        Address("<COIN_RESOURCE_ADDRESS>") => Tuple("<MORPHER_MESSAGE>", "<MORPHER_SIGNATURE>"),
         ...
     )
 ;
@@ -138,8 +138,8 @@ CALL_METHOD
     Address("<ORACLE_COMPONENT_ADDRESS>")
     "get_price"
     Address("<COIN_RESOURCE_ADDRESS>")
-    Map<ResourceAddress, Tuple>(
-        Address("<COIN_RESOURCE_ADDRESS>") => ("<MORPHER_MESSAGE>", "<MORPHER_SIGNATURE>"),
+    Map<Address, Tuple>(
+        Address("<COIN_RESOURCE_ADDRESS>") => Tuple("<MORPHER_MESSAGE>", "<MORPHER_SIGNATURE>"),
         ...
     )
 ;
@@ -217,8 +217,8 @@ CALL_METHOD
     Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
     "finish_unstake"
     "<CLAIM_NFT_ID>"
-    Map<ResourceAddress, Tuple>(
-        Address("<COIN_RESOURCE_ADDRESS>") => ("<MORPHER_MESSAGE>", "<MORPHER_SIGNATURE>"),
+    Map<Address, Tuple>(
+        Address("<COIN_RESOURCE_ADDRESS>") => Tuple("<MORPHER_MESSAGE>", "<MORPHER_SIGNATURE>"),
         ...
     )
 ;
@@ -282,8 +282,8 @@ CALL_METHOD
         "<PROTOCOL_NAME>",
         ...
     )
-    Map<ResourceAddress, Tuple>(
-        Address("<COIN_RESOURCE_ADDRESS>") => ("<MORPHER_MESSAGE>", "<MORPHER_SIGNATURE>"),
+    Map<Address, Tuple>(
+        Address("<COIN_RESOURCE_ADDRESS>") => Tuple("<MORPHER_MESSAGE>", "<MORPHER_SIGNATURE>"),
         ...
     )
 ;
@@ -890,8 +890,8 @@ CALL_METHOD
     "<PROTOCOL_NAME>"
     Bucket("coin_bucket")
     Some(Bucket("other_coin_bucket"))
-    Map<ResourceAddress, Tuple>(
-        Address("<COIN_ADDRESS>") => ("<MORPHER_MESSAGE>", "<MORPHER_SIGNATURE>"),
+    Map<Address, Tuple>(
+        Address("<COIN_ADDRESS>") => Tuple("<MORPHER_MESSAGE>", "<MORPHER_SIGNATURE>"),
         ...
     )
     <MINT_FUND_UNITS>
@@ -939,8 +939,8 @@ CALL_METHOD
     "deposit_protocol_token"
     "<PROTOCOL_NAME>"
     Bucket("token_bucket")
-    Map<ResourceAddress, Tuple>(
-        Address("<COIN_ADDRESS>") => ("<MORPHER_MESSAGE>", "<MORPHER_SIGNATURE>"),
+    Map<Address, Tuple>(
+        Address("<COIN_ADDRESS>") => Tuple("<MORPHER_MESSAGE>", "<MORPHER_SIGNATURE>"),
         ...
     )
     <MINT_FUND_UNITS>
