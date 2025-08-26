@@ -77,6 +77,7 @@ mod weft_wrapper {
         component_address: Global<LendingPool>, // Main WEFT component
         claimer_component_address: Global<WeftTokenClaimer>, // WEFT component that manages
                                                              // incentives
+        coin_token_ratio: Decimal,  // How many coins are returned for a token
     }
 
     impl WeftWrapper {
@@ -108,6 +109,7 @@ mod weft_wrapper {
                 component_address: component_address,
                 claimer_component_address: claimer_component_address,
                 weft_claimer_nft_address: weft_claimer_nft_address,
+                coin_token_ratio: Decimal::ONE,
             }
                 .instantiate()
                 .prepare_to_globalize(OwnerRole::Fixed(rule!(require(admin_badge_address))))
@@ -146,19 +148,6 @@ mod weft_wrapper {
                 ),
                 None
             );
-        }
-
-
-        fn get_token_coin_ratio(&mut self) -> Decimal {
-            let mut resources = IndexSet::new();
-            resources.insert(self.coin_address);
-
-            self.component_address.get_deposit_unit_ratio(resources)
-                .get(&self.token_address)
-                .unwrap()
-                .unwrap()
-                .checked_truncate(RoundingMode::ToZero)
-                .unwrap()
         }
 
         // Withdraw any unexpected fungible or non fungible from the account
@@ -316,6 +305,8 @@ mod weft_wrapper {
             Decimal,                // Total coin amount
             Option<Decimal>         // Total WEFT coin amount
         ) {
+            let coin_amount = coin.amount();
+
             // Pass the bucket of coins to the WEFT component and expect a vector conteining a
             // bucket of tokens
             let token_bucket = self.component_address.deposit(
@@ -323,6 +314,11 @@ mod weft_wrapper {
             )
                 .pop()
                 .unwrap();
+
+            // Update the coin_token_ratio information that will be useful when withdrawing
+            if coin_amount != Decimal::ZERO {
+                self.coin_token_ratio = coin_amount / token_bucket.amount();
+            }
 
             // Deposit the tokens  in the Account
             self.account.try_deposit_or_abort(token_bucket.into(), None);
@@ -369,12 +365,10 @@ mod weft_wrapper {
             // Update the amount to be withdrawn
             amount -= weft_bucket.amount() * other_coin_to_coin_price_ratio.unwrap();
 
-            let token_coin_ratio = self.get_token_coin_ratio();
-
             // Get tokens up to a value equivalent to amount
             let (token_bucket, remaining_tokens) = self.take_from_account(
                 self.token_address,
-                amount * token_coin_ratio
+                amount / self.coin_token_ratio
             );
 
             // Send the tokens to the WEFT component to get the coins
@@ -388,7 +382,7 @@ mod weft_wrapper {
             (
                 FungibleBucket(coin_bucket),
                 Some(FungibleBucket(weft_bucket)),
-                remaining_tokens / token_coin_ratio,
+                remaining_tokens * self.coin_token_ratio,
                 Some(remaining_weft),
             )
         }
@@ -399,7 +393,7 @@ mod weft_wrapper {
             Option<Decimal>         // Total WEFT coin amount
         ) {
             (
-                self.account.balance(self.token_address) / self.get_token_coin_ratio(),
+                self.account.balance(self.token_address) * self.coin_token_ratio,
                 Some(self.account.balance(self.weft_coin_address))
             )
         }
