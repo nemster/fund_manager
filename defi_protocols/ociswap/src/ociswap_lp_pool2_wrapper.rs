@@ -72,7 +72,7 @@ mod ociswap_lp_pool2_wrapper {
             y_address: ResourceAddress,
             lp_token_address: ResourceAddress,
             account: Global<Account>,
-            account_badge_vault: NonFungibleVault,
+            account_badge_bucket: NonFungibleBucket,
             component_address: Global<Pool>,
             fund_manager_badge_address: ResourceAddress,
             admin_badge_address: ResourceAddress,
@@ -84,7 +84,7 @@ mod ociswap_lp_pool2_wrapper {
                 y_address: y_address,
                 lp_token_address: lp_token_address,
                 account: account,
-                account_badge_vault: account_badge_vault,
+                account_badge_vault: NonFungibleVault::with_bucket(account_badge_bucket),
                 component_address: component_address,
                 pool: component_address.liquidity_pool(),
             }
@@ -439,14 +439,16 @@ mod ociswap_lp_pool2_wrapper {
             )
         }
 
-        // Return all available x and y coins, both in the Account and in the pool
+        // Return the number of all available x and y coins, both in the Account and in the pool
         fn get_coin_amounts(&mut self) -> (
             Decimal,                // Total coin amount
             Option<Decimal>         // Total other coin amount
         ) {
-            let amounts = self.pool.get_redemption_value(
-                self.account.balance(self.lp_token_address)
-            );
+            let token_amount = self.account.balance(self.lp_token_address);
+            let amounts = match token_amount > Decimal::ZERO {
+                true => self.pool.get_redemption_value(token_amount),
+                false => IndexMap::new(),
+            };
 
             let x_amount = *amounts.get(&self.x_address).unwrap_or(&Decimal::ZERO) +
                 self.account.balance(self.x_address);
