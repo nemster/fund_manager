@@ -262,7 +262,7 @@ CALL_METHOD
 `<MORE_STAKERS>` must be `false` if the airdrop is completed, `true` if there will be more calls to this method.  
 
 ### update\_defi\_protocols\_value
-This method can ask FundManager to update the estimation of the dollar value of the investment in some DeFi protocols and/or the desired percentage of value to invest in each DeFi protocol.  
+This method can ask FundManager to update the estimation of the dollar value of the investment in some DeFi protocols.  
 It emits a `ProtocolValueUpdateEvent` for each DeFi protocol position whose value is updated. The event contains:  
 - the name of the protocol  
 - the updated value of the coins invested in the protocol  
@@ -297,7 +297,7 @@ CALL_METHOD
 `<MORPHER_MESSAGE>` the message for the Morpher oracle regarding `<COIN_RESOURCE_ADDRESS>`.  
 `<MORPHER_SIGNATURE>` the signature of `<MORPHER_MESSAGE>`.  
 
-### update\_defi\_protocols\_percentage
+### set\_defi\_protocols\_percentage
 This method sets the desired percentage of value to invest in each DeFi protocol. 
 The method doesn't actually move any funds; it only influences the future deposit and withdraws.  
 FundManager doesn't check that the sum of the percentages is 100; each percentage should be considered as a share of the sum of the percentages.  
@@ -311,8 +311,8 @@ CALL_METHOD
 ;
 CALL_METHOD
     Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
-    "update_defi_protocols_percentage"
-    Map<String, Decimal>(
+    "set_defi_protocols_percentage"
+    Map<String, u8>(
         "<PROTOCOL_NAME>" => <DESIRED_PERCENTAGE>u8,
         ...
     )
