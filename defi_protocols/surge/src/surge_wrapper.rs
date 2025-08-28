@@ -28,7 +28,7 @@ static NON_FUNGIBLES_PER_WITHDRAW: u32 = 100;
 mod surge_wrapper {
 
     extern_blueprint! {
-        "package_tdx_2_1pk6dp0yek7ctv4evkhk78lc2af8ha8wd70ntkxva49cres0nl0pd2x",
+        "package_tdx_2_1phyewk3m6aeycqmmmk5easfmk7mg97sn20p2yvd499rj5y5xrxzdcc",
         Exchange {
             fn add_liquidity(&self, payment: Bucket) -> Bucket;
             fn remove_liquidity(&self, lp_token: Bucket) -> Bucket;
@@ -37,7 +37,7 @@ mod surge_wrapper {
     }
 
     extern_blueprint! {
-        "package_tdx_2_1pkddk9u36afsazvfad3af09gvs0l5kmk560v9n9ejj5z99x35scnyn",
+        "package_tdx_2_1phjqhqsp286r7nc4e47kyeyus7drxwcf3965u693fzpe0krcpmt6hu",
         TokenWrapper {
             fn wrap(&mut self, child_token: Bucket) -> Bucket;
             fn unwrap(&mut self, parent_token: Bucket, child_resource: ResourceAddress) -> Bucket;
@@ -83,7 +83,7 @@ mod surge_wrapper {
             coin_address: ResourceAddress,  // The coin to provide liquidity to Surge
             token_address: ResourceAddress, // The token Surge returns for provided liquidity
             account: Global<Account>,       // The account to hold the tokens
-            account_badge_vault: NonFungibleVault,      // Badge to manage the Account
+            account_badge_bucket: NonFungibleBucket,    // Badge to manage the Account
             exchange_component: Global<Exchange>,       // Surge main component
             wrapper_component: Global<TokenWrapper>,    // Surge additional component
             fund_manager_badge_address: ResourceAddress,    // God's badge
@@ -95,7 +95,7 @@ mod surge_wrapper {
                 coin_address: coin_address,
                 token_address: token_address,
                 account: account,
-                account_badge_vault: account_badge_vault,
+                account_badge_vault: NonFungibleVault::with_bucket(account_badge_bucket),
                 exchange_component: exchange_component,
                 wrapper_component: wrapper_component,
             }
