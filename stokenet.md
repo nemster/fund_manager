@@ -33,7 +33,10 @@ TokenValidator component: `component_tdx_2_1cr5f8r4qnv33xuc8cldtcsmqvfeew4e67qwt
 QuantaSwapFactory package: `package_tdx_2_1p5ttf9yl036zjuh6t0ualgh50snlkz0qemayl2c4m72nkantdfcg6d`  
 QuantaSwapFactory component: `component_tdx_2_1crypyusfpzqtd26x9n3ectdelcckmuyccj8lrmpduuv65f7p4v76ey`  
 QuantaSwap XRD/xUSDC (Surge) pool: `component_tdx_2_1cq2l8q44p2kdxxaup8mh8uywwhm4nyutc9g2p0ezxmcddmc8zzl4r7`  
-  
+
+hUSDC: `resource_tdx_2_1thr3zv65sm5w3jvaz4murfdfyl49u3skr20rlssgjfngmj7ax7n86j`  
+QuantaSwap XRD/hUSDC pool: `component_tdx_2_1cp250ax4nq7faup5n6pht37jhjzrg9nm088y9j5zw2pr0ef7f5v52d`  
+
 DefiPlaza pool package: `package_tdx_2_1pk8umega5zc4fft0lmemml3g6qlce99h3wszsukwe3lx45xqay6l9t`  
   
 Morpher component: `component_tdx_2_1cqv8gntu3avns3e8ft3v9ju7wk2n7yhlzrkygc64hpvjkcnjpyglr8`  
@@ -73,6 +76,9 @@ xwBTC@Surge fund account: `account_tdx_2_1cyeadvjw08dn4lcp3wvfehthwee92m77kmwhff
 xwBTC@Surge fund account badge: `resource_tdx_2_1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxx4vczzk:[c133d6b24e79db3aff018b989cdd777672556fdeb6dd74a4ea090c6fd185]`  
 SurgeWrapper package: `package_tdx_2_1pkx8hp2zgalrqkyu3609mc2jel2pznggk48prjlxjqlmvjz789j22y`  
 SurgeWrapper xwBTC@Surge component: `component_tdx_2_1cp9083nrxpnxd82z0hq4wsja5a5qnekwz5pu6g0uw8yl2qnu82mu05`  
+
+RootFinanceWrapper package: `package_tdx_2_1p57pyw5k7as0fvq0pvcsj2g4p9krg38aqtdf9a4qpmtp6zf0skwupn`  
+RootFinanceWrapper component: `component_tdx_2_1cpxddr80264jpqc7wvs6223nh873j65twlx5nu4dw5lzppw94ydtg8`  
 
 ## FundManager
 
@@ -422,7 +428,7 @@ CALL_FUNCTION
 ;
 ```
 
-### Add liquidity to the pool
+### Add liquidity to the WEFT/XRD pool
 ```
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
@@ -624,6 +630,27 @@ CALL_METHOD
 ;
 ```
 
+### Tell the MultiOracleWrapper component that the price of hUSDC is 1
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "create_proof_of_non_fungibles"
+    Address("resource_tdx_2_1nfkhdgruseldvkrlgu9j3vp7uyh98t6arhfl7ugcrj6pzuraynpnfs")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_tdx_2_1czh4y75hzdslhj25m7r4vmlemd7tal34sr9mxwdgguygkf40z9hrwl")
+    "add_oracle"
+    Address("resource_tdx_2_1thr3zv65sm5w3jvaz4murfdfyl49u3skr20rlssgjfngmj7ax7n86j")
+    Some(Decimal("1"))
+    None
+    None
+    None
+    None
+    None
+;
+```
+
 ## QuantaSwap (Caviarnine)
 
 ### Instantiate a TokenValidator component
@@ -659,7 +686,7 @@ CALL_METHOD
 ;
 ```
 
-### Add liquidity to the QuantaSwap pool
+### Add liquidity to the XRD/xUSDC (Surge) QuantaSwap pool
 ```
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
@@ -696,6 +723,57 @@ CALL_METHOD
     Expression("ENTIRE_WORKTOP")
 ;
 ```
+
+### Ask the QuantaSwapFactory component to instantiate a XRD/hUSDC QuantaSwap pool
+```
+CALL_METHOD
+    Address("component_tdx_2_1crypyusfpzqtd26x9n3ectdelcckmuyccj8lrmpduuv65f7p4v76ey")
+    "new_pool"
+     Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
+     Address("resource_tdx_2_1thr3zv65sm5w3jvaz4murfdfyl49u3skr20rlssgjfngmj7ax7n86j")
+     1u32
+     None
+;
+```
+
+### Add liquidity to the XRD/hUSDC QuantaSwap pool
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "withdraw"
+    Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
+    Decimal("4000")
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
+    Bucket("xrd")
+;
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "withdraw"
+    Address("resource_tdx_2_1thr3zv65sm5w3jvaz4murfdfyl49u3skr20rlssgjfngmj7ax7n86j")
+    Decimal("20")
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_tdx_2_1thr3zv65sm5w3jvaz4murfdfyl49u3skr20rlssgjfngmj7ax7n86j")
+    Bucket("husdc")
+;
+CALL_METHOD
+    Address("component_tdx_2_1cp250ax4nq7faup5n6pht37jhjzrg9nm088y9j5zw2pr0ef7f5v52d")
+    "add_liquidity"
+    Bucket("xrd")
+    Bucket("husdc")
+    Array<Tuple>(
+        Tuple(0u32, Decimal("4000"), Decimal("20"))
+    )
+;
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "deposit_batch"
+    Expression("ENTIRE_WORKTOP")
+;
+```
+
 ## MultiDexWrapper
 
 ### Instantiate the MultiDexWrapper component
@@ -807,6 +885,26 @@ CALL_METHOD
     true
 ;
 ```
+
+### Tell the MultiDexWrapper component to use the QuantaSwap pool for XRD <-> hUSDC swaps
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "create_proof_of_non_fungibles"
+    Address("resource_tdx_2_1nfkhdgruseldvkrlgu9j3vp7uyh98t6arhfl7ugcrj6pzuraynpnfs")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_tdx_2_1crxp8ujqswl0cxfr6w60vpejwrmrxpu8fa7ryt427dkvwv3eae7xeq")
+    "add_pool"
+    Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
+    Address("resource_tdx_2_1thr3zv65sm5w3jvaz4murfdfyl49u3skr20rlssgjfngmj7ax7n86j")
+    "caviarnine_pool"
+    Address("component_tdx_2_1cp250ax4nq7faup5n6pht37jhjzrg9nm088y9j5zw2pr0ef7f5v52d")
+    true
+;
+```
+
 ## WeftTokenClaimer
 
 ## Instantiate the WeftTokenClaimer component
@@ -1369,4 +1467,171 @@ CALL_METHOD
 ;
 ```
 
+### Invest some xUSDC (Surge) in the xUSDC@Surge position
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "create_proof_of_non_fungibles"
+    Address("resource_tdx_2_1nfkhdgruseldvkrlgu9j3vp7uyh98t6arhfl7ugcrj6pzuraynpnfs")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "withdraw"
+    Address("resource_tdx_2_1t50uv6v747hw4d2rneh7elfppz8jf7hzjxp2q260weh76cc9qzk85r")
+    Decimal("10")
+;   
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_tdx_2_1t50uv6v747hw4d2rneh7elfppz8jf7hzjxp2q260weh76cc9qzk85r")
+    Bucket("xusdc")
+;
+CALL_METHOD
+    Address("component_tdx_2_1cqn24ymyzqst9zgf6cx2dzp0464nffmqdax272h9hzmj756fqfk503")
+    "deposit_coin"
+    "xUSDC@Surge"
+    Bucket("xusdc")
+    None
+    Map<Address, Tuple>()
+    false
+;   
+```
+
+The account `account_tdx_2_1cyeadvjw08dn4lcp3wvfehthwee92m77kmwhff82pyxxl5v9fl4c6d` now contains 10 SLP tokens.  
+
+Emitted event:  
+```
+AdminDepositEvent
+defi_protocol_name: xUSDC@Surge
+protocol_value: 10
+total_value: 28.490477234363726782
+```
+
+## RootFinanceWrapper
+
+### Create an account and its owner badge for the "hUSDC@RootFinance" position
+```
+CALL_FUNCTION
+    Address("package_tdx_2_1pkgxxxxxxxxxaccntxxxxxxxxxx000929625493xxxxxxxxx9jat20")
+    "Account"
+    "create"
+;
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "deposit_batch"
+    Expression("ENTIRE_WORKTOP")
+;
+```
+
+### Instantiate a RootFinanceWrapper component and pass it the ownership of the account
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "withdraw_non_fungibles"
+    Address("resource_tdx_2_1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxx4vczzk")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("[c180caf8145715a1e0168012ff70c6104aa01d985ef786da8a84422aa0d0]"))
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_tdx_2_1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxx4vczzk")
+    Bucket("account_badge")
+;
+CALL_FUNCTION
+    Address("package_tdx_2_1p57pyw5k7as0fvq0pvcsj2g4p9krg38aqtdf9a4qpmtp6zf0skwupn")
+    "RootFinanceWrapper"
+    "new"
+    Address("resource_tdx_2_1thr3zv65sm5w3jvaz4murfdfyl49u3skr20rlssgjfngmj7ax7n86j")
+    Address("resource_tdx_2_1nfza24sm2yat9qjqnmzjvv00d84p4jclznq0vpyw7m49ycuwj4r4r0")
+    Address("account_tdx_2_1cxqv47q52u26rcqksqf07uxxzp92q8vctmmcdk52s3pz4gxs3d7f3y")
+    Bucket("account_badge")
+    Address("component_tdx_2_1cpymwmdxzgshkjl86lw2fakd9kgkvqtqapudhdtmralfcsy5zay8cu")
+    Address("resource_tdx_2_1thyu69x76sulvf6agqfp5njqd3uyxxtmtrnz3v7vrzszye6yu42s77")
+    Address("resource_tdx_2_1nfkhdgruseldvkrlgu9j3vp7uyh98t6arhfl7ugcrj6pzuraynpnfs")
+;
+```
+
+### Authorize admin #2# to create the hUSDC@RootFinance position in the FundManager
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "create_proof_of_non_fungibles"
+    Address("resource_tdx_2_1nfkhdgruseldvkrlgu9j3vp7uyh98t6arhfl7ugcrj6pzuraynpnfs")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_tdx_2_1cqn24ymyzqst9zgf6cx2dzp0464nffmqdax272h9hzmj756fqfk503")
+    "authorize_admin_operation"
+    Proof("admin_proof")
+    2u8
+    1u8
+    Some("hUSDC@RootFinance")
+    None
+    None
+;
+```
+
+### Register the created RootFinanceWrapper component as hUSDC@RootFinance protocol in the FundManager
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "create_proof_of_non_fungibles"
+    Address("resource_tdx_2_1nfkhdgruseldvkrlgu9j3vp7uyh98t6arhfl7ugcrj6pzuraynpnfs")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_tdx_2_1cqn24ymyzqst9zgf6cx2dzp0464nffmqdax272h9hzmj756fqfk503")
+    "add_defi_protocol"
+    Proof("admin_proof")
+    "hUSDC@RootFinance"
+    Address("resource_tdx_2_1thr3zv65sm5w3jvaz4murfdfyl49u3skr20rlssgjfngmj7ax7n86j")
+    Address("resource_tdx_2_1nfza24sm2yat9qjqnmzjvv00d84p4jclznq0vpyw7m49ycuwj4r4r0")
+    None
+    10u8
+    Address("component_tdx_2_1cpxddr80264jpqc7wvs6223nh873j65twlx5nu4dw5lzppw94ydtg8")
+    None
+;
+```
+
+### Invest some hUSDC in the hUSDC@RootFinance position
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "create_proof_of_non_fungibles"
+    Address("resource_tdx_2_1nfkhdgruseldvkrlgu9j3vp7uyh98t6arhfl7ugcrj6pzuraynpnfs")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "withdraw"
+    Address("resource_tdx_2_1thr3zv65sm5w3jvaz4murfdfyl49u3skr20rlssgjfngmj7ax7n86j")
+    Decimal("10")
+;   
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_tdx_2_1thr3zv65sm5w3jvaz4murfdfyl49u3skr20rlssgjfngmj7ax7n86j")
+    Bucket("husdc")
+;
+CALL_METHOD
+    Address("component_tdx_2_1cqn24ymyzqst9zgf6cx2dzp0464nffmqdax272h9hzmj756fqfk503")
+    "deposit_coin"
+    "hUSDC@RootFinance"
+    Bucket("husdc")
+    None
+    Map<Address, Tuple>()
+    false
+;   
+```
+
+The account `account_tdx_2_1cxqv47q52u26rcqksqf07uxxzp92q8vctmmcdk52s3pz4gxs3d7f3y` now contains a Root Receipt.  
+
+Emitted event:  
+```
+AdminDepositEvent
+defi_protocol_name: hUSDC@RootFinance
+protocol_value: 10
+total_value: 38.490477234363726782
+```
 
