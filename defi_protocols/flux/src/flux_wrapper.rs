@@ -24,9 +24,9 @@ static NON_FUNGIBLES_PER_WITHDRAW: u32 = 100;
 
 // This blueprint is a wrapper to talk to the Flux protocol using the DefiProtocolInterfaceStub
 // interface.
-// Here "coin" is the coin used to provide liquidity to the Flux protocol (as an example LSULP); to
-// provide multiple coins, multiple instances of this component are required.
-// "other coin" is fUSD; is is neved deposited but can be withdrawn.
+// Here "coin" is the collateral in the Flux protocol pool (as an example LSULP); to
+// provide liquidity to multiple pools, multiple instances of this component are required.
+// "coin" is neved deposited but can be withdrawn.
 // "token" is the LP token returned by the Flux protocol upon deposits.
 #[blueprint_with_traits]
 mod flux_wrapper {
@@ -279,8 +279,8 @@ mod flux_wrapper {
             message: Option<String>,
             signature: Option<String>,
         ) -> (
-            Decimal,                // Total coin amount
-            Option<Decimal>         // Total fUSD amount
+            Decimal,                // Total fUSD amount
+            Option<Decimal>         // Total coin amount
         ) {
             let (token_bucket, _, _) = self.component_address.contribute_to_pool(
                 self.coin_address,
@@ -301,10 +301,10 @@ mod flux_wrapper {
             amount: Decimal, // Coin amount to withdraw (or fUSD equivalent value)
             other_coin_to_coin_price_ratio: Option<Decimal>, // coins per fUSD
         ) -> (
-            FungibleBucket,             // Withdrawn coins
-            Option<FungibleBucket>,     // Withdrawn fUSD
-            Decimal,                    // Remaining coin amount
-            Option<Decimal>             // Remaining fUSD amount
+            FungibleBucket,             // Withdrawn fUSD
+            Option<FungibleBucket>,     // Withdrawn coin
+            Decimal,                    // Remaining fUSD amount
+            Option<Decimal>             // Remaining coin amount
         ) {
             // Compute the amount of coins and fUSD withdrawn by returning one pool unit
             let amounts = self.pool.get_redemption_value(Decimal::ONE);
@@ -313,7 +313,7 @@ mod flux_wrapper {
 
             // Compute the number of tokens to get amount coins (or fUSD equivalent value)
             let token_amount = amount
-                / (coin_per_token + fusd_per_token * other_coin_to_coin_price_ratio.unwrap());
+                / (fusd_per_token + coin_per_token * other_coin_to_coin_price_ratio.unwrap());
 
             // Get the tokens from the Account and send them to the Pool
             let (token_bucket, remaining_tokens) = self.take_from_account(
@@ -331,10 +331,10 @@ mod flux_wrapper {
 
             // Return buckets and information
             (
-                FungibleBucket(buckets.0),
-                Some(FungibleBucket(buckets.1)),
-                remaining_coin,
-                Some(remaining_fusd),
+                FungibleBucket(buckets.1),
+                Some(FungibleBucket(buckets.0)),
+                remaining_fusd,
+                Some(remaining_coin),
             )
         }
 
@@ -350,18 +350,22 @@ mod flux_wrapper {
 
         // Get the numebr of coins and fUSD that can be withdrawn from this component
         fn get_coin_amounts(&mut self) -> (
-            Decimal,                // Total coin amount
-            Option<Decimal>         // Total fUSD amount
+            Decimal,                // Total fUSD amount
+            Option<Decimal>         // Total collateral amount
         ) {
-            // Ask the pool the redemption value of the available LP tokens
-            let amounts = self.pool.get_redemption_value(
-                self.account.balance(self.token_address)
-            );
+            let token_amount = self.account.balance(self.token_address);
 
-            (
-                *amounts.get(&self.coin_address).unwrap_or(&Decimal::ZERO),
-                Some(*amounts.get(&self.fusd_address).unwrap_or(&Decimal::ZERO)),
-            )
+            match token_amount == Decimal::ZERO {
+                true => (Decimal::ZERO, Some(Decimal::ZERO)),
+                false => {
+                    let amounts = self.pool.get_redemption_value(token_amount);
+
+                    (
+                        *amounts.get(&self.fusd_address).unwrap_or(&Decimal::ZERO),
+                        Some(*amounts.get(&self.coin_address).unwrap_or(&Decimal::ZERO)),
+                    )
+                }
+            }
         }
     }
 }
