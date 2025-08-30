@@ -37,6 +37,9 @@ QuantaSwap XRD/xUSDC (Surge) pool: `component_tdx_2_1cq2l8q44p2kdxxaup8mh8uywwhm
 hUSDC: `resource_tdx_2_1thr3zv65sm5w3jvaz4murfdfyl49u3skr20rlssgjfngmj7ax7n86j`  
 QuantaSwap XRD/hUSDC pool: `component_tdx_2_1cp250ax4nq7faup5n6pht37jhjzrg9nm088y9j5zw2pr0ef7f5v52d`  
 
+LSULP: `resource_tdx_2_1t59ygltctweq749ucj702a9d6ap8pv60pxjyu05048vfzdnq9fsc2c`  
+QuantaSwap XRD/LSULP pool: `component_tdx_2_1cplpy47fc5hdymxmmt0fqhylxw8fm3y2n3v6w5d3d0nnunyh7sw73z`
+
 DefiPlaza pool package: `package_tdx_2_1pk8umega5zc4fft0lmemml3g6qlce99h3wszsukwe3lx45xqay6l9t`  
   
 Morpher component: `component_tdx_2_1cqv8gntu3avns3e8ft3v9ju7wk2n7yhlzrkygc64hpvjkcnjpyglr8`  
@@ -79,6 +82,21 @@ SurgeWrapper xwBTC@Surge component: `component_tdx_2_1cp9083nrxpnxd82z0hq4wsja5a
 
 RootFinanceWrapper package: `package_tdx_2_1p57pyw5k7as0fvq0pvcsj2g4p9krg38aqtdf9a4qpmtp6zf0skwupn`  
 RootFinanceWrapper component: `component_tdx_2_1cpxddr80264jpqc7wvs6223nh873j65twlx5nu4dw5lzppw94ydtg8`  
+
+Flux dummy oracle component: `component_tdx_2_1cz3e9rmcu232ahfl3s0f7sq3yq4flvfac2kkqezannvlnu45qrhlte`  
+ILIS: `resource_tdx_2_1tkp46lclwtz44d7slfncvr98egwp4jp3zgvxgz4ehsgf7v7ndq7n2z`  
+Flux proxy component: `component_tdx_2_1cq265naw7zpatuau2rcenepunt9e0heprlv59tf3c836d36js3uydx`  
+Flux protocol component: `component_tdx_2_1cpr6gttvlf83uqj47um336dstsqxr403ua9e2ye6x0zx07pz83nyzc`
+Flux StabilityPools component: `component_tdx_2_1cp2ukcpmg2vcn9znq9t27ru5sd5w3tk2taju5jelzynnhafa3tawpy`  
+fusdCTRL: `resource_tdx_2_1t59rffxrwyhxakn7hemt3x9t7wp0j5dar2c8n882vnngy3wwhe8pxg`  
+fUSD: `resource_tdx_2_1thc6avtsk0f2d4mgp4rca76nw6753yz638e0qaszzhqy6e469pcca7`  
+Flux CDP NFT: `resource_tdx_2_1n2cvm9h35264thvvh552j4yd490gt8tasys3q86tvjv5kra3uvff52`  
+LSULP/fUSD Flux pool unit: `resource_tdx_2_1t4uzkqjpn0v90vxr4vczgm3vuuv85pp77umqqgz6queluuu4nd60hx`  
+
+FluxWrapper package: `package_tdx_2_1phyamp6zlvv943qrdl33xv8z5fz9cerf5z8ezczkfarygv3umjfta7`  
+LSULP/fUSD@Flux fund account: `account_tdx_2_1c8tzxu68cwpe5l3kcwvq4nwx6t55gwuzymwwm9rhwkry9hh6d6m08d`  
+LSULP/fUSD@Flux fund account badge: `c1d6237347c3839a7e36c3980acdc6d2e9443b8226dced9477758642defa`  
+LSULP/fUSD@Flux FluxWrapper component: `component_tdx_2_1cr30768gs6mll70y2ryf46pf458ddnm735lnas0nw9cvdfujrqcdzz`  
 
 ## FundManager
 
@@ -651,6 +669,48 @@ CALL_METHOD
 ;
 ```
 
+### Tell the MultiOracleWrapper component that the price of fUSD is 1
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "create_proof_of_non_fungibles"
+    Address("resource_tdx_2_1nfkhdgruseldvkrlgu9j3vp7uyh98t6arhfl7ugcrj6pzuraynpnfs")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_tdx_2_1czh4y75hzdslhj25m7r4vmlemd7tal34sr9mxwdgguygkf40z9hrwl")
+    "add_oracle"
+    Address("resource_tdx_2_1thc6avtsk0f2d4mgp4rca76nw6753yz638e0qaszzhqy6e469pcca7")
+    Some(Decimal("1"))
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+### Tell the MultiOracleWrapper component that the price of LSULP is 1.15 multiplied by the price of XRD
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "create_proof_of_non_fungibles"
+    Address("resource_tdx_2_1nfkhdgruseldvkrlgu9j3vp7uyh98t6arhfl7ugcrj6pzuraynpnfs")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_tdx_2_1czh4y75hzdslhj25m7r4vmlemd7tal34sr9mxwdgguygkf40z9hrwl")
+    "add_oracle"
+    Address("resource_tdx_2_1t59ygltctweq749ucj702a9d6ap8pv60pxjyu05048vfzdnq9fsc2c")
+    None
+    Some(Decimal("1.15"))
+    Some(Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc"))
+    None
+    None
+    None
+;
+```
+
 ## QuantaSwap (Caviarnine)
 
 ### Instantiate a TokenValidator component
@@ -671,6 +731,56 @@ CALL_FUNCTION
     "new"
     Address("resource_tdx_2_1nfkhdgruseldvkrlgu9j3vp7uyh98t6arhfl7ugcrj6pzuraynpnfs")
     Address("component_tdx_2_1cr5f8r4qnv33xuc8cldtcsmqvfeew4e67qwtqv6kqx0p5zu4ghg9yf")
+;
+```
+
+### Ask the QuantaSwapFactory component to instantiate a XRD/LSULP QuantaSwap pool
+```
+CALL_METHOD
+    Address("component_tdx_2_1crypyusfpzqtd26x9n3ectdelcckmuyccj8lrmpduuv65f7p4v76ey")
+    "new_pool"
+     Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
+     Address("resource_tdx_2_1t59ygltctweq749ucj702a9d6ap8pv60pxjyu05048vfzdnq9fsc2c")
+     1u32
+     None
+;
+```
+
+### Add liquidity to the XRD/LSULP QuantaSwap pool
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "withdraw"
+    Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
+    Decimal("5000")
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
+    Bucket("xrd")
+;
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "withdraw"
+    Address("resource_tdx_2_1t59ygltctweq749ucj702a9d6ap8pv60pxjyu05048vfzdnq9fsc2c")
+    Decimal("4348")
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_tdx_2_1t59ygltctweq749ucj702a9d6ap8pv60pxjyu05048vfzdnq9fsc2c")
+    Bucket("lsulp")
+;
+CALL_METHOD
+    Address("component_tdx_2_1cplpy47fc5hdymxmmt0fqhylxw8fm3y2n3v6w5d3d0nnunyh7sw73z")
+    "add_liquidity"
+    Bucket("xrd")
+    Bucket("lsulp")
+    Array<Tuple>(
+        Tuple(0u32, Decimal("5000"), Decimal("4348"))
+    )
+;
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "deposit_batch"
+    Expression("ENTIRE_WORKTOP")
 ;
 ```
 
@@ -901,6 +1011,25 @@ CALL_METHOD
     Address("resource_tdx_2_1thr3zv65sm5w3jvaz4murfdfyl49u3skr20rlssgjfngmj7ax7n86j")
     "caviarnine_pool"
     Address("component_tdx_2_1cp250ax4nq7faup5n6pht37jhjzrg9nm088y9j5zw2pr0ef7f5v52d")
+    true
+;
+```
+
+### Tell the MultiDexWrapper component to use the QuantaSwap pool for XRD <-> LSULP swaps
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "create_proof_of_non_fungibles"
+    Address("resource_tdx_2_1nfkhdgruseldvkrlgu9j3vp7uyh98t6arhfl7ugcrj6pzuraynpnfs")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_tdx_2_1crxp8ujqswl0cxfr6w60vpejwrmrxpu8fa7ryt427dkvwv3eae7xeq")
+    "add_pool"
+    Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
+    Address("resource_tdx_2_1t59ygltctweq749ucj702a9d6ap8pv60pxjyu05048vfzdnq9fsc2c")
+    "caviarnine_pool"
+    Address("component_tdx_2_1cplpy47fc5hdymxmmt0fqhylxw8fm3y2n3v6w5d3d0nnunyh7sw73z")
     true
 ;
 ```
@@ -1635,3 +1764,280 @@ protocol_value: 10
 total_value: 38.490477234363726782
 ```
 
+## Flux
+
+### Instantiate Flux dummy oracle component (with adjusted prices and all methods made public)
+```
+CALL_FUNCTION
+    Address("package_tdx_2_1p5w0vxpkk9j2rcdg85cdnpfkgpw67c26pdux8zk6a0tdlh448rp2v9")
+    "Oracle"
+    "instantiate_oracle"
+    Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
+    Address("resource_tdx_2_1t59ygltctweq749ucj702a9d6ap8pv60pxjyu05048vfzdnq9fsc2c")
+;
+```
+
+### Instantiate all Flux components
+```
+CALL_FUNCTION
+    Address("package_tdx_2_1p42tqez7qegpjgz26vnfjrc92vcuqx7ghwezu49qlh785qjz40y9t5")
+    "Proxy"
+    "new"
+    Address("resource_tdx_2_1nfkhdgruseldvkrlgu9j3vp7uyh98t6arhfl7ugcrj6pzuraynpnfs")
+    Address("component_tdx_2_1cz3e9rmcu232ahfl3s0f7sq3yq4flvfac2kkqezannvlnu45qrhlte")
+    Address("resource_tdx_2_1tk903dr7agsg65v8h8he6kdhwlsctedxq0fuec0aufagr2xeyhs5ur")
+    Address("resource_tdx_2_1tkp46lclwtz44d7slfncvr98egwp4jp3zgvxgz4ehsgf7v7ndq7n2z")
+    Decimal("1")
+    Address("resource_tdx_2_1nfkhdgruseldvkrlgu9j3vp7uyh98t6arhfl7ugcrj6pzuraynpnfs")
+;
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "deposit_batch"
+    Expression("ENTIRE_WORKTOP")
+;
+```
+
+### Accept LSULP as collateral
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "create_proof_of_amount"
+    Address("resource_tdx_2_1t59rffxrwyhxakn7hemt3x9t7wp0j5dar2c8n882vnngy3wwhe8pxg")
+    Decimal("1")
+;
+CALL_METHOD
+    Address("component_tdx_2_1cq265naw7zpatuau2rcenepunt9e0heprlv59tf3c836d36js3uydx")
+    "new_collateral"
+    Address("resource_tdx_2_1t59ygltctweq749ucj702a9d6ap8pv60pxjyu05048vfzdnq9fsc2c")
+    Decimal("1.5")
+    Decimal("0.005")
+    None
+    None
+    None
+    true
+    None
+    "LSULP"
+    "LSULP"
+    "https://assets.caviarnine.com/tokens/lsu_lp.png"
+    "LSULP"
+;
+```
+
+### Get some fUSD
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "create_proof_of_amount"
+    Address("resource_tdx_2_1t59rffxrwyhxakn7hemt3x9t7wp0j5dar2c8n882vnngy3wwhe8pxg")
+    Decimal("1")
+;
+CALL_METHOD
+    Address("component_tdx_2_1cpr6gttvlf83uqj47um336dstsqxr403ua9e2ye6x0zx07pz83nyzc")
+    "free_fusd"
+    Decimal("30")
+;
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "deposit_batch"
+    Expression("ENTIRE_WORKTOP")
+;
+```
+
+### Instantiate an Ociswap Pool V2 for the XRD/fUSD couple
+```
+CALL_FUNCTION
+    Address("package_tdx_2_1p5qntnqluczzjjnm577mfp7p5jd3qm2sv0qzkqklgkrypcnspw3dff")
+    "Pool"
+    "instantiate"
+    Address("resource_tdx_2_1thc6avtsk0f2d4mgp4rca76nw6753yz638e0qaszzhqy6e469pcca7")
+    Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
+    Decimal("0.01")
+    Decimal("0.01")
+    Decimal("0.5")    
+    Array<Tuple>()
+;
+```
+
+### Add liquidity to the XRD/fUSD pool
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "withdraw"
+    Address("resource_tdx_2_1thc6avtsk0f2d4mgp4rca76nw6753yz638e0qaszzhqy6e469pcca7")
+    Decimal("20")
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_tdx_2_1thc6avtsk0f2d4mgp4rca76nw6753yz638e0qaszzhqy6e469pcca7")
+    Bucket("fusd")
+;
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "withdraw"
+    Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
+    Decimal("2000")
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
+    Bucket("xrd")
+;
+CALL_METHOD
+    Address("component_tdx_2_1czwn5rf6zt3hculk40ha6hud78nzqq5mrtnl4mewq9jr63gmjz80jt")
+    "add_liquidity"
+    Bucket("fusd")
+    Bucket("xrd")
+;
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "deposit_batch"
+    Expression("ENTIRE_WORKTOP")
+;
+```
+
+### Tell the MultiDexWrapper component that for XRD <-> fUSD swaps the Ociswap Pool V2 has to be used
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "create_proof_of_non_fungibles"
+    Address("resource_tdx_2_1nfkhdgruseldvkrlgu9j3vp7uyh98t6arhfl7ugcrj6pzuraynpnfs")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_tdx_2_1crxp8ujqswl0cxfr6w60vpejwrmrxpu8fa7ryt427dkvwv3eae7xeq")
+    "add_pool"
+    Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
+    Address("resource_tdx_2_1thc6avtsk0f2d4mgp4rca76nw6753yz638e0qaszzhqy6e469pcca7")
+    "ociswap_pool2"
+    Address("component_tdx_2_1czwn5rf6zt3hculk40ha6hud78nzqq5mrtnl4mewq9jr63gmjz80jt")
+    true
+;
+```
+
+## FluxWrapper
+
+### Create an account and its owner badge for the "LSULP/fUSD@Flux" position
+```
+CALL_FUNCTION
+    Address("package_tdx_2_1pkgxxxxxxxxxaccntxxxxxxxxxx000929625493xxxxxxxxx9jat20")
+    "Account"
+    "create"
+;
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "deposit_batch"
+    Expression("ENTIRE_WORKTOP")
+;
+```
+### Instantiate a FluxWrapper component and give it the control over the created account
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "withdraw_non_fungibles"
+    Address("resource_tdx_2_1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxx4vczzk")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("[c1d6237347c3839a7e36c3980acdc6d2e9443b8226dced9477758642defa]"))
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_tdx_2_1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxx4vczzk")
+    Bucket("account_badge")
+;
+CALL_FUNCTION
+    Address("package_tdx_2_1phyamp6zlvv943qrdl33xv8z5fz9cerf5z8ezczkfarygv3umjfta7")
+    "FluxWrapper"
+    "new"
+    Address("resource_tdx_2_1thc6avtsk0f2d4mgp4rca76nw6753yz638e0qaszzhqy6e469pcca7")
+    Address("resource_tdx_2_1t59ygltctweq749ucj702a9d6ap8pv60pxjyu05048vfzdnq9fsc2c")
+    Address("resource_tdx_2_1t4uzkqjpn0v90vxr4vczgm3vuuv85pp77umqqgz6queluuu4nd60hx")
+    Address("account_tdx_2_1c8tzxu68cwpe5l3kcwvq4nwx6t55gwuzymwwm9rhwkry9hh6d6m08d")
+    Bucket("account_badge")
+    Address("component_tdx_2_1cp2ukcpmg2vcn9znq9t27ru5sd5w3tk2taju5jelzynnhafa3tawpy")
+    Address("resource_tdx_2_1thyu69x76sulvf6agqfp5njqd3uyxxtmtrnz3v7vrzszye6yu42s77")
+    Address("resource_tdx_2_1nfkhdgruseldvkrlgu9j3vp7uyh98t6arhfl7ugcrj6pzuraynpnfs")    
+;
+```
+
+### Authorize admin #2# to create the LSULP/fUSD@Flux position in the FundManager
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "create_proof_of_non_fungibles"
+    Address("resource_tdx_2_1nfkhdgruseldvkrlgu9j3vp7uyh98t6arhfl7ugcrj6pzuraynpnfs")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_tdx_2_1cqn24ymyzqst9zgf6cx2dzp0464nffmqdax272h9hzmj756fqfk503")
+    "authorize_admin_operation"
+    Proof("admin_proof")
+    2u8
+    1u8
+    Some("LSULP/fUSD@Flux")
+    None
+    None
+;
+```
+
+### Register the created FluxWrapper component as fUSD/LSUSP@Flux protocol in the FundManager
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "create_proof_of_non_fungibles"
+    Address("resource_tdx_2_1nfkhdgruseldvkrlgu9j3vp7uyh98t6arhfl7ugcrj6pzuraynpnfs")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_tdx_2_1cqn24ymyzqst9zgf6cx2dzp0464nffmqdax272h9hzmj756fqfk503")
+    "add_defi_protocol"
+    Proof("admin_proof")
+    "LSULP/fUSD@Flux"
+    Address("resource_tdx_2_1thc6avtsk0f2d4mgp4rca76nw6753yz638e0qaszzhqy6e469pcca7")
+    Address("resource_tdx_2_1t4uzkqjpn0v90vxr4vczgm3vuuv85pp77umqqgz6queluuu4nd60hx")
+    Some(Address("resource_tdx_2_1t59ygltctweq749ucj702a9d6ap8pv60pxjyu05048vfzdnq9fsc2c"))
+    10u8
+    Address("component_tdx_2_1cr30768gs6mll70y2ryf46pf458ddnm735lnas0nw9cvdfujrqcdzz")
+    Some(Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc"))
+;
+```
+### Invest some fUSD in the LSULP/fUSD@Flux position
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "create_proof_of_non_fungibles"
+    Address("resource_tdx_2_1nfkhdgruseldvkrlgu9j3vp7uyh98t6arhfl7ugcrj6pzuraynpnfs")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "withdraw"
+    Address("resource_tdx_2_1thc6avtsk0f2d4mgp4rca76nw6753yz638e0qaszzhqy6e469pcca7")
+    Decimal("5")
+;   
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_tdx_2_1thc6avtsk0f2d4mgp4rca76nw6753yz638e0qaszzhqy6e469pcca7")
+    Bucket("fusd")
+;
+CALL_METHOD
+    Address("component_tdx_2_1cqn24ymyzqst9zgf6cx2dzp0464nffmqdax272h9hzmj756fqfk503")
+    "deposit_coin"
+    "LSULP/fUSD@Flux"
+    Bucket("fusd")
+    None
+    Map<Address, Tuple>(
+        Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc") => Tuple("", "")
+    )
+    false
+;   
+```
+
+The account `account_tdx_2_1c8tzxu68cwpe5l3kcwvq4nwx6t55gwuzymwwm9rhwkry9hh6d6m08d` now contains 5 LSULP/fUSD pool units.  
+
+Emitted event:  
+```
+AdminDepositEvent
+defi_protocol_name: LSULP/fUSD@Flux
+protocol_value: 5
+total_value: 43.490477234363726782
+```
