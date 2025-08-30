@@ -312,7 +312,7 @@ CALL_METHOD
 CALL_METHOD
     Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
     "set_defi_protocols_percentage"
-    Map<String, u8>(
+    Map<String, U8>(
         "<PROTOCOL_NAME>" => <DESIRED_PERCENTAGE>u8,
         ...
     )
