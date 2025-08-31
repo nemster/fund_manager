@@ -105,7 +105,6 @@ CALL_METHOD
 
 ### fund\_unit\_value
 Returns the net and the gross (including withdrawal fee) dollar value of a fund unit.  
-A preview of the transaction is enough to get the values; it is not necessary to consume fees actually executing it.  
 
 ```
 CALL_METHOD
@@ -118,7 +117,6 @@ CALL_METHOD
 
 ### fund\_details
 Returns an HashMap containing the amount invested in each DeFi protocol.  
-A preview of the transaction is enough to get the values; it is not necessary to consume fees actually executing it.  
 
 ```
 CALL_METHOD
@@ -131,7 +129,6 @@ CALL_METHOD
 
 ### get\_price
 Reurns the dollar price of a coin.  
-A preview of the transaction is enough to get the values; it is not necessary to consume fees actually executing it.  
 
 ```
 CALL_METHOD
