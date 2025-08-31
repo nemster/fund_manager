@@ -510,7 +510,6 @@ CALL_METHOD
     Proof("admin_proof")
     "<PROTOCOL_NAME>"
     Address("<COIN_ADDRESS>")
-    Address("<TOKEN_ADDRESS>")
     Some(Address("<OTHER_COIN_ADDRESS>"))
     <DESIRED_PERCENTAGE>u8
     Address("<COMPONENT_ADDRESS>")
@@ -522,9 +521,8 @@ CALL_METHOD
 `<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
 `<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
 `<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
-`<PROTOCOL_NAME>` is a conventional name that will be used to identify this protocol. Is a protocol with such a name already exists the new one will replace the existing one and take all of the liquidity from it (so `<TOKEN_ADDRESS>` must be the same).  
+`<PROTOCOL_NAME>` is a conventional name that will be used to identify this protocol. Is a protocol with such a name already exists the new one will replace the existing one and take all of the liquidity from it (so the protocol token must be the same).  
 `<COIN_ADDRESS>` the resource address of the coin that will be deposited in this protocol.  
-`<TOKEN_ADDRESS>` the resource address of the receipt that the protocol returns when a deposit operation happens. It can be both a fungible (WEFT) or a non fungible (Root Finance).  
 `<OTHER_COIN_ADDRESS>` if the protocol allows depositing more two coins togheter (as an example a dex pool), this is the resource address of the second coin to be deposited. Otherwise the line must be `None`.  
 `<DESIRED_PERCENTAGE>` the percentage value share of the fund that must be deposited in this protocol.  
 `<COMPONENT_ADDRESS>` the address of the wrapper component implementing the `DefiProtocol` interface for this protocol.  

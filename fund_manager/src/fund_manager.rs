@@ -86,7 +86,6 @@ struct DefiProtocol {
     desired_percentage: u8, // Desired percentage of the fund to invest in this protocol
     wrapper: DefiProtocolInterfaceScryptoStub,
     coin: ResourceAddress, // Example coin: xUSDC
-    protocol_token: ResourceAddress, // Example protocol_token: w2-xUSDC
     needed_morpher_data: Option<ResourceAddress>, // Invoking Flux protocol methods requires data
                                                   // from the Morpher oracle
     other_coin: Option<ResourceAddress>, // Only for protocols managing two coins, i.e. providing
@@ -1098,7 +1097,6 @@ mod fund_manager {
             admin_proof: Proof,
             name: String, // The name to assign to the protocol wrapper
             coin: ResourceAddress, // The main coin managed by the new protocol
-            protocol_token: ResourceAddress, // The token belonging to this DeFi protocol
             other_coin: Option<ResourceAddress>, // Eventual other coin managed by the protocol
             desired_percentage: u8, // The percentage of the fund value that we want to be
                                     // deposited in this protocol
@@ -1139,7 +1137,6 @@ mod fund_manager {
                 desired_percentage: desired_percentage,
                 wrapper: wrapper,
                 coin: coin,
-                protocol_token: protocol_token,
                 other_coin: other_coin,
                 needed_morpher_data: needed_morpher_data,
             };
@@ -1271,7 +1268,7 @@ mod fund_manager {
         pub fn deposit_protocol_token(
             &mut self,
             defi_protocol_name: String, // The name of the protocol to deposit the tokens in
-            protocol_token_bucket: Bucket, // The bicket of tokens to deposit
+            protocol_token_bucket: Bucket, // The bucket of tokens to deposit
 
             // Eventual Morpher data required by the protocol or the oracle component
             morpher_data: HashMap<ResourceAddress, (String, String)>,
