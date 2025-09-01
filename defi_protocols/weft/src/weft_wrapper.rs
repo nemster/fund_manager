@@ -243,21 +243,30 @@ mod weft_wrapper {
 
     impl DefiProtocolInterfaceTrait for WeftWrapper {
 
-        // Use this method to deposit tokens and coins in this component
+        // Use this method to deposit tokens and WEFT coins in this component
+        // Depositing coins is not supported because withdraw_all never returns coins, just tokens
+        // and eventually WEFT coins
         fn deposit_all(
             &mut self,
-            token: Bucket,
-            coin: Option<FungibleBucket>,
-            other_coin: Option<FungibleBucket>,
+            token: Bucket,                      // Wrapped coin such as w2-xUSDC
+            _coin: Option<FungibleBucket>,      // Not supported
+            other_coin: Option<FungibleBucket>, // WEFT coins
         ) -> (
             Decimal,                // Total coin amount
             Option<Decimal>         // Total WEFT coin amount
         ) {
+            assert!(
+                token.resource_address() == self.token_address,
+                "Wrong token provided"
+            );
+
+            // Deposit the received tokens
             self.account.try_deposit_or_abort(token, None);
 
-            if coin.is_some() {
-                self.deposit_coin(coin.unwrap(), other_coin, None, None)
-            } else if other_coin.is_some() {
+            // Eventually deposit WEFT coins and return coins amounts
+            if other_coin.is_some() {
+                // The deposit_coin method will take care of verifying that other_coin is actually
+                // WEFT coin
                 self.deposit_coin(FungibleBucket::new(self.coin_address), other_coin, None, None)
             } else {
                 self.get_coin_amounts()
@@ -269,7 +278,7 @@ mod weft_wrapper {
             &mut self,
         ) -> (
             Bucket,                 // Tokens
-            Option<FungibleBucket>, // Coins
+            Option<FungibleBucket>, // None
             Option<FungibleBucket>  // WEFT coins
         ) {
 
@@ -305,6 +314,10 @@ mod weft_wrapper {
             Decimal,                // Total coin amount
             Option<Decimal>         // Total WEFT coin amount
         ) {
+            assert!(
+                coin.resource_address() == self.coin_address,
+                "Wrong coin provided"
+            );
             let coin_amount = coin.amount();
 
             // Pass the bucket of coins to the WEFT component and expect a vector conteining a

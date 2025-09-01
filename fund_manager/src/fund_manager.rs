@@ -1170,6 +1170,9 @@ mod fund_manager {
         // An admin can invoke this method to deposit coins in an existing DeFi protocol and
         // eventually mint new fund units corresponding to the value of the added coins.
         // There's no need for authorization; a single admin can invoke this method.
+        //
+        // It's DeFi protocol wrapper responsibility to check that the provided coins are the
+        // correct ones
         pub fn deposit_coin(
             &mut self,
             defi_protocol_name: String, // The name of the protocol to deposit the coin in
@@ -1184,19 +1187,19 @@ mod fund_manager {
         ) -> Option<FungibleBucket> // Fund units
         {
 
-            // Compute the USD value of the first bucket of deposited coins
-            let coin_price = self.oracle_component.unwrap().get_price(
-                coin_bucket.resource_address(),
-                morpher_data.clone(),
-            );
-            let mut buckets_value = coin_bucket.amount() * coin_price;
-
             // Get the current value of a fund unit
             let (_, fund_unit_gross_value) = self.fund_unit_value();
 
             // Get information about the DeFi protocol to deposit the buckets in
             let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).expect("Protocol not found");
 
+            // Compute the USD value of the first bucket of deposited coins
+            let coin_price = self.oracle_component.unwrap().get_price(
+                defi_protocol.coin,
+                morpher_data.clone(),
+            );
+
+            let mut buckets_value = coin_bucket.amount() * coin_price;
             // Extract the Morpher data needed by the DeFi protocol from the ones received
             let (message, signature) = match defi_protocol.needed_morpher_data {
                 Some(resource_address) => {
@@ -1265,6 +1268,9 @@ mod fund_manager {
         // An admin can invoke this method to deposit protocol tokens in an existing DeFi protocol
         // and eventually mint new fund units corresponding to the value of the added tokens.
         // There's no need for authorization; a single admin can invoke this method.
+        //
+        // It's DeFi protocol wrapper responsibility to check that the provided tokens are the
+        // correct ones
         pub fn deposit_protocol_token(
             &mut self,
             defi_protocol_name: String, // The name of the protocol to deposit the tokens in

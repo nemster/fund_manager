@@ -220,6 +220,11 @@ mod surge_wrapper {
             Decimal,                // Total coin amount
             Option<Decimal>         // None
         ) {
+            assert!(
+                token.resource_address() == self.token_address,
+                "Wrong token provided"
+            );
+
             // Deposit tokens
             self.account.try_deposit_or_abort(token, None);
 
@@ -260,6 +265,11 @@ mod surge_wrapper {
             Decimal,                // Total coin amount
             Option<Decimal>         // None
         ) {
+            assert!(
+                coin.resource_address() == self.coin_address,
+                "Wrong coin provided"
+            );
+
             // Wrap the coins
             let wrapped_coin_bucket = self.wrapper_component.wrap(coin.into());
 
@@ -272,7 +282,7 @@ mod surge_wrapper {
                 None
             );
 
-            // REturn the total amount of coins deposited
+            // Return the total amount of coins withdrawable
             self.get_coin_amounts()
         }
 

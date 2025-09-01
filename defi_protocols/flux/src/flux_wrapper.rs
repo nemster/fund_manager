@@ -242,8 +242,17 @@ mod flux_wrapper {
             Decimal,
             Option<Decimal>
         ) {
+
+            // Make sure the correct token was passed
+            assert!(
+                token.resource_address() == self.token_address,
+                "Wrong token"
+            );
+
+            // Deposit the received LP tokens in the account
             self.account.try_deposit_or_abort(token, None);
 
+            // Return the total number of fUSD and collateral that can be withdrawn
             self.get_coin_amounts()
         }
 
@@ -282,6 +291,10 @@ mod flux_wrapper {
             Decimal,                // Total fUSD amount
             Option<Decimal>         // Total coin amount
         ) {
+            // There's no need to check that coin bucket really contains fUSD because the Flux
+            // protocols pool only accepts fUSD deposits
+
+            // Deposit the received bucket in the Flux pool and get the protocol tokens
             let (token_bucket, _, _) = self.component_address.contribute_to_pool(
                 self.coin_address,
                 coin.into(),
@@ -290,8 +303,10 @@ mod flux_wrapper {
                 signature.expect("Signature needed"),
             );
 
+            // Deposit the received protocol tokens in the account
             self.account.try_deposit_or_abort(token_bucket, None);
             
+            // Return the total number of fUSD and collateral that can be withdrawn
             self.get_coin_amounts()
         }
 
