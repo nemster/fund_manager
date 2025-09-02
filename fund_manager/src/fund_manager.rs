@@ -170,7 +170,6 @@ mod fund_manager {
             bot => updatable_by: [OWNER];
         },
         methods {
-            init => PUBLIC;
 
             // Multisig operations
             add_defi_protocol => PUBLIC;
@@ -285,7 +284,25 @@ mod fund_manager {
             withdrawal_fee: u8,                     // Percentage withdrawal fee
             buyback_fund_percentage: u8,            // Percentage of XRD sent to the buyback fund
             buyback_fund_account: Global<Account>,  // Account managing the buyback fund
-        ) -> Global<FundManager> {
+            number_of_admin_badges: u8,             // Number of admin badges to mint
+            min_authorizers: u8,                    // Number of authorizers for multisig operation
+            fund_units_initial_supply: Decimal,     // Fund units to mint
+        ) -> (
+            Global<FundManager>,
+            ResourceAddress,        // Fund manager badge address
+            NonFungibleBucket,      // Admin badges
+            FungibleBucket,         // Fund units initial supply
+            ResourceAddress,        // Bot badge address
+        ) {
+
+            assert!(
+                number_of_admin_badges > 0,
+                "Create at least one admin badge",
+            );
+            assert!(
+                number_of_admin_badges > min_authorizers,
+                "The minimum number of authorizers must be smaller than the number of badges",
+            );
 
             // Reserve a component address to set permissions
             let (address_reservation, component_address) =
@@ -312,11 +329,16 @@ mod fund_manager {
                 .mint_initial_supply(Decimal::ONE);
             let fund_manager_badge_address = fund_manager_badge_bucket.resource_address();
 
-            // Create the resource manager to mint admin badges (those will be minted in the init
-            // method).
+            // Create the admin badges and the ResourceManager to mint new ones in future.
             // Admin badges are non fungibles identified by a number, recallable by the fund
             // manager.
-            let admin_badge_resource_manager = ResourceBuilder::new_integer_non_fungible::<Admin>(
+            let mut admin_badges_specification = vec![];
+            for n in 1..=number_of_admin_badges {
+                admin_badges_specification.push(
+                    (IntegerNonFungibleLocalId::from(u64::from(n)), Admin {})
+                );
+            }
+            let admin_badge_bucket = ResourceBuilder::new_integer_non_fungible::<Admin>(
                 OwnerRole::Fixed(rule!(require(fund_manager_badge_address)))
             )
                 .metadata(metadata!(
@@ -338,11 +360,13 @@ mod fund_manager {
                     recaller => rule!(require(fund_manager_badge_address));
                     recaller_updater => rule!(require(fund_manager_badge_address));
                 ))
-                .create_with_no_initial_supply();
-            let admin_badge_address = admin_badge_resource_manager.address();
+                .mint_initial_supply(admin_badges_specification);
+            let admin_badge_address = admin_badge_bucket.resource_address();
+            let admin_badge_resource_manager = NonFungibleResourceManager::from(admin_badge_address);
 
-            // Create the resource manager to mint fund units
-            let fund_unit_resource_manager = ResourceBuilder::new_fungible(
+            // Create the initial supply of fund units and the ResourceManager to mint more in
+            // future
+            let fund_unit_bucket = ResourceBuilder::new_fungible(
                 OwnerRole::Fixed(rule!(require(admin_badge_address)))
             )
                 .metadata(metadata!(
@@ -364,7 +388,10 @@ mod fund_manager {
                     burner => rule!(require(global_caller(component_address)));
                     burner_updater => rule!(require(fund_manager_badge_address));
                 ))
-                .create_with_no_initial_supply();
+                .mint_initial_supply(fund_units_initial_supply);
+            let fund_unit_resource_manager = FungibleResourceManager::from(
+                fund_unit_bucket.resource_address()
+            );
 
             // Create the resource manager to mint bot badges.
             // Bot badges are fungibles with zero divisibility, non transferable and recallable by
@@ -419,13 +446,13 @@ mod fund_manager {
             );
 
             // Instantiate the component and globalize it
-            Self {
+            let fund_manager = Self {
                 admin_badge_resource_manager: admin_badge_resource_manager,
                 bot_badge_resource_manager: bot_badge_resource_manager,
                 fund_unit_resource_manager: fund_unit_resource_manager,
                 validator_badge_vault: NonFungibleVault::new(VALIDATOR_OWNER_BADGE),
                 authorization_vector: vec![],
-                min_authorizers: 0,
+                min_authorizers: min_authorizers,
                 defi_protocols_list: vec![],
                 defi_protocols: KeyValueStore::new_with_registered_type(),
                 fund_manager_badge_vault: FungibleVault::with_bucket(fund_manager_badge_bucket),
@@ -438,7 +465,7 @@ mod fund_manager {
                 fund_units_to_distribute: Decimal::ZERO,
                 oracle_component: None,
                 withdrawal_fee: withdrawal_fee,
-                number_of_admins: 0,
+                number_of_admins: number_of_admin_badges,
                 buyback_fund_percentage: buyback_fund_percentage,
                 buyback_fund_account: buyback_fund_account,
             }
@@ -448,56 +475,14 @@ mod fund_manager {
                     bot => rule!(require(bot_badge_resource_manager.address()));
                 ))
                 .with_address(address_reservation)
-                .globalize()
-        }
+                .globalize();
 
-        // This method can be called just once, immediately after component instantiation, to mint
-        // admin badges and the initial supply of fund units
-        pub fn init(
-            &mut self,
-            number_of_admin_badges: u8, // number of admin badges to mint
-            min_authorizers: u8, // number of authorizers for multisig operation
-            fund_units_initial_supply: Decimal,
-        ) -> (
-            NonFungibleBucket, // Admin badges
-            FungibleBucket, // Fund units initial supply
-        ) {
-            // Make sure this method hasn't been invoked before
-            assert!(
-                self.number_of_admins == 0,
-                "Component already initialised",
-            );
-
-            // Make sure the numbers make sense
-            assert!(
-                number_of_admin_badges > 0,
-                "Create at least one admin badge",
-            );
-            assert!(
-                number_of_admin_badges > min_authorizers,
-                "The minimum number of authorizers must be smaller than the number of badges",
-            );
-
-            self.min_authorizers = min_authorizers;
-
-            // Mint the admin badges numbering them from 1 to number_of_admin_badges
-            let mut admin_badges_bucket = NonFungibleBucket::new(
-                self.admin_badge_resource_manager.address()
-            );
-            for n in 1..=number_of_admin_badges {
-                admin_badges_bucket.put(
-                    self.admin_badge_resource_manager.mint_non_fungible(
-                        &NonFungibleLocalId::integer(n.into()),
-                        Admin {},
-                    )
-                );
-            }
-            self.number_of_admins = number_of_admin_badges;
-
-            // Return all of the admin badges and the fund units initial supply
             (
-                admin_badges_bucket,
-                self.fund_unit_resource_manager.mint(fund_units_initial_supply)
+                fund_manager,
+                fund_manager_badge_address,
+                admin_badge_bucket,
+                fund_unit_bucket,
+                bot_badge_resource_manager.address(),
             )
         }
 
