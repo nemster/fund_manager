@@ -24,14 +24,8 @@ overflow-checks = true # Panic in the case of an overflow.
 resolver = "2"
 members= [
         "fund_manager",
-	"defi_protocols/weft",
-	"defi_protocols/root_finance",
-	"defi_protocols/ociswap",
-	"defi_protocols/flux",
-	"defi_protocols/surge",
-	"defi_protocols/caviarnine",
-	"dex",
-	"oracle",
+	"defi_protocols/dummy",
+	"dex_and_oracle",
 ]
 
 [workspace.lints.clippy]

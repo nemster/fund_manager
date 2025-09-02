@@ -1,5 +1,5 @@
 [package]
-name = "ociswap_lp_wrapper"
+name = "dummy_defi_protocol"
 version = "1.0.0"
 edition = "2021"
 

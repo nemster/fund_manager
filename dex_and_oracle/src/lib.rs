@@ -1,2 +1,2 @@
 #[path = "../../fund_manager/src/common.rs"] mod common;
-pub mod multi_oracle_wrapper;
+pub mod dummy_dex_and_oracle;

@@ -1,5 +1,5 @@
 [package]
-name = "multi_dex_wrapper"
+name = "dummy_dex_and_oracle"
 version = "1.0.0"
 edition = "2021"
 
