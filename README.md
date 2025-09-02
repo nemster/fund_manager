@@ -514,6 +514,7 @@ CALL_METHOD
     <DESIRED_PERCENTAGE>u8
     Address("<COMPONENT_ADDRESS>")
     Some(Address("<MORPHER_COIN_ADDRESS>"))
+    <ALLOW_OTHER_COIN_INPUT>
 ;
 ```
 
@@ -527,6 +528,7 @@ CALL_METHOD
 `<DESIRED_PERCENTAGE>` the percentage value share of the fund that must be deposited in this protocol.  
 `<COMPONENT_ADDRESS>` the address of the wrapper component implementing the `DefiProtocol` interface for this protocol.  
 `<MORPHER_COIN_ADDRESS>` some protocols (Flux) need data from the Morpher oracle when performing operations on them. This is the resource address of the coin whose data are needed by the protocol. If this is not the case the line must be `None`.  
+`<ALLOW_OTHER_COIN_INPUT>` Whether it's possible to invest `OTHER_COIN` or it is withdrawable only. It must be `false` for Flux and Weft, `true` for Ociswap.   
 
 ### remove\_defi\_protocol
 This method allows an authorized admin to remove a DeFi protocol wrapper from the FundManager.  

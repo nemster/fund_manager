@@ -90,6 +90,10 @@ struct DefiProtocol {
                                                   // from the Morpher oracle
     other_coin: Option<ResourceAddress>, // Only for protocols managing two coins, i.e. providing
                                          // liquidity to a Dex
+    allow_other_coin_input: bool,   // Whether it's possible to invest other_coin or it is
+                                    // withdrawable only
+                                    // I.e. Flux only allows fUSD investments but can return
+                                    // collateral too when withdrawing
 }
 
 // This event is issued when the LSU unstake starts and a claim NFT is minted.
@@ -670,14 +674,25 @@ mod fund_manager {
 
         // Get the net and gross (withdrawal fee included) USD value of a fund unit
         pub fn fund_unit_value(&self) -> (Decimal, Decimal) {
-            // TODO: return a default value if total_value or the fund units supply is zero!
 
-            let gross_value = self.total_value / self.fund_unit_resource_manager.total_supply().unwrap();
+            let fund_units_supply = self.fund_unit_resource_manager.total_supply().unwrap();
 
-            (
-                (gross_value * (100 - self.withdrawal_fee)) / 100, // net value
-                gross_value
-            )
+            if self.total_value == Decimal::ZERO || fund_units_supply == Decimal::ZERO {
+
+                // Return a default value if total_value or the fund units supply is zero
+                (
+                    Decimal::ONE * (100 - self.withdrawal_fee) / 100,   // net value
+                    Decimal::ONE                                        // gross value
+                )
+
+            } else {
+                let gross_value = self.total_value / fund_units_supply;
+
+                (
+                    gross_value * (100 - self.withdrawal_fee) / 100,    // net value
+                    gross_value                                         // gross value
+                )
+            }
         }
 
         // This method returns the list of DeFi protocol positions and their value
@@ -963,7 +978,7 @@ mod fund_manager {
                     )
                 );
 
-            } else if defi_protocol.other_coin == Some(XRD) {
+            } else if defi_protocol.allow_other_coin_input && defi_protocol.other_coin == Some(XRD) {
                 let defi_protocol_coin = defi_protocol.coin;
 
                 (coin_amount, other_coin_amount) = self.fund_manager_badge_vault.authorize_with_amount(
@@ -1088,6 +1103,8 @@ mod fund_manager {
             wrapper: DefiProtocolInterfaceScryptoStub, // Component address of the wrapper
             needed_morpher_data: Option<ResourceAddress>, // Whether the protocol needs data from
                                                           // the Morpher oracle
+            allow_other_coin_input: bool,   // Whether it's possible to invest other_coin or it is
+                                            // withdrawable only
         ) {
 
             // Check that there are enough authorizations for this operation.
@@ -1124,6 +1141,7 @@ mod fund_manager {
                 coin: coin,
                 other_coin: other_coin,
                 needed_morpher_data: needed_morpher_data,
+                allow_other_coin_input: allow_other_coin_input,
             };
 
             // Get liquidity from the old protocol wrapper position and deposit it in the new one
