@@ -472,16 +472,15 @@ mod ociswap_lp_pool2_wrapper {
             Option<Decimal>         // Total other coin amount
         ) {
             let token_amount = self.account.balance(self.lp_token_address);
-            let amounts = match token_amount > Decimal::ZERO {
-                true => self.pool.get_redemption_value(token_amount),
-                false => IndexMap::new(),
-            };
+            let mut x_amount = self.account.balance(self.x_address);
+            let mut y_amount = self.account.balance(self.x_address);
 
-            let x_amount = *amounts.get(&self.x_address).unwrap_or(&Decimal::ZERO) +
-                self.account.balance(self.x_address);
-
-            let y_amount = *amounts.get(&self.y_address).unwrap_or(&Decimal::ZERO) +
-                self.account.balance(self.y_address);
+            if token_amount > Decimal::ZERO {
+                let amounts = self.pool.get_redemption_value(token_amount);
+                
+                x_amount += *amounts.get(&self.x_address).unwrap_or(&Decimal::ZERO);
+                y_amount += *amounts.get(&self.y_address).unwrap_or(&Decimal::ZERO);
+            }
 
             (
                 x_amount,
