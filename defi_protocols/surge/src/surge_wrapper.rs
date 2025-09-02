@@ -337,14 +337,19 @@ mod surge_wrapper {
             Decimal,                // Total coin amount
             Option<Decimal>         // None
         ) {
-            let pool_details = self.exchange_component.get_pool_details();
 
             let token_amount = self.account.balance(self.token_address);
 
-            (
-                pool_details.base_tokens_amount * (token_amount / pool_details.lp_supply),
-                None
-            )
+            if token_amount == Decimal::ZERO {
+                (Decimal::ZERO, None)
+            } else {
+                let pool_details = self.exchange_component.get_pool_details();
+
+                (
+                    pool_details.base_tokens_amount * (token_amount / pool_details.lp_supply),
+                    None
+                )
+            }
         }
 
         // Withdraw the badge used to manage the Account; this component will no loger be able to
