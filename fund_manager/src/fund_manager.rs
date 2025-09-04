@@ -1352,7 +1352,8 @@ mod fund_manager {
             &mut self,
             admin_proof: Proof,
             name: String,
-        ) -> NonFungibleBucket {
+            withdraw_account_badge: bool,
+        ) -> Option<NonFungibleBucket> {
 
             // Check other admins' authorizations
             self.check_operation_authorization(
@@ -1378,11 +1379,17 @@ mod fund_manager {
                 }
             );
 
-            // Get the Account badge
-            self.fund_manager_badge_vault.authorize_with_amount(
-                1,
-                || defi_protocol.wrapper.withdraw_account_badge()
-            )
+            // Get the Account badge if requested
+            if withdraw_account_badge {
+                Some(
+                    self.fund_manager_badge_vault.authorize_with_amount(
+                        1,
+                        || defi_protocol.wrapper.withdraw_account_badge()
+                    )
+                )
+            } else {
+                None
+            }
         }
 
         // Updates the cached value of the specified DeFi protocols by asking amounts to the

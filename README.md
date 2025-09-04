@@ -536,7 +536,7 @@ Warning: the admin will receive all of the liquidity in the protocol so it's adv
 This method emits the `RemovedProtocolEvent` that shows:  
 - the name of the protocol being removed  
 - the updated fund total value  
-Returns: the account owner badge (complete control over the Account used internally by the wrapper).  
+Returns: the account owner badge (complete control over the Account used internally by the wrapper) if requested.  
 
 ```
 CALL_METHOD
@@ -553,6 +553,7 @@ CALL_METHOD
     "remove_defi_protocol"
     Proof("admin_proof")
     "<PROTOCOL_NAME>"
+    <WITHDRAW_ACCOUNT_BADGE>
 ;
 CALL_METHOD
     Address("<ACCOUNT>")
@@ -566,6 +567,7 @@ CALL_METHOD
 `<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
 `<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
 `<PROTOCOL_NAME>` is the name of the protocol to remove.  
+`<WITHDRAW_ACCOUNT_BADGE>` whether to withdraw the badge of the account used by the wrapper (`true`) or not (`false`).  
 
 ### set\_dex\_component
 This method allows an authorized admin to replace the dex component used by FundManager.  
