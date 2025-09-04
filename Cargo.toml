@@ -26,6 +26,7 @@ members= [
         "fund_manager",
 	"defi_protocols/dummy",
 	"dex_and_oracle",
+	"validator",
 ]
 
 [workspace.lints.clippy]
