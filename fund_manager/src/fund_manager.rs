@@ -248,7 +248,7 @@ mod fund_manager {
         fund_manager_badge_vault: FungibleVault,
 
         // Address of the Validator
-        validator: Global<Validator>,
+        validator: Global<AnyComponent>,
 
         // A Vault to store claim NFTs of the LSU being unstaked
         claim_nft_vault: NonFungibleVault,
@@ -288,7 +288,8 @@ mod fund_manager {
 
         // This function instantiates a globalized FundManager component
         pub fn new(
-            validator: Global<Validator>,           // Validator address
+            validator: Global<AnyComponent>,        // Validator address
+            validator_owner_badge_address: ResourceAddress,
             claim_nft_address: ResourceAddress,     // Validator's claim NFT address
             withdrawal_fee: u8,                     // Percentage withdrawal fee
             buyback_fund_percentage: u8,            // Percentage of XRD sent to the buyback fund
@@ -459,7 +460,7 @@ mod fund_manager {
                 admin_badge_resource_manager: admin_badge_resource_manager,
                 bot_badge_resource_manager: bot_badge_resource_manager,
                 fund_unit_resource_manager: fund_unit_resource_manager,
-                validator_badge_vault: NonFungibleVault::new(VALIDATOR_OWNER_BADGE),
+                validator_badge_vault: NonFungibleVault::new(validator_owner_badge_address),
                 authorization_vector: Vec::with_capacity(min_authorizers.into()),
                 min_authorizers: min_authorizers,
                 defi_protocols_list: vec![],
@@ -850,7 +851,10 @@ mod fund_manager {
                 .authorize_with_non_fungibles(
                     &self.validator_badge_vault.non_fungible_local_ids(1),
                     || {
-                        self.validator.start_unlock_owner_stake_units(amount);
+                        self.validator.call_ignore_rtn::<(Decimal, )>(
+                            "start_unlock_owner_stake_units",
+                            &(amount, )
+                        )
                     }
                 );
         }
@@ -867,7 +871,10 @@ mod fund_manager {
                 .authorize_with_non_fungibles(
                     &self.validator_badge_vault.non_fungible_local_ids(1),
                     || {
-                        self.validator.finish_unlock_owner_stake_units()
+                        self.validator.call::<(), FungibleBucket>(
+                            "finish_unlock_owner_stake_units",
+                            &()
+                        )
                     }
                 );
 
@@ -950,7 +957,10 @@ mod fund_manager {
             let claim_nft_bucket = self.claim_nft_vault.take_non_fungible(&claim_nft_id);
 
             // Get the XRD out of it
-            let mut bucket = self.validator.claim_xrd(claim_nft_bucket);
+            let mut bucket = self.validator.call::<(NonFungibleBucket, ), FungibleBucket>(
+                "claim_xrd",
+                &(claim_nft_bucket, )
+            );
 
             // Send a percentage of the XRD to the buyback fund account
             let buyback_fund_bucket_amount = (bucket.amount() * self.buyback_fund_percentage) / 100;
@@ -1822,9 +1832,15 @@ mod fund_manager {
             self.validator_badge_vault.authorize_with_non_fungibles(
                 &self.validator_badge_vault.non_fungible_local_ids(1),
                 || if register {
-                    self.validator.register();
+                    self.validator.call_ignore_rtn::<()>(
+                        "register",
+                        &()
+                    );
                 } else {
-                    self.validator.unregister();
+                    self.validator.call_ignore_rtn::<()>(
+                        "unregister",
+                        &()
+                    );
                 }
             )
         }
@@ -1839,7 +1855,10 @@ mod fund_manager {
             // Use the validator owner badge to signal readiness
             self.validator_badge_vault.authorize_with_non_fungibles(
                 &self.validator_badge_vault.non_fungible_local_ids(1),
-                || self.validator.signal_protocol_update_readiness(vote)
+                || self.validator.call_ignore_rtn::<(String, )>(
+                    "signal_protocol_update_readiness",
+                    &(vote, )
+                )
             );
         }
 
@@ -1853,8 +1872,9 @@ mod fund_manager {
             // Use the validator owner badge to set the node key
             self.validator_badge_vault.authorize_with_non_fungibles(
                 &self.validator_badge_vault.non_fungible_local_ids(1),
-                || self.validator.update_key(
-                    Secp256k1PublicKey::from_str(&key).expect("Invalid key")
+                || self.validator.call_ignore_rtn::<(Secp256k1PublicKey, )>(
+                    "update_key",
+                    &(Secp256k1PublicKey::from_str(&key).expect("Invalid key"), )
                 )
             );
         }

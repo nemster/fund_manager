@@ -21,6 +21,7 @@ mod dummy_validator {
             register => restrict_to: [OWNER];
             unregister => restrict_to: [OWNER];
             signal_protocol_update_readiness => restrict_to: [OWNER];
+            update_key => restrict_to: [OWNER];
         }
     }
 
@@ -171,6 +172,12 @@ mod dummy_validator {
         pub fn signal_protocol_update_readiness(
             &self,
             _vote: String,
+        ) {
+        }
+
+        pub fn update_key(
+            &self,
+            _key: String,
         ) {
         }
 
