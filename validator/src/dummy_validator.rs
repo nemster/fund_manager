@@ -68,7 +68,7 @@ mod dummy_validator {
                 .create_with_no_initial_supply();
             let lsu_address = lsu_resource_manager.address();
 
-            let claim_nft_resource_manager = ResourceBuilder::new_integer_non_fungible::<ClaimNft>(
+            let claim_nft_resource_manager = ResourceBuilder::new_string_non_fungible::<ClaimNft>(
                 OwnerRole::Fixed(AccessRule::DenyAll)
             )
                 .mint_roles(mint_roles!(
@@ -137,7 +137,12 @@ mod dummy_validator {
 
             self.last_claim_nft_id += 1;
             self.claim_nft_resource_manager.mint_non_fungible(
-                &NonFungibleLocalId::integer(self.last_claim_nft_id),
+                &NonFungibleLocalId::String(
+                    StringNonFungibleLocalId::try_from(
+                        self.last_claim_nft_id.to_string()
+                    )
+                        .unwrap()
+                ),
                 ClaimNft {amount: amount},
             )
         }
