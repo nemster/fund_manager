@@ -593,6 +593,12 @@ mod fund_manager {
                 "You can't authorize yourself",
             );
 
+            // Make sure the admin to allow exists
+            assert!(
+                allowed_admin_id <= self.number_of_admins,
+                "Can't authorize a non existent admin"
+            );
+
             // Remove expired entries from the authorization_vector
             self.purge_authorization_vector();
 
