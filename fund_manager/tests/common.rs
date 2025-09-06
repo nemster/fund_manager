@@ -372,7 +372,7 @@ impl Common {
                 number_of_authorizers + 1,
                 1u8,
                 Some(protocol_name.clone()),
-                Some(desired_percentage),
+                None,
                 None,
             )?;
         }
