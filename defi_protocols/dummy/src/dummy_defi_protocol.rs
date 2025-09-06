@@ -23,7 +23,7 @@ mod dummy_defi_protocol {
     struct DummyDefiProtocol {
         token_vault: Vault,
         coin_vault: FungibleVault,
-        other_coin_vault: FungibleVault,
+        other_coin_vault: Option<FungibleVault>,
         account_badge_vault: NonFungibleVault,
     }
 
@@ -32,7 +32,7 @@ mod dummy_defi_protocol {
         pub fn new(
             token_address: ResourceAddress,
             coin_address: ResourceAddress,
-            other_coin_address: ResourceAddress,
+            other_coin_address: Option<ResourceAddress>,
             account_badge: NonFungibleBucket,
             fund_manager_badge_address: ResourceAddress,
             admin_badge_address: ResourceAddress,
@@ -41,7 +41,10 @@ mod dummy_defi_protocol {
             Self {
                 token_vault: Vault::new(token_address),
                 coin_vault: FungibleVault::new(coin_address),
-                other_coin_vault: FungibleVault::new(other_coin_address),
+                other_coin_vault: match other_coin_address {
+                    None => None,
+                    Some(other_coin_address) => Some(FungibleVault::new(other_coin_address)),
+                },
                 account_badge_vault: NonFungibleVault::with_bucket(account_badge),
             }
                 .instantiate()
@@ -72,7 +75,7 @@ mod dummy_defi_protocol {
             }
 
             if other_coin.is_some() {
-                self.other_coin_vault.put(other_coin.unwrap());
+                self.other_coin_vault.as_mut().unwrap().put(other_coin.unwrap());
             }
 
             self.get_coin_amounts()
@@ -85,10 +88,15 @@ mod dummy_defi_protocol {
             Option<FungibleBucket>,
             Option<FungibleBucket>
         ) {
+            let other_coin_bucket = match self.other_coin_vault.as_mut() {
+                None => None,
+                Some(other_coin_vault) => Some(other_coin_vault.take_all()),
+            };
+
             (
                 self.token_vault.take_all(),
                 Some(self.coin_vault.take_all()),
-                Some(self.other_coin_vault.take_all()),
+                other_coin_bucket,
             )
         }
 
@@ -105,7 +113,7 @@ mod dummy_defi_protocol {
             self.coin_vault.put(coin);
 
             if other_coin.is_some() {
-                self.other_coin_vault.put(other_coin.unwrap());
+                self.other_coin_vault.as_mut().unwrap().put(other_coin.unwrap());
             }
 
             self.get_coin_amounts()
@@ -134,17 +142,29 @@ mod dummy_defi_protocol {
                 },
             };
 
-            let other_coin_bucket = match amount == Decimal::ZERO {
-                true => None,
-                false => {
-                    amount /= other_coin_to_coin_price_ratio.unwrap();
+            let (other_coin_bucket, other_coin_amount) = match self.other_coin_vault.as_mut() {
+                None => (None, None),
+                Some(other_coin_vault) => match amount == Decimal::ZERO {
+                    true => (
+                        None,
+                        Some(other_coin_vault.amount())
+                    ),
+                    false => {
+                        amount /= other_coin_to_coin_price_ratio.unwrap();
 
-                    let available_other_coin_amount = self.other_coin_vault.amount();
+                        let available_other_coin_amount = other_coin_vault.amount();
 
-                    match amount > available_coin_amount {
-                        true => Some(self.other_coin_vault.take(available_other_coin_amount)),
-                        false => Some(self.other_coin_vault.take(amount)),
-                    }
+                        match amount > available_coin_amount {
+                            true => (
+                                Some(other_coin_vault.take(available_other_coin_amount)),
+                                Some(Decimal::ZERO)
+                            ),
+                            false => (
+                                Some(other_coin_vault.take(amount)),
+                                Some(other_coin_vault.amount())
+                            )
+                        }
+                    },
                 },
             };
 
@@ -152,7 +172,7 @@ mod dummy_defi_protocol {
                 coin_bucket,
                 other_coin_bucket,
                 self.coin_vault.amount(),
-                Some(self.other_coin_vault.amount())
+                other_coin_amount
             )
         }
 
@@ -164,9 +184,14 @@ mod dummy_defi_protocol {
             Decimal,
             Option<Decimal>
         ) {
+            let other_coin_amount = match &self.other_coin_vault {
+                None => None,
+                Some(other_coin_vault) => Some(other_coin_vault.amount()),
+            };
+
             (
                 self.coin_vault.amount(),
-                Some(self.other_coin_vault.amount()),
+                other_coin_amount
             )
         }
     }
