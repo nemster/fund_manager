@@ -455,7 +455,7 @@ mod fund_manager {
                 bot_badge_resource_manager: bot_badge_resource_manager,
                 fund_unit_resource_manager: fund_unit_resource_manager,
                 validator_badge_vault: NonFungibleVault::new(VALIDATOR_OWNER_BADGE),
-                authorization_vector: vec![],
+                authorization_vector: Vec::with_capacity(min_authorizers.into()),
                 min_authorizers: min_authorizers,
                 defi_protocols_list: vec![],
                 defi_protocols: KeyValueStore::new_with_registered_type(),
@@ -570,7 +570,11 @@ mod fund_manager {
                 authorization.timestamp + AUTHORIZATION_TIMEOUT > now
             });
 
-            // TODO: save state space by creating a new vector if len == 0 and capacity is big?
+            // Shrink the authorization_vector if it's the case
+            if self.authorization_vector.len() < self.min_authorizers.into()
+                && self.authorization_vector.capacity() > (2 * self.min_authorizers).into() {
+                    self.authorization_vector.shrink_to(self.min_authorizers.into());
+            }
         }
 
         // An admin can invoke this method to authorize another admin to perform a multisignature
