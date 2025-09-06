@@ -897,7 +897,10 @@ mod fund_manager {
             for name in self.defi_protocols_list.iter() {
                 let defi_protocol = self.defi_protocols.get(&name).unwrap();
 
-                let percentage = 100 * defi_protocol.value / self.total_value;
+                let percentage = match self.total_value > Decimal::ZERO {
+                    true => 100 * defi_protocol.value / self.total_value,
+                    false => Decimal::ZERO,
+                };
                 let percentage_diff: Decimal = percentage - defi_protocol.desired_percentage;
 
                 if percentage_diff < smallest_percentage_diff {
