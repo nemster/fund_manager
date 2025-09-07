@@ -853,7 +853,10 @@ mod fund_manager {
 
         // The bot can invoke this method to complete the unlock of the Validator's owner LSUs and
         // start their unstake
-        pub fn start_unstake(&mut self) {
+        pub fn start_unstake(&mut self) -> (
+            Decimal,    // Unstaked LSU amount
+            String      // Id of the minted claim NFT
+        ) {
 
             // Complete LSU unlock
             let lsu_bucket = self.validator_badge_vault
@@ -872,6 +875,10 @@ mod fund_manager {
 
             // Start LSU unstake and get the claim NFT
             let claim_nft_bucket = self.validator.unstake(lsu_bucket);
+            let claim_nft_id = match claim_nft_bucket.non_fungible_local_id() {
+                NonFungibleLocalId::String(id) => id.value().to_string(),
+                _ => Runtime::panic("Non string Claim NFT id".to_string()),
+            };
 
             // Emit the LsuUnstakeStartedEvent event
             Runtime::emit_event(
@@ -883,6 +890,8 @@ mod fund_manager {
             
             // Store the received claim NFT
             self.claim_nft_vault.put(claim_nft_bucket);
+
+            (lsu_amount, claim_nft_id)
         }
 
         // Private method to find the name of the DeFi protocol position to invest in
@@ -924,6 +933,11 @@ mod fund_manager {
             &mut self,
             claim_nft_id: String, // String representation of the claim NFT id to unstake
             morpher_data: HashMap<ResourceAddress, (String, String)>, 
+        ) -> (
+            Decimal,    // XRD amount to buyback fund
+            Decimal,    // XRD amount to protocol
+            String,     // name of the DeFi protocol the funds have been invested in
+            Decimal,    // number of new fund units to distribute
         ) {
             // The bot must complete previous distributions before invoking this method
             assert!(
@@ -940,9 +954,8 @@ mod fund_manager {
             let mut bucket = self.validator.claim_xrd(claim_nft_bucket);
 
             // Send a percentage of the XRD to the buyback fund account
-            let buyback_fund_bucket = bucket.take(
-                (bucket.amount() * self.buyback_fund_percentage) / 100
-            );
+            let buyback_fund_bucket_amount = (bucket.amount() * self.buyback_fund_percentage) / 100;
+            let buyback_fund_bucket = bucket.take(buyback_fund_bucket_amount);
             self.buyback_fund_account.try_deposit_or_abort(
                 buyback_fund_bucket.into(),
                 None
@@ -1056,12 +1069,19 @@ mod fund_manager {
             Runtime::emit_event(
                 LsuUnstakeCompletedEvent {
                     xrd_amount: xrd_amount,
-                    defi_protocol_name: defi_protocol_name,
+                    defi_protocol_name: defi_protocol_name.clone(),
                     fund_units_to_distribute: self.fund_units_to_distribute,
                     protocol_value: new_protocol_value,
                     total_value: self.total_value,
                 }
             );
+
+            (
+                buyback_fund_bucket_amount,
+                xrd_amount,
+                defi_protocol_name,
+                self.fund_units_to_distribute,
+            )
         }
 
         // The bot can invoke this method to distribute the recently minted fund units.
