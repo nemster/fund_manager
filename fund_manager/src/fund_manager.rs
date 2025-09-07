@@ -885,14 +885,17 @@ mod fund_manager {
             );
 
             // Start LSU unstake and get the claim NFT
-            let claim_nft_bucket = self.validator.unstake(lsu_bucket);
+            let claim_nft_bucket = self.validator.call::<(FungibleBucket, ), NonFungibleBucket>(
+                "unstake",
+                &(lsu_bucket, )
+            );
             let claim_nft_id = claim_nft_bucket.non_fungible_local_id();
 
             // Emit the LsuUnstakeStartedEvent event
             Runtime::emit_event(
                 LsuUnstakeStartedEvent {
                     lsu_amount: lsu_amount,
-                    claim_nft_id: claim_nft_id.clone(),
+                    claim_nft_id: claim_nft_bucket.non_fungible_local_id(),
                 }
             );
             

@@ -6,6 +6,17 @@ use fund_manager::fund_manager::fund_manager_test::*;
 use dummy_dex_and_oracle::dummy_dex_and_oracle::dummy_dex_and_oracle_test::*;
 use dummy_defi_protocol::dummy_defi_protocol::dummy_defi_protocol_test::*;
 
+pub static BUYBACK_FUND_PERCENTAGE: u8 = 20;
+pub static WITHDRAWAL_FEE_PERCENTAGE: u8 = 20;
+pub static NUMBER_OF_ADMINS: u8 = 3;
+pub static MIN_AUTHORIZERS: u8 = 1;
+pub static FUND_UNIT_INITIAL_SUPPLY: Decimal = dec!(100);
+
+pub static XRD_PRICE: Decimal = Decimal::ONE;
+pub static A_PRICE: Decimal = dec!(2);
+pub static B_PRICE: Decimal = Decimal::ONE;
+pub static C_PRICE: Decimal = dec!("0.5");
+
 #[derive(ScryptoSbor, NonFungibleData)]
 pub struct Empty {
 }
@@ -94,12 +105,12 @@ impl Common {
             dummy_validator.into(),
             validator_owner_badge_bucket.resource_address(&mut env)?,
             claim_nft_address,
-            20u8,
-            20u8,
+            WITHDRAWAL_FEE_PERCENTAGE,
+            BUYBACK_FUND_PERCENTAGE,
             account.into(),
-            3u8,
-            1u8,
-            dec!("100"),
+            NUMBER_OF_ADMINS,
+            MIN_AUTHORIZERS,
+            FUND_UNIT_INITIAL_SUPPLY,
             fund_manager_package,
             &mut env,
         )?;
@@ -142,7 +153,7 @@ impl Common {
             .divisibility(18)
             .mint_initial_supply(100, &mut env)?;
 
-        // Create coin A, deposit 1000000 A in the dex and set its price to 2
+        // Create coin A, deposit 1000000 A in the dex and set its price
         let a_bucket = ResourceBuilder::new_fungible(OwnerRole::None)
             .divisibility(18)
             .mint_initial_supply(2000000, &mut env)?;
@@ -152,11 +163,11 @@ impl Common {
         )?;
         dummy_dex_and_oracle.set_price(
             a_bucket.resource_address(&mut env)?,
-            dec!(2),
+            A_PRICE,
             &mut env
         )?;
 
-        // Create coin B, deposit 1000000 B in the dex and set its price to 1
+        // Create coin B, deposit 1000000 B in the dex and set its price
         let b_bucket = ResourceBuilder::new_fungible(OwnerRole::None)
             .divisibility(18)
             .mint_initial_supply(2000000, &mut env)?;
@@ -166,11 +177,11 @@ impl Common {
         )?;
         dummy_dex_and_oracle.set_price(
             b_bucket.resource_address(&mut env)?,
-            dec!(1),
+            B_PRICE,
             &mut env
         )?;
 
-        // Create coin C, deposit 1000000 C in the dex and set its price to 0.5
+        // Create coin C, deposit 1000000 C in the dex and set its price
         let c_bucket = ResourceBuilder::new_fungible(OwnerRole::None)
             .divisibility(18)
             .mint_initial_supply(2000000, &mut env)?;
@@ -180,7 +191,7 @@ impl Common {
         )?;
         dummy_dex_and_oracle.set_price(
             c_bucket.resource_address(&mut env)?,
-            dec!("0.5"),
+            C_PRICE,
             &mut env
         )?;
 
@@ -224,15 +235,17 @@ impl Common {
         };
 
         // Set the DummyDexAndOracle component as the dex to be used by the FundManager component
-        common.authorize_admin_operation(
-            1u8,
-            2u8,
-            3u8,
-            None,
-            None,
-            None,
-        )?;
-        let proof = common.create_admin_proof(2u8)?;
+        for n in 1..=MIN_AUTHORIZERS {
+            common.authorize_admin_operation(
+                n,
+                MIN_AUTHORIZERS + 1,
+                3u8,
+                None,
+                None,
+                None,
+            )?;
+        }
+        let proof = common.create_admin_proof(MIN_AUTHORIZERS + 1)?;
         fund_manager.set_dex_component(
             proof,
             common.dex_and_oracle.into(),
@@ -240,15 +253,17 @@ impl Common {
         )?;
 
         // Set the DummyDexAndOracle component as the oracle to be used by the FundManager component
-        common.authorize_admin_operation(
-            1u8,
-            2u8,
-            7u8,
-            None,
-            None,
-            None
-        )?;
-        let proof = common.create_admin_proof(2u8)?;
+        for n in 1..=MIN_AUTHORIZERS {
+            common.authorize_admin_operation(
+                n,
+                MIN_AUTHORIZERS + 1,
+                7u8,
+                None,
+                None,
+                None
+            )?;
+        }
+        let proof = common.create_admin_proof(MIN_AUTHORIZERS + 1)?;
         common.fund_manager.set_oracle_component(
             proof,
             common.dex_and_oracle.into(),
@@ -256,15 +271,17 @@ impl Common {
         )?;
 
         // Mint a bot badge and send it to the account
-        common.authorize_admin_operation(
-            1u8,
-            2u8,
-            10u8,
-            None,
-            None,
-            Some(common.account)
-        )?;
-        let proof = common.create_admin_proof(2u8)?;
+        for n in 1..=MIN_AUTHORIZERS {
+            common.authorize_admin_operation(
+                n,
+                MIN_AUTHORIZERS + 1,
+                10u8,
+                None,
+                None,
+                Some(common.account)
+            )?;
+        }
+        let proof = common.create_admin_proof(MIN_AUTHORIZERS + 1)?;
         common.fund_manager.mint_bot_badge(
             proof,
             common.account,
@@ -351,7 +368,6 @@ impl Common {
 
     pub fn create_and_add_defi_protocol(
         &mut self,
-        number_of_authorizers: u8,
         protocol_name: String,
         coin: ResourceAddress,
         other_coin: Option<ResourceAddress>,
@@ -366,10 +382,10 @@ impl Common {
         )?;
 
         // Make the requested number of authorization for the add_defi_protocol operation
-        for n in 1..=number_of_authorizers {
+        for n in 1..=MIN_AUTHORIZERS {
             self.authorize_admin_operation(
                 n,
-                number_of_authorizers + 1,
+                MIN_AUTHORIZERS + 1,
                 1u8,
                 Some(protocol_name.clone()),
                 None,
@@ -378,7 +394,7 @@ impl Common {
         }
 
         // Create the proof for the authorized admin
-        let proof = self.create_admin_proof(number_of_authorizers + 1)?;
+        let proof = self.create_admin_proof(MIN_AUTHORIZERS + 1)?;
 
         // Register the new defi protocol in the FundManager component
         self.fund_manager.add_defi_protocol(
