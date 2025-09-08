@@ -521,13 +521,12 @@ mod fund_manager {
             &mut self,
             validator_badge: NonFungibleBucket,
         ) {
-            // It's not possible to deposit more than one Validator badge
-            assert!(
-                self.validator_badge_vault.is_empty(),
-                "There's already a validator badge",
-            );
-
             self.validator_badge_vault.put(validator_badge);
+
+            assert!(
+                self.validator_badge_vault.amount() == Decimal::ONE,
+                "Can't deposit multiple validato badges"
+            );
         }
 
         // This method deposits back the fund manager badge in the component in case it has
