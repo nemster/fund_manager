@@ -1,7 +1,7 @@
 use scrypto::prelude::*;
 
 #[derive(ScryptoSbor, NonFungibleData)]
-struct Owner {
+pub struct Owner {
 }
 
 #[derive(ScryptoSbor, NonFungibleData)]
@@ -51,6 +51,10 @@ mod dummy_validator {
             let owner_badge_bucket = ResourceBuilder::new_integer_non_fungible::<Owner>(
                 OwnerRole::None
             )
+                .mint_roles(mint_roles!(
+                    minter => rule!(require(global_caller(component_address)));
+                    minter_updater => rule!(deny_all);
+                ))
                 .mint_initial_supply(
                     vec![(IntegerNonFungibleLocalId::from(1u64), Owner {})]
                 );

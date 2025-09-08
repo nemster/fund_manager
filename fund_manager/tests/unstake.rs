@@ -1,6 +1,7 @@
 mod common;
 use common::*;
 use scrypto_test::prelude::*;
+use scrypto_test::prelude::ApplicationError::PanicMessage;
 
 #[test]
 // Test unlock + unstake + investment in defi + fund units distribution 
@@ -100,3 +101,98 @@ fn test_unstake_and_distribution() -> Result<(), RuntimeError> {
     Ok(())
 }
 
+#[test]
+// Check that badge authentication is needed at each step
+fn test_no_auth() -> Result<(), RuntimeError> {
+
+    let mut common = Common::new().unwrap();
+
+    let a_address = common.a_bucket.resource_address(&mut common.env)?;
+    let b_address = common.b_bucket.resource_address(&mut common.env)?;
+    common.create_and_add_defi_protocol(
+        "A/B".to_string(),
+        a_address,
+        Some(b_address),
+        100u8,
+        true
+    )?;
+
+    let xrd_to_unstake = dec!(100);
+
+    let result1 = common.fund_manager.start_unlock_owner_stake_units(
+        xrd_to_unstake,
+        &mut common.env
+    );
+    match result1 {
+        Err(RuntimeError::SystemModuleError(SystemModuleError::AuthError(_))) => {},
+        _ => return Err(
+            RuntimeError::ApplicationError(
+                PanicMessage("Authentication bypassed in start_unlock_owner_stake_units".to_string())
+            )
+        ),
+    }
+
+    common.env.disable_auth_module();
+    common.fund_manager.start_unlock_owner_stake_units(
+        xrd_to_unstake,
+        &mut common.env
+    )?;
+    common.env.enable_auth_module();
+
+    let result2 = common.fund_manager.start_unstake(&mut common.env);
+    match result2 {
+        Err(RuntimeError::SystemModuleError(SystemModuleError::AuthError(_))) => {},
+        _ => return Err(
+            RuntimeError::ApplicationError(
+                PanicMessage("Authentication bypassed in start_unstake".to_string())
+            )
+        ),
+    }
+
+    common.env.disable_auth_module();
+    let (_, claim_nft_id) = common.fund_manager.start_unstake(&mut common.env)?;
+    common.env.enable_auth_module();
+
+    let result3 = common.fund_manager.finish_unstake(
+        claim_nft_id.clone(),
+        HashMap::new(),
+        &mut common.env
+    );
+    match result3 {
+        Err(RuntimeError::SystemModuleError(SystemModuleError::AuthError(_))) => {},
+        _ => return Err(
+            RuntimeError::ApplicationError(
+                PanicMessage("Authentication bypassed in finish_unstake".to_string())
+            )
+        ),
+    }
+
+    common.env.disable_auth_module();
+    common.fund_manager.finish_unstake(
+        claim_nft_id,
+        HashMap::new(),
+        &mut common.env
+    )?;
+    common.env.enable_auth_module();
+
+    let mut distribution = IndexMap::new();
+    distribution.insert(
+        common.account,
+        dec!(1)
+    );
+    let result4 = common.fund_manager.fund_units_distribution(
+        distribution,
+        false,
+        &mut common.env
+    );
+    match result4 {
+        Err(RuntimeError::SystemModuleError(SystemModuleError::AuthError(_))) => {},
+        _ => return Err(
+            RuntimeError::ApplicationError(
+                PanicMessage("Authentication bypassed in fund_units_distribution".to_string())
+            )
+        ),
+    }
+
+    Ok(())
+}
