@@ -931,7 +931,7 @@ mod fund_manager {
         // all of the morpher oracle data to this method.
         pub fn finish_unstake(
             &mut self,
-            claim_nft_id: String, // String representation of the claim NFT id to unstake
+            claim_nft_id: NonFungibleLocalId,
             morpher_data: HashMap<ResourceAddress, (String, String)>, 
         ) -> (
             Decimal,    // XRD amount to buyback fund
@@ -946,9 +946,7 @@ mod fund_manager {
             );
 
             // Take the specified claim NFT out of the Vault
-            let claim_nft_bucket = self.claim_nft_vault.take_non_fungible(
-                &NonFungibleLocalId::String(StringNonFungibleLocalId::try_from(claim_nft_id).unwrap())
-            );
+            let claim_nft_bucket = self.claim_nft_vault.take_non_fungible(&claim_nft_id);
 
             // Get the XRD out of it
             let mut bucket = self.validator.claim_xrd(claim_nft_bucket);

@@ -213,7 +213,7 @@ CALL_METHOD
 CALL_METHOD
     Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
     "finish_unstake"
-    "<CLAIM_NFT_ID>"
+    NonFungibleLocalId("<CLAIM_NFT_ID>")
     Map<Address, Tuple>(
         Address("<COIN_RESOURCE_ADDRESS>") => Tuple("<MORPHER_MESSAGE>", "<MORPHER_SIGNATURE>"),
         ...
@@ -224,7 +224,7 @@ CALL_METHOD
 `<ACCOUNT>` is the bot account.  
 `<BOT_BADGE>` is the resource address of the badge held by the bot account.  
 `<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
-`<CLAIM_NFT_ID>` the NonFungibleId of the Claim NFT to complete the unstake.  
+`<CLAIM_NFT_ID>` the NonFungibleId of the Claim NFT to complete the unstake (including curly brackets and dashes).  
 `<COIN_RESOURCE_ADDRESS>` the resource address of a coin that is listed on the Morpher oracle.  
 `<MORPHER_MESSAGE>` the message for the Morpher oracle regarding `<COIN_RESOURCE_ADDRESS>`.  
 `<MORPHER_SIGNATURE>` the signature of `<MORPHER_MESSAGE>`.  
