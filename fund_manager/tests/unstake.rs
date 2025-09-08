@@ -36,7 +36,7 @@ fn test_unstake_and_distribution() -> Result<(), RuntimeError> {
         protocol_name,
         fund_unit_amount_to_distribute
     ) = common.fund_manager.finish_unstake(
-        claim_nft_id,
+        NonFungibleLocalId::string(claim_nft_id).unwrap(),
         HashMap::new(),
         &mut common.env
     )?;
@@ -154,7 +154,7 @@ fn test_no_auth() -> Result<(), RuntimeError> {
     common.env.enable_auth_module();
 
     let result3 = common.fund_manager.finish_unstake(
-        claim_nft_id.clone(),
+        NonFungibleLocalId::string(claim_nft_id.clone()).unwrap(),
         HashMap::new(),
         &mut common.env
     );
@@ -169,7 +169,7 @@ fn test_no_auth() -> Result<(), RuntimeError> {
 
     common.env.disable_auth_module();
     common.fund_manager.finish_unstake(
-        claim_nft_id,
+        NonFungibleLocalId::string(claim_nft_id).unwrap(),
         HashMap::new(),
         &mut common.env
     )?;
