@@ -223,15 +223,29 @@ mod ociswap_lp_pool2_wrapper {
                 let mut buckets = vec![token];
 
                 if coin.is_some() {
+                    assert!(
+                        coin.as_ref().unwrap().resource_address() == self.x_address,
+                        "Wrong x coin provided"
+                    );
+
                     buckets.push(coin.unwrap().into());
                 }
 
                 if other_coin.is_some() {
+                    assert!(
+                        other_coin.as_ref().unwrap().resource_address() == self.y_address,
+                        "Wrong y coin provided"
+                    );
+
                     buckets.push(other_coin.unwrap().into());
                 }
 
                 self.account.try_deposit_batch_or_abort(buckets, None);
             } else {
+                assert!(
+                    token.resource_address() == self.lp_token_address,
+                    "Wrong token provided"
+                );
 
                 // Deposit just the LP tokens
                 self.account.try_deposit_or_abort(token, None);
@@ -282,6 +296,19 @@ mod ociswap_lp_pool2_wrapper {
             Decimal,                // Available x coins
             Option<Decimal>         // Available y coins
         ) {
+
+            // Check that the correct coins have been provided
+            assert!(
+                coin.resource_address() == self.x_address,
+                "Wrong x coin provided"
+            );
+            if other_coin.is_some() {
+                assert!(
+                    other_coin.as_ref().unwrap().resource_address() == self.y_address,
+                    "Wrong y coin provided"
+                );
+            }
+
             let coin_amount = coin.amount();
 
             // Add eventual x coins in the Account to the given bucket
@@ -445,16 +472,15 @@ mod ociswap_lp_pool2_wrapper {
             Option<Decimal>         // Total other coin amount
         ) {
             let token_amount = self.account.balance(self.lp_token_address);
-            let amounts = match token_amount > Decimal::ZERO {
-                true => self.pool.get_redemption_value(token_amount),
-                false => IndexMap::new(),
-            };
+            let mut x_amount = self.account.balance(self.x_address);
+            let mut y_amount = self.account.balance(self.x_address);
 
-            let x_amount = *amounts.get(&self.x_address).unwrap_or(&Decimal::ZERO) +
-                self.account.balance(self.x_address);
-
-            let y_amount = *amounts.get(&self.y_address).unwrap_or(&Decimal::ZERO) +
-                self.account.balance(self.y_address);
+            if token_amount > Decimal::ZERO {
+                let amounts = self.pool.get_redemption_value(token_amount);
+                
+                x_amount += *amounts.get(&self.x_address).unwrap_or(&Decimal::ZERO);
+                y_amount += *amounts.get(&self.y_address).unwrap_or(&Decimal::ZERO);
+            }
 
             (
                 x_amount,

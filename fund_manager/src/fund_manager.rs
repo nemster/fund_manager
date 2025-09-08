@@ -86,11 +86,14 @@ struct DefiProtocol {
     desired_percentage: u8, // Desired percentage of the fund to invest in this protocol
     wrapper: DefiProtocolInterfaceScryptoStub,
     coin: ResourceAddress, // Example coin: xUSDC
-    protocol_token: ResourceAddress, // Example protocol_token: w2-xUSDC
     needed_morpher_data: Option<ResourceAddress>, // Invoking Flux protocol methods requires data
                                                   // from the Morpher oracle
     other_coin: Option<ResourceAddress>, // Only for protocols managing two coins, i.e. providing
                                          // liquidity to a Dex
+    allow_other_coin_input: bool,   // Whether it's possible to invest other_coin or it is
+                                    // withdrawable only
+                                    // I.e. Flux only allows fUSD investments but can return
+                                    // collateral too when withdrawing
 }
 
 // This event is issued when the LSU unstake starts and a claim NFT is minted.
@@ -171,7 +174,6 @@ mod fund_manager {
             bot => updatable_by: [OWNER];
         },
         methods {
-            init => PUBLIC;
 
             // Multisig operations
             add_defi_protocol => PUBLIC;
@@ -286,7 +288,25 @@ mod fund_manager {
             withdrawal_fee: u8,                     // Percentage withdrawal fee
             buyback_fund_percentage: u8,            // Percentage of XRD sent to the buyback fund
             buyback_fund_account: Global<Account>,  // Account managing the buyback fund
-        ) -> Global<FundManager> {
+            number_of_admin_badges: u8,             // Number of admin badges to mint
+            min_authorizers: u8,                    // Number of authorizers for multisig operation
+            fund_units_initial_supply: Decimal,     // Fund units to mint
+        ) -> (
+            Global<FundManager>,
+            ResourceAddress,        // Fund manager badge address
+            NonFungibleBucket,      // Admin badges
+            FungibleBucket,         // Fund units initial supply
+            ResourceAddress,        // Bot badge address
+        ) {
+
+            assert!(
+                number_of_admin_badges > 0,
+                "Create at least one admin badge",
+            );
+            assert!(
+                number_of_admin_badges > min_authorizers,
+                "The minimum number of authorizers must be smaller than the number of badges",
+            );
 
             // Reserve a component address to set permissions
             let (address_reservation, component_address) =
@@ -313,11 +333,16 @@ mod fund_manager {
                 .mint_initial_supply(Decimal::ONE);
             let fund_manager_badge_address = fund_manager_badge_bucket.resource_address();
 
-            // Create the resource manager to mint admin badges (those will be minted in the init
-            // method).
+            // Create the admin badges and the ResourceManager to mint new ones in future.
             // Admin badges are non fungibles identified by a number, recallable by the fund
             // manager.
-            let admin_badge_resource_manager = ResourceBuilder::new_integer_non_fungible::<Admin>(
+            let mut admin_badges_specification = vec![];
+            for n in 1..=number_of_admin_badges {
+                admin_badges_specification.push(
+                    (IntegerNonFungibleLocalId::from(u64::from(n)), Admin {})
+                );
+            }
+            let admin_badge_bucket = ResourceBuilder::new_integer_non_fungible::<Admin>(
                 OwnerRole::Fixed(rule!(require(fund_manager_badge_address)))
             )
                 .metadata(metadata!(
@@ -339,11 +364,13 @@ mod fund_manager {
                     recaller => rule!(require(fund_manager_badge_address));
                     recaller_updater => rule!(require(fund_manager_badge_address));
                 ))
-                .create_with_no_initial_supply();
-            let admin_badge_address = admin_badge_resource_manager.address();
+                .mint_initial_supply(admin_badges_specification);
+            let admin_badge_address = admin_badge_bucket.resource_address();
+            let admin_badge_resource_manager = NonFungibleResourceManager::from(admin_badge_address);
 
-            // Create the resource manager to mint fund units
-            let fund_unit_resource_manager = ResourceBuilder::new_fungible(
+            // Create the initial supply of fund units and the ResourceManager to mint more in
+            // future
+            let fund_unit_bucket = ResourceBuilder::new_fungible(
                 OwnerRole::Fixed(rule!(require(admin_badge_address)))
             )
                 .metadata(metadata!(
@@ -365,7 +392,10 @@ mod fund_manager {
                     burner => rule!(require(global_caller(component_address)));
                     burner_updater => rule!(require(fund_manager_badge_address));
                 ))
-                .create_with_no_initial_supply();
+                .mint_initial_supply(fund_units_initial_supply);
+            let fund_unit_resource_manager = FungibleResourceManager::from(
+                fund_unit_bucket.resource_address()
+            );
 
             // Create the resource manager to mint bot badges.
             // Bot badges are fungibles with zero divisibility, non transferable and recallable by
@@ -420,13 +450,13 @@ mod fund_manager {
             );
 
             // Instantiate the component and globalize it
-            Self {
+            let fund_manager = Self {
                 admin_badge_resource_manager: admin_badge_resource_manager,
                 bot_badge_resource_manager: bot_badge_resource_manager,
                 fund_unit_resource_manager: fund_unit_resource_manager,
                 validator_badge_vault: NonFungibleVault::new(VALIDATOR_OWNER_BADGE),
-                authorization_vector: vec![],
-                min_authorizers: 0,
+                authorization_vector: Vec::with_capacity(min_authorizers.into()),
+                min_authorizers: min_authorizers,
                 defi_protocols_list: vec![],
                 defi_protocols: KeyValueStore::new_with_registered_type(),
                 fund_manager_badge_vault: FungibleVault::with_bucket(fund_manager_badge_bucket),
@@ -439,7 +469,7 @@ mod fund_manager {
                 fund_units_to_distribute: Decimal::ZERO,
                 oracle_component: None,
                 withdrawal_fee: withdrawal_fee,
-                number_of_admins: 0,
+                number_of_admins: number_of_admin_badges,
                 buyback_fund_percentage: buyback_fund_percentage,
                 buyback_fund_account: buyback_fund_account,
             }
@@ -449,56 +479,14 @@ mod fund_manager {
                     bot => rule!(require(bot_badge_resource_manager.address()));
                 ))
                 .with_address(address_reservation)
-                .globalize()
-        }
+                .globalize();
 
-        // This method can be called just once, immediately after component instantiation, to mint
-        // admin badges and the initial supply of fund units
-        pub fn init(
-            &mut self,
-            number_of_admin_badges: u8, // number of admin badges to mint
-            min_authorizers: u8, // number of authorizers for multisig operation
-            fund_units_initial_supply: Decimal,
-        ) -> (
-            NonFungibleBucket, // Admin badges
-            FungibleBucket, // Fund units initial supply
-        ) {
-            // Make sure this method hasn't been invoked before
-            assert!(
-                self.number_of_admins == 0,
-                "Component already initialised",
-            );
-
-            // Make sure the numbers make sense
-            assert!(
-                number_of_admin_badges > 0,
-                "Create at least one admin badge",
-            );
-            assert!(
-                number_of_admin_badges > min_authorizers,
-                "The minimum number of authorizers must be smaller than the number of badges",
-            );
-
-            self.min_authorizers = min_authorizers;
-
-            // Mint the admin badges numbering them from 1 to number_of_admin_badges
-            let mut admin_badges_bucket = NonFungibleBucket::new(
-                self.admin_badge_resource_manager.address()
-            );
-            for n in 1..=number_of_admin_badges {
-                admin_badges_bucket.put(
-                    self.admin_badge_resource_manager.mint_non_fungible(
-                        &NonFungibleLocalId::integer(n.into()),
-                        Admin {},
-                    )
-                );
-            }
-            self.number_of_admins = number_of_admin_badges;
-
-            // Return all of the admin badges and the fund units initial supply
             (
-                admin_badges_bucket,
-                self.fund_unit_resource_manager.mint(fund_units_initial_supply)
+                fund_manager,
+                fund_manager_badge_address,
+                admin_badge_bucket,
+                fund_unit_bucket,
+                bot_badge_resource_manager.address(),
             )
         }
 
@@ -533,13 +521,12 @@ mod fund_manager {
             &mut self,
             validator_badge: NonFungibleBucket,
         ) {
-            // It's not possible to deposit more than one Validator badge
-            assert!(
-                self.validator_badge_vault.is_empty(),
-                "There's already a validator badge",
-            );
-
             self.validator_badge_vault.put(validator_badge);
+
+            assert!(
+                self.validator_badge_vault.amount() == Decimal::ONE,
+                "Can't deposit multiple validato badges"
+            );
         }
 
         // This method deposits back the fund manager badge in the component in case it has
@@ -582,7 +569,11 @@ mod fund_manager {
                 authorization.timestamp + AUTHORIZATION_TIMEOUT > now
             });
 
-            // TODO: save state space by creating a new vector if len == 0 and capacity is big?
+            // Shrink the authorization_vector if it's the case
+            if self.authorization_vector.len() < self.min_authorizers.into()
+                && self.authorization_vector.capacity() > (2 * self.min_authorizers).into() {
+                    self.authorization_vector.shrink_to(self.min_authorizers.into());
+            }
         }
 
         // An admin can invoke this method to authorize another admin to perform a multisignature
@@ -603,6 +594,12 @@ mod fund_manager {
             assert!(
                 allower_admin_id != allowed_admin_id,
                 "You can't authorize yourself",
+            );
+
+            // Make sure the admin to allow exists
+            assert!(
+                allowed_admin_id <= self.number_of_admins,
+                "Can't authorize a non existent admin"
             );
 
             // Remove expired entries from the authorization_vector
@@ -686,14 +683,25 @@ mod fund_manager {
 
         // Get the net and gross (withdrawal fee included) USD value of a fund unit
         pub fn fund_unit_value(&self) -> (Decimal, Decimal) {
-            // TODO: return a default value if total_value or the fund units supply is zero!
 
-            let gross_value = self.total_value / self.fund_unit_resource_manager.total_supply().unwrap();
+            let fund_units_supply = self.fund_unit_resource_manager.total_supply().unwrap();
 
-            (
-                (gross_value * (100 - self.withdrawal_fee)) / 100, // net value
-                gross_value
-            )
+            if self.total_value == Decimal::ZERO || fund_units_supply == Decimal::ZERO {
+
+                // Return a default value if total_value or the fund units supply is zero
+                (
+                    Decimal::ONE * (100 - self.withdrawal_fee) / 100,   // net value
+                    Decimal::ONE                                        // gross value
+                )
+
+            } else {
+                let gross_value = self.total_value / fund_units_supply;
+
+                (
+                    gross_value * (100 - self.withdrawal_fee) / 100,    // net value
+                    gross_value                                         // gross value
+                )
+            }
         }
 
         // This method returns the list of DeFi protocol positions and their value
@@ -844,7 +852,10 @@ mod fund_manager {
 
         // The bot can invoke this method to complete the unlock of the Validator's owner LSUs and
         // start their unstake
-        pub fn start_unstake(&mut self) {
+        pub fn start_unstake(&mut self) -> (
+            Decimal,    // Unstaked LSU amount
+            String      // Id of the minted claim NFT
+        ) {
 
             // Complete LSU unlock
             let lsu_bucket = self.validator_badge_vault
@@ -863,6 +874,10 @@ mod fund_manager {
 
             // Start LSU unstake and get the claim NFT
             let claim_nft_bucket = self.validator.unstake(lsu_bucket);
+            let claim_nft_id = match claim_nft_bucket.non_fungible_local_id() {
+                NonFungibleLocalId::String(id) => id.value().to_string(),
+                _ => Runtime::panic("Non string Claim NFT id".to_string()),
+            };
 
             // Emit the LsuUnstakeStartedEvent event
             Runtime::emit_event(
@@ -874,6 +889,8 @@ mod fund_manager {
             
             // Store the received claim NFT
             self.claim_nft_vault.put(claim_nft_bucket);
+
+            (lsu_amount, claim_nft_id)
         }
 
         // Private method to find the name of the DeFi protocol position to invest in
@@ -888,7 +905,10 @@ mod fund_manager {
             for name in self.defi_protocols_list.iter() {
                 let defi_protocol = self.defi_protocols.get(&name).unwrap();
 
-                let percentage = 100 * defi_protocol.value / self.total_value;
+                let percentage = match self.total_value > Decimal::ZERO {
+                    true => 100 * defi_protocol.value / self.total_value,
+                    false => Decimal::ZERO,
+                };
                 let percentage_diff: Decimal = percentage - defi_protocol.desired_percentage;
 
                 if percentage_diff < smallest_percentage_diff {
@@ -910,8 +930,13 @@ mod fund_manager {
         // all of the morpher oracle data to this method.
         pub fn finish_unstake(
             &mut self,
-            claim_nft_id: String, // String representation of the claim NFT id to unstake
+            claim_nft_id: NonFungibleLocalId,
             morpher_data: HashMap<ResourceAddress, (String, String)>, 
+        ) -> (
+            Decimal,    // XRD amount to buyback fund
+            Decimal,    // XRD amount to protocol
+            String,     // name of the DeFi protocol the funds have been invested in
+            Decimal,    // number of new fund units to distribute
         ) {
             // The bot must complete previous distributions before invoking this method
             assert!(
@@ -920,17 +945,14 @@ mod fund_manager {
             );
 
             // Take the specified claim NFT out of the Vault
-            let claim_nft_bucket = self.claim_nft_vault.take_non_fungible(
-                &NonFungibleLocalId::String(StringNonFungibleLocalId::try_from(claim_nft_id).unwrap())
-            );
+            let claim_nft_bucket = self.claim_nft_vault.take_non_fungible(&claim_nft_id);
 
             // Get the XRD out of it
             let mut bucket = self.validator.claim_xrd(claim_nft_bucket);
 
             // Send a percentage of the XRD to the buyback fund account
-            let buyback_fund_bucket = bucket.take(
-                (bucket.amount() * self.buyback_fund_percentage) / 100
-            );
+            let buyback_fund_bucket_amount = (bucket.amount() * self.buyback_fund_percentage) / 100;
+            let buyback_fund_bucket = bucket.take(buyback_fund_bucket_amount);
             self.buyback_fund_account.try_deposit_or_abort(
                 buyback_fund_bucket.into(),
                 None
@@ -979,7 +1001,7 @@ mod fund_manager {
                     )
                 );
 
-            } else if defi_protocol.other_coin == Some(XRD) {
+            } else if defi_protocol.allow_other_coin_input && defi_protocol.other_coin == Some(XRD) {
                 let defi_protocol_coin = defi_protocol.coin;
 
                 (coin_amount, other_coin_amount) = self.fund_manager_badge_vault.authorize_with_amount(
@@ -1044,12 +1066,19 @@ mod fund_manager {
             Runtime::emit_event(
                 LsuUnstakeCompletedEvent {
                     xrd_amount: xrd_amount,
-                    defi_protocol_name: defi_protocol_name,
+                    defi_protocol_name: defi_protocol_name.clone(),
                     fund_units_to_distribute: self.fund_units_to_distribute,
                     protocol_value: new_protocol_value,
                     total_value: self.total_value,
                 }
             );
+
+            (
+                buyback_fund_bucket_amount,
+                xrd_amount,
+                defi_protocol_name,
+                self.fund_units_to_distribute,
+            )
         }
 
         // The bot can invoke this method to distribute the recently minted fund units.
@@ -1098,13 +1127,14 @@ mod fund_manager {
             admin_proof: Proof,
             name: String, // The name to assign to the protocol wrapper
             coin: ResourceAddress, // The main coin managed by the new protocol
-            protocol_token: ResourceAddress, // The token belonging to this DeFi protocol
             other_coin: Option<ResourceAddress>, // Eventual other coin managed by the protocol
             desired_percentage: u8, // The percentage of the fund value that we want to be
                                     // deposited in this protocol
             wrapper: DefiProtocolInterfaceScryptoStub, // Component address of the wrapper
             needed_morpher_data: Option<ResourceAddress>, // Whether the protocol needs data from
                                                           // the Morpher oracle
+            allow_other_coin_input: bool,   // Whether it's possible to invest other_coin or it is
+                                            // withdrawable only
         ) {
 
             // Check that there are enough authorizations for this operation.
@@ -1139,9 +1169,9 @@ mod fund_manager {
                 desired_percentage: desired_percentage,
                 wrapper: wrapper,
                 coin: coin,
-                protocol_token: protocol_token,
                 other_coin: other_coin,
                 needed_morpher_data: needed_morpher_data,
+                allow_other_coin_input: allow_other_coin_input,
             };
 
             // Get liquidity from the old protocol wrapper position and deposit it in the new one
@@ -1173,6 +1203,9 @@ mod fund_manager {
         // An admin can invoke this method to deposit coins in an existing DeFi protocol and
         // eventually mint new fund units corresponding to the value of the added coins.
         // There's no need for authorization; a single admin can invoke this method.
+        //
+        // It's DeFi protocol wrapper responsibility to check that the provided coins are the
+        // correct ones
         pub fn deposit_coin(
             &mut self,
             defi_protocol_name: String, // The name of the protocol to deposit the coin in
@@ -1187,19 +1220,19 @@ mod fund_manager {
         ) -> Option<FungibleBucket> // Fund units
         {
 
-            // Compute the USD value of the first bucket of deposited coins
-            let coin_price = self.oracle_component.unwrap().get_price(
-                coin_bucket.resource_address(),
-                morpher_data.clone(),
-            );
-            let mut buckets_value = coin_bucket.amount() * coin_price;
-
             // Get the current value of a fund unit
             let (_, fund_unit_gross_value) = self.fund_unit_value();
 
             // Get information about the DeFi protocol to deposit the buckets in
             let mut defi_protocol = self.defi_protocols.get_mut(&defi_protocol_name).expect("Protocol not found");
 
+            // Compute the USD value of the first bucket of deposited coins
+            let coin_price = self.oracle_component.unwrap().get_price(
+                defi_protocol.coin,
+                morpher_data.clone(),
+            );
+
+            let mut buckets_value = coin_bucket.amount() * coin_price;
             // Extract the Morpher data needed by the DeFi protocol from the ones received
             let (message, signature) = match defi_protocol.needed_morpher_data {
                 Some(resource_address) => {
@@ -1268,10 +1301,13 @@ mod fund_manager {
         // An admin can invoke this method to deposit protocol tokens in an existing DeFi protocol
         // and eventually mint new fund units corresponding to the value of the added tokens.
         // There's no need for authorization; a single admin can invoke this method.
+        //
+        // It's DeFi protocol wrapper responsibility to check that the provided tokens are the
+        // correct ones
         pub fn deposit_protocol_token(
             &mut self,
             defi_protocol_name: String, // The name of the protocol to deposit the tokens in
-            protocol_token_bucket: Bucket, // The bicket of tokens to deposit
+            protocol_token_bucket: Bucket, // The bucket of tokens to deposit
 
             // Eventual Morpher data required by the protocol or the oracle component
             morpher_data: HashMap<ResourceAddress, (String, String)>,
@@ -1346,7 +1382,8 @@ mod fund_manager {
             &mut self,
             admin_proof: Proof,
             name: String,
-        ) -> NonFungibleBucket {
+            withdraw_account_badge: bool,
+        ) -> Option<NonFungibleBucket> {
 
             // Check other admins' authorizations
             self.check_operation_authorization(
@@ -1372,11 +1409,17 @@ mod fund_manager {
                 }
             );
 
-            // Get the Account badge
-            self.fund_manager_badge_vault.authorize_with_amount(
-                1,
-                || defi_protocol.wrapper.withdraw_account_badge()
-            )
+            // Get the Account badge if requested
+            if withdraw_account_badge {
+                Some(
+                    self.fund_manager_badge_vault.authorize_with_amount(
+                        1,
+                        || defi_protocol.wrapper.withdraw_account_badge()
+                    )
+                )
+            } else {
+                None
+            }
         }
 
         // Updates the cached value of the specified DeFi protocols by asking amounts to the

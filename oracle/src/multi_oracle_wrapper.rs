@@ -35,9 +35,13 @@ pub enum OracleType {
         reference_coin: ResourceAddress,    // Reference coin
         reverse: bool,  // Whether the pool returns coin price against reference coin or the
                         // opposite
+        last_update_time: u64,              // Last time the price cache was updated
+        last_price: Decimal,                // Price cache
     },
     Morpher {
         market_id: String, // String identifier of the market (e.g. "GATEIO:XRD_USDT")
+        last_update_time: u64,              // Last time the price cache was updated
+        last_price: Decimal,                // Price cache
     },
 }
 
@@ -55,6 +59,10 @@ pub enum OracleType {
 // The different steps can involve different oracle types.
 //
 // Only one oracle type can be added for each resource address.
+//
+// Ociswap and Morpher prices are cached to reduce the number of outgoing components calls. This is
+// expecially useful for protocols that need both the XRD price and the price of some coin
+// dependent from XRD; the XRD price will be computed just once.
 #[blueprint_with_traits]
 #[types(
     ResourceAddress,
@@ -145,7 +153,7 @@ mod multi_oracle_wrapper {
             morpher_component: Option<Global<MorpherOracle>>,   // New Morpher component address
                                                                 // or None
             observation_time: Option<u64>,  // New Ociswap oracle observation time
-            price_lifetime: Option<u64>,    // New Morpher oracle information lifetime
+            price_lifetime: Option<u64>,    // New Morpher oracle and cached information lifetime
         ) {
             // Only change non None information
             if morpher_component.is_some() {
@@ -198,6 +206,8 @@ mod multi_oracle_wrapper {
                         component: ociswap_component.unwrap(),
                         reference_coin: reference_coin.unwrap(),
                         reverse: ociswap_reverse.unwrap(),
+                        last_update_time: 0u64,
+                        last_price: Decimal::ONE,
                     }
                 );
 
@@ -207,6 +217,8 @@ mod multi_oracle_wrapper {
                     coin_address,
                     OracleType::Morpher {
                         market_id: morpher_market_id.unwrap(),
+                        last_update_time: 0u64,
+                        last_price: Decimal::ONE,
                     }
                 );
 
@@ -236,7 +248,7 @@ mod multi_oracle_wrapper {
         ) -> Decimal {
 
             // Find the oracle to use for the given coin
-            let oracle = self.oracles.get(&coin_address).expect("Coin not found").clone();
+            let mut oracle = self.oracles.get_mut(&coin_address).expect("Coin not found").clone();
 
             // Use the found oracle type
             match oracle {
@@ -245,12 +257,19 @@ mod multi_oracle_wrapper {
                 OracleType::FixedMultiplier { multiplier, reference_coin } =>
                     multiplier * self.get_price(reference_coin, morpher_data),
 
-                OracleType::Ociswap { component, reference_coin, reverse } => {
+                OracleType::Ociswap { component, reference_coin, reverse, ref mut last_update_time, ref mut last_price } => {
+
+                    // Get current time
+                    let now: u64 = Clock::current_time_rounded_to_seconds()
+                        .seconds_since_unix_epoch.try_into().unwrap();
+
+                    // If the cached value is still valid, return it
+                    if *last_update_time + self.price_lifetime >= now {
+                        return *last_price;
+                    }
 
                     // Ociswap oracle requires a time interval to return an average price
-                    let interval_end = Clock::current_time_rounded_to_seconds()
-                        .seconds_since_unix_epoch.try_into().unwrap();
-                    let intervals = vec![(interval_end - self.observation_time, interval_end)];
+                    let intervals = vec![(now - self.observation_time, now)];
 
                     // Ociswap returns the square root of the requested price
                     let price_sqrt = component.call::<(Vec<(u64, u64)>, ), Vec<ObservationInterval>>(
@@ -259,15 +278,32 @@ mod multi_oracle_wrapper {
                     )[0].price_sqrt;
 
                     // Is it a/b or b/a price?
-                    match reverse {
+                    let price = match reverse {
                         false => self.get_price(reference_coin, morpher_data) * price_sqrt * price_sqrt,
                         true => self.get_price(reference_coin, morpher_data) / (price_sqrt * price_sqrt),
+                    };
+
+                    // Update cache
+                    // Cache will not work if observation_time / 2 > price_lifetime because newly
+                    // collected data will already be osolete, so no need to store them
+                    if self.observation_time / 2 <= self.price_lifetime {
+                        *last_update_time = now - self.observation_time / 2;
+                        *last_price = price;
                     }
+
+                    price
                 },
 
-                OracleType::Morpher { market_id } => {
+                OracleType::Morpher { market_id, ref mut last_update_time, ref mut last_price } => {
+
+                    // Get current time
                     let now: u64 = Clock::current_time_rounded_to_seconds()
                         .seconds_since_unix_epoch.try_into().unwrap();
+
+                    // If the cached value is still valid, return it
+                    if *last_update_time + self.price_lifetime >= now {
+                        return *last_price;
+                    }
 
                     // Extract message and signature for this coin from the morpher_data HashMap
                     let (message, signature) = morpher_data.get(&coin_address).expect("Missing Morpher data");
@@ -290,6 +326,10 @@ mod multi_oracle_wrapper {
                         price_message.market_id == *market_id,
                         "Mismatched resource address",
                     );
+
+                    // Update cache
+                    *last_update_time = price_message.created_at;
+                    *last_price = price_message.price;
 
                     price_message.price
                 },

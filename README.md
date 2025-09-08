@@ -105,7 +105,6 @@ CALL_METHOD
 
 ### fund\_unit\_value
 Returns the net and the gross (including withdrawal fee) dollar value of a fund unit.  
-A preview of the transaction is enough to get the values; it is not necessary to consume fees actually executing it.  
 
 ```
 CALL_METHOD
@@ -118,7 +117,6 @@ CALL_METHOD
 
 ### fund\_details
 Returns an HashMap containing the amount invested in each DeFi protocol.  
-A preview of the transaction is enough to get the values; it is not necessary to consume fees actually executing it.  
 
 ```
 CALL_METHOD
@@ -131,7 +129,6 @@ CALL_METHOD
 
 ### get\_price
 Reurns the dollar price of a coin.  
-A preview of the transaction is enough to get the values; it is not necessary to consume fees actually executing it.  
 
 ```
 CALL_METHOD
@@ -216,7 +213,7 @@ CALL_METHOD
 CALL_METHOD
     Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
     "finish_unstake"
-    "<CLAIM_NFT_ID>"
+    NonFungibleLocalId("<CLAIM_NFT_ID>")
     Map<Address, Tuple>(
         Address("<COIN_RESOURCE_ADDRESS>") => Tuple("<MORPHER_MESSAGE>", "<MORPHER_SIGNATURE>"),
         ...
@@ -227,7 +224,7 @@ CALL_METHOD
 `<ACCOUNT>` is the bot account.  
 `<BOT_BADGE>` is the resource address of the badge held by the bot account.  
 `<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
-`<CLAIM_NFT_ID>` the NonFungibleId of the Claim NFT to complete the unstake.  
+`<CLAIM_NFT_ID>` the NonFungibleId of the Claim NFT to complete the unstake (including curly brackets and dashes).  
 `<COIN_RESOURCE_ADDRESS>` the resource address of a coin that is listed on the Morpher oracle.  
 `<MORPHER_MESSAGE>` the message for the Morpher oracle regarding `<COIN_RESOURCE_ADDRESS>`.  
 `<MORPHER_SIGNATURE>` the signature of `<MORPHER_MESSAGE>`.  
@@ -513,11 +510,11 @@ CALL_METHOD
     Proof("admin_proof")
     "<PROTOCOL_NAME>"
     Address("<COIN_ADDRESS>")
-    Address("<TOKEN_ADDRESS>")
     Some(Address("<OTHER_COIN_ADDRESS>"))
     <DESIRED_PERCENTAGE>u8
     Address("<COMPONENT_ADDRESS>")
     Some(Address("<MORPHER_COIN_ADDRESS>"))
+    <ALLOW_OTHER_COIN_INPUT>
 ;
 ```
 
@@ -525,13 +522,13 @@ CALL_METHOD
 `<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
 `<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
 `<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
-`<PROTOCOL_NAME>` is a conventional name that will be used to identify this protocol. Is a protocol with such a name already exists the new one will replace the existing one and take all of the liquidity from it (so `<TOKEN_ADDRESS>` must be the same).  
+`<PROTOCOL_NAME>` is a conventional name that will be used to identify this protocol. Is a protocol with such a name already exists the new one will replace the existing one and take all of the liquidity from it (so the protocol token must be the same).  
 `<COIN_ADDRESS>` the resource address of the coin that will be deposited in this protocol.  
-`<TOKEN_ADDRESS>` the resource address of the receipt that the protocol returns when a deposit operation happens. It can be both a fungible (WEFT) or a non fungible (Root Finance).  
 `<OTHER_COIN_ADDRESS>` if the protocol allows depositing more two coins togheter (as an example a dex pool), this is the resource address of the second coin to be deposited. Otherwise the line must be `None`.  
 `<DESIRED_PERCENTAGE>` the percentage value share of the fund that must be deposited in this protocol.  
 `<COMPONENT_ADDRESS>` the address of the wrapper component implementing the `DefiProtocol` interface for this protocol.  
 `<MORPHER_COIN_ADDRESS>` some protocols (Flux) need data from the Morpher oracle when performing operations on them. This is the resource address of the coin whose data are needed by the protocol. If this is not the case the line must be `None`.  
+`<ALLOW_OTHER_COIN_INPUT>` Whether it's possible to invest `OTHER_COIN` or it is withdrawable only. It must be `false` for Flux and Weft, `true` for Ociswap.   
 
 ### remove\_defi\_protocol
 This method allows an authorized admin to remove a DeFi protocol wrapper from the FundManager.  
@@ -539,7 +536,7 @@ Warning: the admin will receive all of the liquidity in the protocol so it's adv
 This method emits the `RemovedProtocolEvent` that shows:  
 - the name of the protocol being removed  
 - the updated fund total value  
-Returns: the account owner badge (complete control over the Account used internally by the wrapper).  
+Returns: the account owner badge (complete control over the Account used internally by the wrapper) if requested.  
 
 ```
 CALL_METHOD
@@ -556,6 +553,7 @@ CALL_METHOD
     "remove_defi_protocol"
     Proof("admin_proof")
     "<PROTOCOL_NAME>"
+    <WITHDRAW_ACCOUNT_BADGE>
 ;
 CALL_METHOD
     Address("<ACCOUNT>")
@@ -569,6 +567,7 @@ CALL_METHOD
 `<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
 `<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
 `<PROTOCOL_NAME>` is the name of the protocol to remove.  
+`<WITHDRAW_ACCOUNT_BADGE>` whether to withdraw the badge of the account used by the wrapper (`true`) or not (`false`).  
 
 ### set\_dex\_component
 This method allows an authorized admin to replace the dex component used by FundManager.  

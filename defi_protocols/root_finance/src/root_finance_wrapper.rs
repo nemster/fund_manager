@@ -206,11 +206,13 @@ mod root_finance_wrapper {
 
     impl DefiProtocolInterfaceTrait for RootFinanceWrapper {
 
-        // Deposit a Root receipt and eventually coins
+        // Deposit a Root receipt
+        // This method doesn't support depositing coins because withdraw_all never returns coins,
+        // just tokens
         fn deposit_all(
             &mut self,
             token: Bucket,                          // Root receipt bucket
-            coin: Option<FungibleBucket>,           // Coin bucket
+            _coin: Option<FungibleBucket>,          // Not supported
             _other_coin: Option<FungibleBucket>,    // Not supported
         ) -> (
             Decimal,                // Total coin amount
@@ -221,15 +223,29 @@ mod root_finance_wrapper {
                 "There's already a Root receipt in the account",
             );
 
+            assert!(
+                token.resource_address() == self.token_address,
+                "Wrong token provided"
+            );
+
             // Deposit the Root receipt
             self.account.try_deposit_or_abort(token, None);
 
-            // Deposit eventual coin in the Root component
-            if coin.is_some() {
-                self.deposit_coin(coin.unwrap(), None, None, None)
-            } else {
-                self.get_coin_amounts()
+            // Check that the the provided Root receipt is relative to che coin this wrapper is
+            // dedicated to
+            let non_fungible_data = self.root_receipt_non_fungible_data();
+            match non_fungible_data.collaterals.len() {
+                0 => {},
+                1 => assert!(
+                    *non_fungible_data.collaterals.keys().next().unwrap() == self.coin_address,
+                    "The provided Root receipt contains the wrong coin"
+                ),
+                _ => Runtime::panic(
+                    "The provided Root receipt contains multiple coins".to_string()
+                ),
             }
+
+            self.get_coin_amounts()
         }
 
         // Withdraw the Root receipt
@@ -278,6 +294,13 @@ mod root_finance_wrapper {
             Decimal,                // Total coin amount
             Option<Decimal>         // None
         ) {
+            assert!(
+                coin.resource_address() == self.coin_address,
+                "Wrong coin provided"
+            );
+
+            // There must be only one Root receipt NFT so let's see there already one or we have to
+            // mint it
             if self.account.balance(self.token_address) == Decimal::ZERO {
 
                 let coin_amount = coin.amount();
