@@ -5,13 +5,13 @@ LSU: `resource_tdx_2_1thrg4addeue0w87wksukm86updhptw9zr7z4xlrjpecltgpfpxhxce`
 Claim NFT: `resource_tdx_2_1nfwdxtrjum4qrcd2quas5vaynwuhupwse7qszzvaq2wu5f92lr8zs8`  
 Node public key: `033a63816b35185845b2d6b6bddd0158e0f43922f172d6bb8a3de35ebe459013bd`  
   
-FundManager package: `package_tdx_2_1p4uqhfm4zjxuxgpzfkqsutyvan7m4tv75muawjd52ctw07qy03ls7l`  
-FundManager component: `component_tdx_2_1cpmzvmvc9dl7xm5xn5808nuhzu97964xq2jrzhjz4uh0kqdesgpscd`  
-AccountLocker: `locker_tdx_2_1drsmeqz7l0n7tqleqfc3pt4dkfyh67rkhjjat8n73ctk2klve66j7d`  
-FundManager badge: `resource_tdx_2_1t4ag6k8n4s0vv3smwjxzfu84jg30den5pp9tdzcx656ecg4swhc22v`  
-Admin badge: `resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9`  
-Fund unit: `resource_tdx_2_1t43fmc96wnkuugnn3x40f7fagtp4ks47mpzupceqx3k88w9w3gnxmj`  
-Bot badge: `resource_tdx_2_1tksvp84p7epkc9mtkxg6ewvatavt2n9de8j95k97x0udn6zc9s0mrg`  
+FundManager package: `package_tdx_2_1p4rv3hyae94tmyg36wru460wzcfjzajpw2zlt7ns5m7mswmchxud0l`  
+FundManager component: `component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg`  
+AccountLocker: `locker_tdx_2_1dq0rslnp945vc3p75lxgvnd8ph2qfr43am3srus8q352572ckpdl4w`  
+FundManager badge: `resource_tdx_2_1tkl7aghjp3q4x6v65vak3h326cg6332gqx9uveayyvef0cfsfsx43s`  
+Admin badge: `resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w`  
+Fund unit: `resource_tdx_2_1t4ny2slhdk7dgshdaxggs3efddfp8j3uf838km74fcys9f8lwttd3n`  
+Bot badge: `resource_tdx_2_1t40pyc05pfmsqvslxpnystfyxe654h856r049gfxc009cjrp6kluta`  
 Bot account: `account_tdx_2_129y9wu3vugaeasnprxjlrqy3tpmr7hpurrmapmyqhsr26ehhrh22e2`  
 
 Ociswap registry package: `package_tdx_2_1p5r62g3nc27kmkjud77yqq735jvk3s530q4xknthgz35ca8scf506e`  
@@ -44,10 +44,10 @@ QuantaSwap XRD/LSULP pool: `component_tdx_2_1cplpy47fc5hdymxmmt0fqhylxw8fm3y2n3v
 Morpher component: `component_tdx_2_1cqv8gntu3avns3e8ft3v9ju7wk2n7yhlzrkygc64hpvjkcnjpyglr8`  
 
 Oracle package: `package_tdx_2_1ph5wc4ehsaaj7gakrsx2agrw06qh2quhuhqew73a8njtk6uzpdqhx9`  
-Oracle component: `component_tdx_2_1cpzt5upmw777dt9crm05uwhdfl3u6jl0dptk5g3p46t9ut5alhcljx`  
+Oracle component: `component_tdx_2_1cpyye865pn6n2nywn0cuk6nql2wnz7gu4w6qceqa5sgkxqd6cfacmx`  
 
 Dex package: `package_tdx_2_1p4m66pm669ju4f4eexjvev22hktlk5pwrnmrg6wsqa645d2tcfn8zt`  
-Dex component: `component_tdx_2_1cqf2lzd95ldv62lu7tyne7wtevkh48vfvnajc5l5ypmeqevqc5j0un`  
+Dex component: `component_tdx_2_1crttmzmeggqh6m4x8ccag8g22zp033jf2csam8uwnpq43k8jyp8745`  
 
 Weft component: `component_tdx_2_1crrha0f0s7gayclln3f2s4xmpz3ja5lph2prmavkdsfwc05sun0t8t`  
 w2-XRD resource address: `resource_tdx_2_1t59p7p242t5gfcn7hzzpzdql3ej76q379hdrkdx524xmmnv3hmtgv9`  
@@ -62,25 +62,25 @@ Weft claimer updater badge: `resource_tdx_2_1ntan5kqdrwuh7fgfltf982u309399lstpxu
 Account package: `package_tdx_2_1pkgxxxxxxxxxaccntxxxxxxxxxx000929625493xxxxxxxxx9jat20`  
 
 WeftWrapper package: `package_tdx_2_1p4nhdquv2wc65nla2jxqnhemut7jng044s7madjcvdwmslp2cp5p7l`  
-WEFT-XRD fund account: `account_tdx_2_1cy9j3t83quyvltvmt7c6ezv4n5fsnlax3w0chmucu9ue0vg680mk7j`  
-WEFT-XRD fund account badge: `resource_tdx_2_1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxx4vczzk:[c10b28acf10708cfad9b5fb1ac89959d1309ffa68b9f8bef98e17997b11a]`  
-WEFT-XRD wrapper component: `component_tdx_2_1cqtlj4am7d4mm4kd4eqkl3hsfu7uqra7q5snrcq3ehf0ujdmnpyfm8`  
-WEFT-xUSDC fund account: `account_tdx_2_1c9pu2f38s5han6kaqm9h70xsue20cppxdz4938d32ypg8e2m6eyh4p`  
-WEFT-xUSDC fund account badge: `resource_tdx_2_1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxx4vczzk:[c143c52627852fd9eadd06cb7f3cd0e654fc042668aa589db1510283e55b]`  
-WEFT-xUSDC wrapper component: `component_tdx_2_1czz6dz9egemp6wjzsgezcyle23qwx35yau95t5u22ug5w27k7ut3j9`  
+XRD@WEFT fund account: `account_tdx_2_1cy9j3t83quyvltvmt7c6ezv4n5fsnlax3w0chmucu9ue0vg680mk7j`  
+XRD@WEFT fund account badge: `resource_tdx_2_1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxx4vczzk:[c10b28acf10708cfad9b5fb1ac89959d1309ffa68b9f8bef98e17997b11a]`  
+XRD@WEFT wrapper component: `component_tdx_2_1cpccpswzq6574n3ge24l6wuwzv9g2y3ryff9uxfwqtmq8r27cavycs`  
+xUSDC@WEFT fund account: `account_tdx_2_1c9pu2f38s5han6kaqm9h70xsue20cppxdz4938d32ypg8e2m6eyh4p`  
+xUSDC@WEFT fund account badge: `resource_tdx_2_1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxx4vczzk:[c143c52627852fd9eadd06cb7f3cd0e654fc042668aa589db1510283e55b]`  
+xUSDC@WEFT wrapper component: `component_tdx_2_1czvd9zgcxqcax33nflt0sfkf4q3twwupnse7pla0wjhpnc7959mz0s`  
 
 OciswapLpPool2Wrapper package: `package_tdx_2_1p4wtkvhhpp8tdqm08k9sxh5grk5zlkrhvl6r63nscddvns2d69g3vx`  
 WEFT/XRD@Ociswap fund account: `account_tdx_2_1cxpwmsppazvh49z90qc2cve4mrx9k2qxhzx9xqukxf88vw87dzk7kr`  
 WEFT/XRD@Ociswap fund account badge: `resource_tdx_2_1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxx4vczzk:[c182edc021e8997a94457830ac3335d8cc5b2806b88c530396324e7638fe]`  
-OciswapLpPool2Wrapper component: `component_tdx_2_1czesgeledjjme668d2m86gxg2hxheeynzz7avlrdu2x0maylf68rt9`  
+OciswapLpPool2Wrapper component: `component_tdx_2_1czny8yle3nazx3lkruduafzjgf650a4vvpkjz5vgqjva372g2wdqzz`  
 
 xUSDC@Surge fund account: `account_tdx_2_1cyeadvjw08dn4lcp3wvfehthwee92m77kmwhff82pyxxl5v9fl4c6d`  
 xUSDC@Surge fund account badge: `resource_tdx_2_1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxx4vczzk:[c133d6b24e79db3aff018b989cdd777672556fdeb6dd74a4ea090c6fd185]`  
 SurgeWrapper package: `package_tdx_2_1pk2yn9ql6rnldlw99z3a5975ly0ngncdeym0zx0djvay5f58pa2ys6`  
-SurgeWrapper xUSDC@Surge component: `component_tdx_2_1cph4h8k3nc2yhmgxp8k9ynxzhqwwj9mfyynx2hauvc89usctzg3qfn`  
+SurgeWrapper xUSDC@Surge component: `component_tdx_2_1cr5x2k3fxnu48s2sgknyakz2zqe8pk08m8nsppy3hws32asrtpaf9z`  
 
 RootFinanceWrapper package: `package_tdx_2_1pk6vjpp63clc7ylc5nwejew69dw3fg3j7h0mt6yymtrkcaex48gdc2`  
-RootFinanceWrapper component: `component_tdx_2_1cqgz038ttllxyd28n4we77alazq8yr4pccxkaf847whdxv8yxa3hhg`  
+RootFinanceWrapper component: `component_tdx_2_1cp8zrvpak8x5jvmd02u9amzktzkgl25078vsw9tkhcgssjuye5arhx`  
 
 Flux dummy oracle component: `component_tdx_2_1cz3e9rmcu232ahfl3s0f7sq3yq4flvfac2kkqezannvlnu45qrhlte`  
 ILIS: `resource_tdx_2_1tkp46lclwtz44d7slfncvr98egwp4jp3zgvxgz4ehsgf7v7ndq7n2z`  
@@ -95,14 +95,14 @@ LSULP/fUSD Flux pool unit: `resource_tdx_2_1t4uzkqjpn0v90vxr4vczgm3vuuv85pp77umq
 FluxWrapper package: `package_tdx_2_1pkhdgxgxcxelenel07ex7hgqe8834ftwtl883na60t36lxc9unxstn`  
 LSULP/fUSD@Flux fund account: `account_tdx_2_1c8tzxu68cwpe5l3kcwvq4nwx6t55gwuzymwwm9rhwkry9hh6d6m08d`  
 LSULP/fUSD@Flux fund account badge: `c1d6237347c3839a7e36c3980acdc6d2e9443b8226dced9477758642defa`  
-LSULP/fUSD@Flux FluxWrapper component: `component_tdx_2_1cp259ed2ckjtzdr706cvxeha9dzx2k33x35xefgf0ra4kdkchs5vd9`  
+LSULP/fUSD@Flux FluxWrapper component: `component_tdx_2_1cp78mauptuds2ewzc3cc4pkx4nssfc6zy3lwhh0jesfkpgf5h0davj`  
 
 ## FundManager
 
 ### Component intantiation
 ```
 CALL_FUNCTION
-    Address("package_tdx_2_1p4uqhfm4zjxuxgpzfkqsutyvan7m4tv75muawjd52ctw07qy03ls7l")
+    Address("package_tdx_2_1p4rv3hyae94tmyg36wru460wzcfjzajpw2zlt7ns5m7mswmchxud0l")
     "FundManager"
     "new"
     Address("validator_tdx_2_1svff7mkddhm9dy325f3ckx72cxqsl49ewy74667pchqfkxl7wxpa8r")
@@ -136,11 +136,11 @@ TAKE_ALL_FROM_WORKTOP
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpmzvmvc9dl7xm5xn5808nuhzu97964xq2jrzhjz4uh0kqdesgpscd")
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
     "deposit_validator_badge"
     Bucket("validator_badge")
 ;
@@ -151,14 +151,14 @@ CALL_METHOD
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpmzvmvc9dl7xm5xn5808nuhzu97964xq2jrzhjz4uh0kqdesgpscd")
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
     "authorize_admin_operation"
     Proof("admin_proof")
     2u8
@@ -174,14 +174,14 @@ CALL_METHOD
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpmzvmvc9dl7xm5xn5808nuhzu97964xq2jrzhjz4uh0kqdesgpscd")
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
     "mint_bot_badge"
     Proof("admin_proof")
     Address("account_tdx_2_129y9wu3vugaeasnprxjlrqy3tpmr7hpurrmapmyqhsr26ehhrh22e2")
@@ -196,9 +196,9 @@ CALL_FUNCTION
     Address("package_tdx_2_1ph5wc4ehsaaj7gakrsx2agrw06qh2quhuhqew73a8njtk6uzpdqhx9")
     "MultiOracleWrapper"
     "new"
-    Address("resource_tdx_2_1t4ag6k8n4s0vv3smwjxzfu84jg30den5pp9tdzcx656ecg4swhc22v")
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
-    Address("resource_tdx_2_1tksvp84p7epkc9mtkxg6ewvatavt2n9de8j95k97x0udn6zc9s0mrg")
+    Address("resource_tdx_2_1tkl7aghjp3q4x6v65vak3h326cg6332gqx9uveayyvef0cfsfsx43s")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
+    Address("resource_tdx_2_1t40pyc05pfmsqvslxpnystfyxe654h856r049gfxc009cjrp6kluta")
     Address("component_tdx_2_1cqv8gntu3avns3e8ft3v9ju7wk2n7yhlzrkygc64hpvjkcnjpyglr8")
     600u64
     600u64 
@@ -210,14 +210,14 @@ CALL_FUNCTION
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpmzvmvc9dl7xm5xn5808nuhzu97964xq2jrzhjz4uh0kqdesgpscd")
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
     "authorize_admin_operation"
     Proof("admin_proof")
     2u8
@@ -233,17 +233,17 @@ CALL_METHOD
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpmzvmvc9dl7xm5xn5808nuhzu97964xq2jrzhjz4uh0kqdesgpscd")
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
     "set_oracle_component"
     Proof("admin_proof")
-    Address("component_tdx_2_1cpzt5upmw777dt9crm05uwhdfl3u6jl0dptk5g3p46t9ut5alhcljx")
+    Address("component_tdx_2_1cpyye865pn6n2nywn0cuk6nql2wnz7gu4w6qceqa5sgkxqd6cfacmx")
 ;
 ```
 
@@ -252,11 +252,11 @@ CALL_METHOD
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpzt5upmw777dt9crm05uwhdfl3u6jl0dptk5g3p46t9ut5alhcljx")
+    Address("component_tdx_2_1cpyye865pn6n2nywn0cuk6nql2wnz7gu4w6qceqa5sgkxqd6cfacmx")
     "add_oracle"
     Address("resource_tdx_2_1tk903dr7agsg65v8h8he6kdhwlsctedxq0fuec0aufagr2xeyhs5ur")
     Some(Decimal("1"))
@@ -273,11 +273,11 @@ CALL_METHOD
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpzt5upmw777dt9crm05uwhdfl3u6jl0dptk5g3p46t9ut5alhcljx")
+    Address("component_tdx_2_1cpyye865pn6n2nywn0cuk6nql2wnz7gu4w6qceqa5sgkxqd6cfacmx")
     "add_oracle"
     Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
     None
@@ -294,11 +294,11 @@ CALL_METHOD
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpzt5upmw777dt9crm05uwhdfl3u6jl0dptk5g3p46t9ut5alhcljx")
+    Address("component_tdx_2_1cpyye865pn6n2nywn0cuk6nql2wnz7gu4w6qceqa5sgkxqd6cfacmx")
     "add_oracle"
     Address("resource_tdx_2_1t4pttehu02el4jrqdua56rgt8057hx2fnzm63yv6wt5p5nj6ant0kq")
     None
@@ -315,11 +315,11 @@ CALL_METHOD
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpzt5upmw777dt9crm05uwhdfl3u6jl0dptk5g3p46t9ut5alhcljx")
+    Address("component_tdx_2_1cpyye865pn6n2nywn0cuk6nql2wnz7gu4w6qceqa5sgkxqd6cfacmx")
     "add_oracle"
     Address("resource_tdx_2_1t50uv6v747hw4d2rneh7elfppz8jf7hzjxp2q260weh76cc9qzk85r")
     Some(Decimal("1"))
@@ -336,11 +336,11 @@ CALL_METHOD
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpzt5upmw777dt9crm05uwhdfl3u6jl0dptk5g3p46t9ut5alhcljx")
+    Address("component_tdx_2_1cpyye865pn6n2nywn0cuk6nql2wnz7gu4w6qceqa5sgkxqd6cfacmx")
     "add_oracle"
     Address("resource_tdx_2_1thr3zv65sm5w3jvaz4murfdfyl49u3skr20rlssgjfngmj7ax7n86j")
     Some(Decimal("1"))
@@ -357,11 +357,11 @@ CALL_METHOD
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpzt5upmw777dt9crm05uwhdfl3u6jl0dptk5g3p46t9ut5alhcljx")
+    Address("component_tdx_2_1cpyye865pn6n2nywn0cuk6nql2wnz7gu4w6qceqa5sgkxqd6cfacmx")
     "add_oracle"
     Address("resource_tdx_2_1thc6avtsk0f2d4mgp4rca76nw6753yz638e0qaszzhqy6e469pcca7")
     Some(Decimal("1"))
@@ -378,11 +378,11 @@ CALL_METHOD
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpzt5upmw777dt9crm05uwhdfl3u6jl0dptk5g3p46t9ut5alhcljx")
+    Address("component_tdx_2_1cpyye865pn6n2nywn0cuk6nql2wnz7gu4w6qceqa5sgkxqd6cfacmx")
     "add_oracle"
     Address("resource_tdx_2_1t59ygltctweq749ucj702a9d6ap8pv60pxjyu05048vfzdnq9fsc2c")
     None
@@ -402,8 +402,8 @@ CALL_FUNCTION
     Address("package_tdx_2_1p4m66pm669ju4f4eexjvev22hktlk5pwrnmrg6wsqa645d2tcfn8zt")
     "MultiDexWrapper"
     "new"
-    Address("resource_tdx_2_1t4ag6k8n4s0vv3smwjxzfu84jg30den5pp9tdzcx656ecg4swhc22v")
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1tkl7aghjp3q4x6v65vak3h326cg6332gqx9uveayyvef0cfsfsx43s")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
 ;
 ```
 
@@ -412,14 +412,14 @@ CALL_FUNCTION
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpmzvmvc9dl7xm5xn5808nuhzu97964xq2jrzhjz4uh0kqdesgpscd")
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
     "authorize_admin_operation"
     Proof("admin_proof")
     2u8
@@ -435,17 +435,17 @@ CALL_METHOD
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpmzvmvc9dl7xm5xn5808nuhzu97964xq2jrzhjz4uh0kqdesgpscd")
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
     "set_dex_component"
     Proof("admin_proof")
-    Address("component_tdx_2_1cqf2lzd95ldv62lu7tyne7wtevkh48vfvnajc5l5ypmeqevqc5j0un")
+    Address("component_tdx_2_1crttmzmeggqh6m4x8ccag8g22zp033jf2csam8uwnpq43k8jyp8745")
 ;
 ```
 
@@ -454,11 +454,11 @@ CALL_METHOD
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cqf2lzd95ldv62lu7tyne7wtevkh48vfvnajc5l5ypmeqevqc5j0un")
+    Address("component_tdx_2_1crttmzmeggqh6m4x8ccag8g22zp033jf2csam8uwnpq43k8jyp8745")
     "add_pool"
     Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
     Address("resource_tdx_2_1tk903dr7agsg65v8h8he6kdhwlsctedxq0fuec0aufagr2xeyhs5ur")
@@ -473,11 +473,11 @@ CALL_METHOD
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cqf2lzd95ldv62lu7tyne7wtevkh48vfvnajc5l5ypmeqevqc5j0un")
+    Address("component_tdx_2_1crttmzmeggqh6m4x8ccag8g22zp033jf2csam8uwnpq43k8jyp8745")
     "add_pool"
     Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
     Address("resource_tdx_2_1t4pttehu02el4jrqdua56rgt8057hx2fnzm63yv6wt5p5nj6ant0kq")
@@ -492,11 +492,11 @@ CALL_METHOD
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cqf2lzd95ldv62lu7tyne7wtevkh48vfvnajc5l5ypmeqevqc5j0un")
+    Address("component_tdx_2_1crttmzmeggqh6m4x8ccag8g22zp033jf2csam8uwnpq43k8jyp8745")
     "add_pool"
     Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
     Address("resource_tdx_2_1t50uv6v747hw4d2rneh7elfppz8jf7hzjxp2q260weh76cc9qzk85r")
@@ -511,11 +511,11 @@ CALL_METHOD
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cqf2lzd95ldv62lu7tyne7wtevkh48vfvnajc5l5ypmeqevqc5j0un")
+    Address("component_tdx_2_1crttmzmeggqh6m4x8ccag8g22zp033jf2csam8uwnpq43k8jyp8745")
     "add_pool"
     Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
     Address("resource_tdx_2_1thr3zv65sm5w3jvaz4murfdfyl49u3skr20rlssgjfngmj7ax7n86j")
@@ -530,11 +530,11 @@ CALL_METHOD
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cqf2lzd95ldv62lu7tyne7wtevkh48vfvnajc5l5ypmeqevqc5j0un")
+    Address("component_tdx_2_1crttmzmeggqh6m4x8ccag8g22zp033jf2csam8uwnpq43k8jyp8745")
     "add_pool"
     Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
     Address("resource_tdx_2_1t59ygltctweq749ucj702a9d6ap8pv60pxjyu05048vfzdnq9fsc2c")
@@ -544,9 +544,11 @@ CALL_METHOD
 ;
 ```
 
+// TODO
+
 ## WeftWrapper
 
-### Create a WeftWrapper component for the "WEFT-XRD" position and pass it the ownership of an account
+### Create a WeftWrapper component for the "XRD@WEFT" position and pass it the ownership of an account
 ```
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
@@ -568,63 +570,63 @@ CALL_FUNCTION
     Address("resource_tdx_2_1ngtrx5j8p5g786vw2zwjwl3ckyrkg4vy445gzn8df8nuc5fsd3anhp")
     Address("component_tdx_2_1crrha0f0s7gayclln3f2s4xmpz3ja5lph2prmavkdsfwc05sun0t8t")
     Address("component_tdx_2_1cqmcd6aqh8m5q65wcektnjfx0cnqyavkj2gpc8n6dlm5sm4y8z7vwv")
-    Address("resource_tdx_2_1t4ag6k8n4s0vv3smwjxzfu84jg30den5pp9tdzcx656ecg4swhc22v")
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
-    Address("resource_tdx_2_1tksvp84p7epkc9mtkxg6ewvatavt2n9de8j95k97x0udn6zc9s0mrg")
+    Address("resource_tdx_2_1tkl7aghjp3q4x6v65vak3h326cg6332gqx9uveayyvef0cfsfsx43s")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
+    Address("resource_tdx_2_1t40pyc05pfmsqvslxpnystfyxe654h856r049gfxc009cjrp6kluta")
     Address("account_tdx_2_1cy9j3t83quyvltvmt7c6ezv4n5fsnlax3w0chmucu9ue0vg680mk7j")
     Bucket("account_badge")
 ;
 ```
 
-### Authorize admin #2# to create the WEFT-XRD position in the FundManager
+### Authorize admin #2# to create the XRD@WEFT position in the FundManager
 ```
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpmzvmvc9dl7xm5xn5808nuhzu97964xq2jrzhjz4uh0kqdesgpscd")
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
     "authorize_admin_operation"
     Proof("admin_proof")
     2u8
     1u8
-    Some("WEFT-XRD")
+    Some("XRD@WEFT")
     None
     None
 ;
 ```
 
-### Register the created WeftWrapper component as WEFT-XRD DeFi protocol in the FundManager
+### Register the created WeftWrapper component as XRD@WEFT DeFi protocol in the FundManager
 ```
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpmzvmvc9dl7xm5xn5808nuhzu97964xq2jrzhjz4uh0kqdesgpscd")
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
     "add_defi_protocol"
     Proof("admin_proof")
-    "WEFT-XRD"
+    "XRD@WEFT"
     Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
     Some(Address("resource_tdx_2_1t4pttehu02el4jrqdua56rgt8057hx2fnzm63yv6wt5p5nj6ant0kq"))
     50u8
-    Address("component_tdx_2_1cqtlj4am7d4mm4kd4eqkl3hsfu7uqra7q5snrcq3ehf0ujdmnpyfm8")
+    Address("component_tdx_2_1cpccpswzq6574n3ge24l6wuwzv9g2y3ryff9uxfwqtmq8r27cavycs")
     None
     false
 ;
 ```
 
-### Create a WeftWrapper component for the "WEFT-xUSDC" position and pass it the ownership of an account
+### Create a WeftWrapper component for the "xUSDC@WEFT" position and pass it the ownership of an account
 ```
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
@@ -646,57 +648,57 @@ CALL_FUNCTION
     Address("resource_tdx_2_1ngtrx5j8p5g786vw2zwjwl3ckyrkg4vy445gzn8df8nuc5fsd3anhp")
     Address("component_tdx_2_1crrha0f0s7gayclln3f2s4xmpz3ja5lph2prmavkdsfwc05sun0t8t")
     Address("component_tdx_2_1cqmcd6aqh8m5q65wcektnjfx0cnqyavkj2gpc8n6dlm5sm4y8z7vwv")
-    Address("resource_tdx_2_1t4ag6k8n4s0vv3smwjxzfu84jg30den5pp9tdzcx656ecg4swhc22v")
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
-    Address("resource_tdx_2_1tksvp84p7epkc9mtkxg6ewvatavt2n9de8j95k97x0udn6zc9s0mrg")
+    Address("resource_tdx_2_1tkl7aghjp3q4x6v65vak3h326cg6332gqx9uveayyvef0cfsfsx43s")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
+    Address("resource_tdx_2_1t40pyc05pfmsqvslxpnystfyxe654h856r049gfxc009cjrp6kluta")
     Address("account_tdx_2_1c9pu2f38s5han6kaqm9h70xsue20cppxdz4938d32ypg8e2m6eyh4p")
     Bucket("account_badge")
 ;
 ```
 
-### Authorize admin #2# to create the WEFT-xUSDC position in the FundManager
+### Authorize admin #2# to create the xUSDC@WEFT position in the FundManager
 ```
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpmzvmvc9dl7xm5xn5808nuhzu97964xq2jrzhjz4uh0kqdesgpscd")
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
     "authorize_admin_operation"
     Proof("admin_proof")
     2u8
     1u8
-    Some("WEFT-xUSDC")
+    Some("xUSDC@WEFT")
     None
     None
 ;
 ```
 
-### Register the created WeftWrapper component as WEFT-xUSDC DeFi protocol in the FundManager
+### Register the created WeftWrapper component as xUSDC@WEFT DeFi protocol in the FundManager
 ```
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpmzvmvc9dl7xm5xn5808nuhzu97964xq2jrzhjz4uh0kqdesgpscd")
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
     "add_defi_protocol"
     Proof("admin_proof")
-    "WEFT-xUSDC"
+    "xUSDC@WEFT"
     Address("resource_tdx_2_1tk903dr7agsg65v8h8he6kdhwlsctedxq0fuec0aufagr2xeyhs5ur")
     Some(Address("resource_tdx_2_1t4pttehu02el4jrqdua56rgt8057hx2fnzm63yv6wt5p5nj6ant0kq"))
     50u8
-    Address("component_tdx_2_1czz6dz9egemp6wjzsgezcyle23qwx35yau95t5u22ug5w27k7ut3j9")
+    Address("component_tdx_2_1czvd9zgcxqcax33nflt0sfkf4q3twwupnse7pla0wjhpnc7959mz0s")
     None
     false
 ;
@@ -726,8 +728,8 @@ CALL_FUNCTION
     Address("account_tdx_2_1cxpwmsppazvh49z90qc2cve4mrx9k2qxhzx9xqukxf88vw87dzk7kr")
     Bucket("account_badge")
     Address("component_tdx_2_1cqjk0fpczra87ft2q3maps4d7tnmq7s4cmjslv20t3knq2ldas665x")
-    Address("resource_tdx_2_1t4ag6k8n4s0vv3smwjxzfu84jg30den5pp9tdzcx656ecg4swhc22v")
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1tkl7aghjp3q4x6v65vak3h326cg6332gqx9uveayyvef0cfsfsx43s")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
 ;
 ```
 
@@ -736,14 +738,14 @@ CALL_FUNCTION
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpmzvmvc9dl7xm5xn5808nuhzu97964xq2jrzhjz4uh0kqdesgpscd")
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
     "authorize_admin_operation"
     Proof("admin_proof")
     2u8
@@ -759,21 +761,21 @@ CALL_METHOD
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpmzvmvc9dl7xm5xn5808nuhzu97964xq2jrzhjz4uh0kqdesgpscd")
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
     "add_defi_protocol"
     Proof("admin_proof")
     "WEFT/XRD@Ociswap"
     Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
     Some(Address("resource_tdx_2_1t4pttehu02el4jrqdua56rgt8057hx2fnzm63yv6wt5p5nj6ant0kq"))
     20u8
-    Address("component_tdx_2_1czesgeledjjme668d2m86gxg2hxheeynzz7avlrdu2x0maylf68rt9")
+    Address("component_tdx_2_1czny8yle3nazx3lkruduafzjgf650a4vvpkjz5vgqjva372g2wdqzz")
     None
     true
 ;
@@ -803,8 +805,8 @@ CALL_FUNCTION
     Bucket("account_badge")
     Address("component_tdx_2_1cz8ugj8wk9ea65cqlud58xt69md79mvxasurw7npne8uhzhr0qr2l0")
     Address("component_tdx_2_1cq25gzt4aah36m4hn4s9vmpfugy5ek2r5zqkh39kvsqjn66kjxgdcl")
-    Address("resource_tdx_2_1t4ag6k8n4s0vv3smwjxzfu84jg30den5pp9tdzcx656ecg4swhc22v")
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1tkl7aghjp3q4x6v65vak3h326cg6332gqx9uveayyvef0cfsfsx43s")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
 ;
 ```
 
@@ -813,14 +815,14 @@ CALL_FUNCTION
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpmzvmvc9dl7xm5xn5808nuhzu97964xq2jrzhjz4uh0kqdesgpscd")
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
     "authorize_admin_operation"
     Proof("admin_proof")
     2u8
@@ -836,21 +838,21 @@ CALL_METHOD
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpmzvmvc9dl7xm5xn5808nuhzu97964xq2jrzhjz4uh0kqdesgpscd")
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
     "add_defi_protocol"
     Proof("admin_proof")
     "xUSDC@Surge"
     Address("resource_tdx_2_1t50uv6v747hw4d2rneh7elfppz8jf7hzjxp2q260weh76cc9qzk85r")
     None
     10u8
-    Address("component_tdx_2_1cph4h8k3nc2yhmgxp8k9ynxzhqwwj9mfyynx2hauvc89usctzg3qfn")
+    Address("component_tdx_2_1cr5x2k3fxnu48s2sgknyakz2zqe8pk08m8nsppy3hws32asrtpaf9z")
     None
     false
 ;
@@ -879,8 +881,8 @@ CALL_FUNCTION
     Address("account_tdx_2_1cxqv47q52u26rcqksqf07uxxzp92q8vctmmcdk52s3pz4gxs3d7f3y")
     Bucket("account_badge")
     Address("component_tdx_2_1cpymwmdxzgshkjl86lw2fakd9kgkvqtqapudhdtmralfcsy5zay8cu")
-    Address("resource_tdx_2_1t4ag6k8n4s0vv3smwjxzfu84jg30den5pp9tdzcx656ecg4swhc22v")
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1tkl7aghjp3q4x6v65vak3h326cg6332gqx9uveayyvef0cfsfsx43s")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
 ;
 ```
 
@@ -889,14 +891,14 @@ CALL_FUNCTION
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpmzvmvc9dl7xm5xn5808nuhzu97964xq2jrzhjz4uh0kqdesgpscd")
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
     "authorize_admin_operation"
     Proof("admin_proof")
     2u8
@@ -912,21 +914,21 @@ CALL_METHOD
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpmzvmvc9dl7xm5xn5808nuhzu97964xq2jrzhjz4uh0kqdesgpscd")
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
     "add_defi_protocol"
     Proof("admin_proof")
     "hUSDC@RootFinance"
     Address("resource_tdx_2_1thr3zv65sm5w3jvaz4murfdfyl49u3skr20rlssgjfngmj7ax7n86j")
     None
     10u8
-    Address("component_tdx_2_1cqgz038ttllxyd28n4we77alazq8yr4pccxkaf847whdxv8yxa3hhg")
+    Address("component_tdx_2_1cp8zrvpak8x5jvmd02u9amzktzkgl25078vsw9tkhcgssjuye5arhx")
     None
     false
 ;
@@ -956,8 +958,8 @@ CALL_FUNCTION
     Address("account_tdx_2_1c8tzxu68cwpe5l3kcwvq4nwx6t55gwuzymwwm9rhwkry9hh6d6m08d")
     Bucket("account_badge")
     Address("component_tdx_2_1cp2ukcpmg2vcn9znq9t27ru5sd5w3tk2taju5jelzynnhafa3tawpy")
-    Address("resource_tdx_2_1t4ag6k8n4s0vv3smwjxzfu84jg30den5pp9tdzcx656ecg4swhc22v")
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1tkl7aghjp3q4x6v65vak3h326cg6332gqx9uveayyvef0cfsfsx43s")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
 ;   
 ```
 
@@ -966,14 +968,14 @@ CALL_FUNCTION
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpmzvmvc9dl7xm5xn5808nuhzu97964xq2jrzhjz4uh0kqdesgpscd")
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
     "authorize_admin_operation"
     Proof("admin_proof")
     2u8
@@ -989,21 +991,21 @@ CALL_METHOD
 CALL_METHOD
     Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
     "create_proof_of_non_fungibles"
-    Address("resource_tdx_2_1nfcwacen7amux869jpvg0zc4gn9h0csfkdcewankh7t7eyhk2w4fk9")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
     Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
 ;
 POP_FROM_AUTH_ZONE
     Proof("admin_proof")
 ;
 CALL_METHOD
-    Address("component_tdx_2_1cpmzvmvc9dl7xm5xn5808nuhzu97964xq2jrzhjz4uh0kqdesgpscd")
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
     "add_defi_protocol"
     Proof("admin_proof")
     "LSULP/fUSD@Flux"
     Address("resource_tdx_2_1thc6avtsk0f2d4mgp4rca76nw6753yz638e0qaszzhqy6e469pcca7")
     Some(Address("resource_tdx_2_1t59ygltctweq749ucj702a9d6ap8pv60pxjyu05048vfzdnq9fsc2c"))
     10u8
-    Address("component_tdx_2_1cp259ed2ckjtzdr706cvxeha9dzx2k33x35xefgf0ra4kdkchs5vd9")
+    Address("component_tdx_2_1cp78mauptuds2ewzc3cc4pkx4nssfc6zy3lwhh0jesfkpgf5h0davj")
     Some(Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc"))
     false
 ;
