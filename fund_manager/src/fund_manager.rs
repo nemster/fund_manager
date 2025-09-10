@@ -853,8 +853,8 @@ mod fund_manager {
         // The bot can invoke this method to complete the unlock of the Validator's owner LSUs and
         // start their unstake
         pub fn start_unstake(&mut self) -> (
-            Decimal,    // Unstaked LSU amount
-            String      // Id of the minted claim NFT
+            Decimal,                // Unstaked LSU amount
+            NonFungibleLocalId      // Id of the minted claim NFT
         ) {
 
             // Complete LSU unlock
@@ -874,16 +874,13 @@ mod fund_manager {
 
             // Start LSU unstake and get the claim NFT
             let claim_nft_bucket = self.validator.unstake(lsu_bucket);
-            let claim_nft_id = match claim_nft_bucket.non_fungible_local_id() {
-                NonFungibleLocalId::String(id) => id.value().to_string(),
-                _ => Runtime::panic("Non string Claim NFT id".to_string()),
-            };
+            let claim_nft_id = claim_nft_bucket.non_fungible_local_id();
 
             // Emit the LsuUnstakeStartedEvent event
             Runtime::emit_event(
                 LsuUnstakeStartedEvent {
                     lsu_amount: lsu_amount,
-                    claim_nft_id: claim_nft_bucket.non_fungible_local_id(),
+                    claim_nft_id: claim_nft_id.clone(),
                 }
             );
             
