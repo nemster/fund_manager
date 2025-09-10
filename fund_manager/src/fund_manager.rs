@@ -39,6 +39,7 @@ pub enum AuthorizedOperation {
     SetWithdrawalFee            = 9,    // set_withdrawal_fee method
     MintBotBadge                = 10,   // mint_bot_badge method
     SetBuybackFund              = 11,   // set_buyback_fund method
+    WithdrawClaimNfts           = 12,   // withdraw_claim_nfts method
 }
 impl From<u8> for AuthorizedOperation {
     fn from(orig: u8) -> Self {
@@ -55,6 +56,7 @@ impl From<u8> for AuthorizedOperation {
             9  => return AuthorizedOperation::SetWithdrawalFee,
             10 => return AuthorizedOperation::MintBotBadge,
             11 => return AuthorizedOperation::SetBuybackFund,
+            12 => return AuthorizedOperation::WithdrawClaimNfts,
             _  => Runtime::panic("Unknown operation".to_string()),
         };
     }
@@ -188,6 +190,7 @@ mod fund_manager {
             set_withdrawal_fee => PUBLIC;
             mint_bot_badge => PUBLIC;
             set_buyback_fund => PUBLIC;
+            withdraw_claim_nfts => PUBLIC;
 
             // Single admin operations
             authorize_admin_operation => PUBLIC;
@@ -1852,6 +1855,35 @@ mod fund_manager {
                     Secp256k1PublicKey::from_str(&key).expect("Invalid key")
                 )
             );
+        }
+
+        // In case the component has to be replaced with a new one, the pending Claim NFTs can be
+        // withdrawn by using this method.
+        // To use only in case of an emergency, an admin needs others' admins authorization to
+        // successfully execute this method.
+        pub fn withdraw_claim_nfts(
+            &mut self,
+            admin_proof: Proof
+        ) -> NonFungibleBucket {
+
+            // Verify autorization
+            self.check_operation_authorization(
+                self.get_admin_id(admin_proof),
+                AuthorizedOperation::WithdrawClaimNfts,
+                None,
+                None,
+                None,
+            );
+
+            // Withdraw the Claim NFTs
+            self.claim_nft_vault.take_non_fungibles(
+                &self.claim_nft_vault.non_fungible_local_ids(
+
+                    // In order to avoid fee explosion, limit the number of NFTs that can be
+                    // withdrawn in a single operation
+                    MAX_VECTOR_SIZE.try_into().unwrap()
+                ),
+            )
         }
     }
 }

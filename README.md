@@ -421,6 +421,7 @@ CALL_METHOD
 9 -> `set_withdrawal_fee`  
 10 -> `mint_bot_badge`  
 11 -> `set_buyback_fund`  
+12 -> `withdraw_claim_nfts`  
 `<PROTOCOL_NAME>` is the name of the protocol to add/remove for `add_defi_protocol` and `remove_defi_protocol` operations, `None` for all the other operations.  
 `<PERCENTAGE>` is the percentage to set for `set_withdrawal_fee` or `set_buyback_fund` operations, `None` for all the other operations.  
 `<RECEIVER_ACCOUNT>` is the account address that will receive the badge for the `mint_admin_badge` and `mint_bot_badge` operations, `None` for all the other operations.  
@@ -848,6 +849,37 @@ CALL_METHOD
 `<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
 `<PERCENTAGE>` is the percentage fee to set.  
 `<RECEIVER_ACCOUNT>` is the account address that will manage the buyback fund.  
+
+# withdraw\_claim\_nfts
+In case the component has to be replaced with a new one, the pending Claim NFTs can be withdrawn by using this method.  
+To use only in case of an emergency, an admin needs others' admins authorization to successfully execute this method.  
+
+```
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "create_proof_of_non_fungibles"
+    Address("<ADMIN_BADGE>")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#<MY_ADMIN_BADGE_ID>#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
+    "withdraw_claim_nfts"
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("<ACCOUNT>")
+    "deposit_batch"
+    Expression("ENTIRE_WORKTOP")
+;
+```
+
+`<ACCOUNT>` is the admin account.  
+`<ADMIN_BADGE>` is the resource address of the badge held by the admin account.  
+`<MY_ADMIN_BADGE_ID>` is the numeric identifier of the admin badge owned by the account that is executing this transaction.  
+`<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
 
 ### deposit\_coin
 Deposit coins (eventually other coins too) in a DeFi protocol and eventually get the equivalent amount of fund units.  
