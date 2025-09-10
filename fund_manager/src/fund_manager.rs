@@ -207,8 +207,10 @@ mod fund_manager {
             start_unstake => restrict_to: [bot];
             finish_unstake => restrict_to: [bot];
             fund_units_distribution => restrict_to: [bot];
-            update_defi_protocols_value => restrict_to: [bot];
-            set_defi_protocols_percentage => restrict_to: [bot];
+
+            // Bot or admin operations
+            update_defi_protocols_value => restrict_to: [bot, OWNER];
+            set_defi_protocols_percentage => restrict_to: [bot, OWNER];
 
             // Unauthenticated user operation
             withdraw => PUBLIC;

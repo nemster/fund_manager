@@ -259,7 +259,8 @@ CALL_METHOD
 `<MORE_STAKERS>` must be `false` if the airdrop is completed, `true` if there will be more calls to this method.  
 
 ### update\_defi\_protocols\_value
-This method can ask FundManager to update the estimation of the dollar value of the investment in some DeFi protocols.  
+This method asks FundManager to update the estimation of the dollar value of the investment in some DeFi protocols.  
+This method can be invoked by either the bot or an admin, in the following example it's invoked by the bot.  
 It emits a `ProtocolValueUpdateEvent` for each DeFi protocol position whose value is updated. The event contains:  
 - the name of the protocol  
 - the updated value of the coins invested in the protocol  
@@ -298,6 +299,7 @@ CALL_METHOD
 This method sets the desired percentage of value to invest in each DeFi protocol. 
 The method doesn't actually move any funds; it only influences the future deposit and withdraws.  
 FundManager doesn't check that the sum of the percentages is 100; each percentage should be considered as a share of the sum of the percentages.  
+This method can be invoked by either the bot or an admin, in the following example it's invoked by the bot.  
 
 ```
 CALL_METHOD
