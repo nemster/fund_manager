@@ -14,7 +14,7 @@ fn test_validator_badge() -> Result<(), RuntimeError> {
         common.authorize_admin_operation(
             n,
             MIN_AUTHORIZERS + 1,
-            0u8,
+            WITHDRAW_VALIDATOR_BADGE,
             None,
             None,
             None,
@@ -82,7 +82,7 @@ fn test_deposit_no_auth() -> Result<(), RuntimeError> {
         common.authorize_admin_operation(
             n,
             MIN_AUTHORIZERS + 1,
-            0u8,
+            WITHDRAW_VALIDATOR_BADGE,
             None,
             None,
             None,
@@ -155,7 +155,7 @@ fn test_multiple_validator_badges2() -> Result<(), RuntimeError> {
         common.authorize_admin_operation(
             n,
             MIN_AUTHORIZERS + 1,
-            0u8,
+            WITHDRAW_VALIDATOR_BADGE,
             None,
             None,
             None,
@@ -208,7 +208,7 @@ fn test_deposit_wrong_badge() -> Result<(), RuntimeError> {
         common.authorize_admin_operation(
             n,
             MIN_AUTHORIZERS + 1,
-            0u8,
+            WITHDRAW_VALIDATOR_BADGE,
             None,
             None,
             None,

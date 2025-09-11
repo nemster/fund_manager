@@ -13,7 +13,7 @@ fn test_fund_manager_badge() -> Result<(), RuntimeError> {
         common.authorize_admin_operation(
             n,
             MIN_AUTHORIZERS + 1,
-            8u8,
+            WITHDRAW_FUND_MANAGER_BADGE,
             None,
             None,
             None,
@@ -81,7 +81,7 @@ fn test_deposit_no_auth() -> Result<(), RuntimeError> {
         common.authorize_admin_operation(
             n,
             MIN_AUTHORIZERS + 1,
-            8u8,
+            WITHDRAW_FUND_MANAGER_BADGE,
             None,
             None,
             None,
@@ -122,7 +122,7 @@ fn test_deposit_wrong_badge() -> Result<(), RuntimeError> {
         common.authorize_admin_operation(
             n,
             MIN_AUTHORIZERS + 1,
-            8u8,
+            WITHDRAW_FUND_MANAGER_BADGE,
             None,
             None,
             None,
@@ -167,7 +167,7 @@ fn test_divisibility() -> Result<(), RuntimeError> {
         common.authorize_admin_operation(
             n,
             MIN_AUTHORIZERS + 1,
-            8u8,
+            WITHDRAW_FUND_MANAGER_BADGE,
             None,
             None,
             None,

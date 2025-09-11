@@ -17,6 +17,21 @@ pub static A_PRICE: Decimal = dec!(2);
 pub static B_PRICE: Decimal = Decimal::ONE;
 pub static C_PRICE: Decimal = dec!("0.5");
 
+pub static WITHDRAW_VALIDATOR_BADGE: u8 = 0;
+pub static ADD_DEFI_PROTOCOL: u8 = 1;
+pub static REMOVE_DEFI_PROTOCOL: u8 = 2;
+pub static SET_DEX_COMPONENT: u8 = 3;
+pub static DECREASE_MIN_AUTHORIZERS: u8 = 4;
+pub static INCREASE_MIN_AUTHORIZERS: u8 = 5;
+pub static MINT_ADMIN_BADGE: u8 = 6;
+pub static SET_ORACLE_COMPONENT: u8 = 7;
+pub static WITHDRAW_FUND_MANAGER_BADGE: u8 = 8;
+pub static SET_WITHDRAWAL_FEE: u8 = 9;
+pub static MINT_BOT_BADGE: u8 = 10;
+pub static SET_BUYBACK_ACCOUNT: u8 = 11;
+pub static WITHDRAW_CLAIM_NFTS: u8 = 12;
+pub static MAX_OPERATION: u8 = 12;
+
 #[derive(ScryptoSbor, NonFungibleData)]
 pub struct Empty {
 }
@@ -239,7 +254,7 @@ impl Common {
             common.authorize_admin_operation(
                 n,
                 MIN_AUTHORIZERS + 1,
-                3u8,
+                SET_DEX_COMPONENT,
                 None,
                 None,
                 None,
@@ -257,7 +272,7 @@ impl Common {
             common.authorize_admin_operation(
                 n,
                 MIN_AUTHORIZERS + 1,
-                7u8,
+                SET_ORACLE_COMPONENT,
                 None,
                 None,
                 None
@@ -275,7 +290,7 @@ impl Common {
             common.authorize_admin_operation(
                 n,
                 MIN_AUTHORIZERS + 1,
-                10u8,
+                MINT_BOT_BADGE,
                 None,
                 None,
                 Some(common.account)
@@ -386,7 +401,7 @@ impl Common {
             self.authorize_admin_operation(
                 n,
                 MIN_AUTHORIZERS + 1,
-                1u8,
+                ADD_DEFI_PROTOCOL,
                 Some(protocol_name.clone()),
                 None,
                 None,

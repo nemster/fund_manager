@@ -186,7 +186,7 @@ mod dummy_validator {
 
         pub fn update_key(
             &self,
-            _key: String,
+            _key: Secp256k1PublicKey,
         ) {
         }
 
