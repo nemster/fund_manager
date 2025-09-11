@@ -28,7 +28,7 @@ pub static SET_ORACLE_COMPONENT: u8 = 7;
 pub static WITHDRAW_FUND_MANAGER_BADGE: u8 = 8;
 pub static SET_WITHDRAWAL_FEE: u8 = 9;
 pub static MINT_BOT_BADGE: u8 = 10;
-pub static SET_BUYBACK_ACCOUNT: u8 = 11;
+pub static SET_BUYBACK_FUND: u8 = 11;
 pub static WITHDRAW_CLAIM_NFTS: u8 = 12;
 pub static MAX_OPERATION: u8 = 12;
 
