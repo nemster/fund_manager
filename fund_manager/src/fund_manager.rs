@@ -1593,7 +1593,7 @@ mod fund_manager {
 
 
             // Get the value of a fund unit
-            let (fund_unit_net_value, fund_unit_gross_value) = self.fund_unit_value();
+            let (fund_unit_net_value, _) = self.fund_unit_value();
 
             // Find the DeFi protocol position to withdraw from
             let fund_unit_amount = fund_units_bucket.amount();
@@ -1679,7 +1679,7 @@ mod fund_manager {
             }
 
             // Compute the amount of fund units to burn
-            let mut fund_units_to_burn = coin_bucket_value / fund_unit_gross_value;
+            let mut fund_units_to_burn = coin_bucket_value / fund_unit_net_value;
             if fund_units_to_burn > fund_unit_amount {
                 assert!(
                     fund_units_to_burn < fund_unit_amount * (1 + ACCEPTABLE_VALUE_DIFFERENCE),
