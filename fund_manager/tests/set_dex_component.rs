@@ -46,7 +46,7 @@ fn test_no_auth() -> Result<(), RuntimeError> {
     if result.is_ok() {
         return Err(
             RuntimeError::ApplicationError(
-                PanicMessage("Autorization bypassed in set_dex_component".to_string())
+                PanicMessage("Authorization bypassed in set_dex_component".to_string())
             )
         );
     }
@@ -70,6 +70,7 @@ fn test_wrong_proof() -> Result<(), RuntimeError> {
         )?;
     }
 
+    // Wrong proof
     let proof = common.account_badge_bucket.create_proof_of_non_fungibles(
         indexset!(NonFungibleLocalId::Integer(u64::from(MIN_AUTHORIZERS + 1).into())),
         &mut common.env

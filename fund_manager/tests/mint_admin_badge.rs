@@ -61,6 +61,7 @@ fn test_incomplete_auth() -> Result<(), RuntimeError> {
 
     let mut common = Common::new().unwrap();
 
+    // Admin's account address is missing
     for n in 1..=MIN_AUTHORIZERS {
         common.authorize_admin_operation(
             n,
@@ -92,7 +93,7 @@ fn test_incomplete_auth() -> Result<(), RuntimeError> {
 }
 
 #[test]
-fn test_wrong_badge() -> Result<(), RuntimeError> {
+fn test_wrong_proof() -> Result<(), RuntimeError> {
 
     let mut common = Common::new().unwrap();
 
@@ -107,6 +108,7 @@ fn test_wrong_badge() -> Result<(), RuntimeError> {
         )?;
     }
 
+    // Wrong proof
     let proof = common.account_badge_bucket.create_proof_of_non_fungibles(
         indexset!(NonFungibleLocalId::Integer(u64::from(MIN_AUTHORIZERS + 1).into())),
         &mut common.env

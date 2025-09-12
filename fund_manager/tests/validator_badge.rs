@@ -64,7 +64,7 @@ fn test_withdraw_no_auth() -> Result<(), RuntimeError> {
         Err(RuntimeError::ApplicationError(_)) => {},
         _ => return Err(
             RuntimeError::ApplicationError(
-                PanicMessage("Autorization bypassed in withdraw_validator_badge".to_string())
+                PanicMessage("Authorization bypassed in withdraw_validator_badge".to_string())
             )
         ),
     }
@@ -126,6 +126,7 @@ fn test_multiple_validator_badges1() -> Result<(), RuntimeError> {
         &mut common.env,
     )?;
 
+    // There's already a validator badge in the component
     common.env.disable_auth_module();
     let result = common.fund_manager.deposit_validator_badge(
         validator_badge_bucket,
@@ -169,6 +170,7 @@ fn test_multiple_validator_badges2() -> Result<(), RuntimeError> {
         &mut common.env
     )?;
 
+    // Two validator badges in this bucket
     let two_validator_badges_bucket = BucketFactory::create_non_fungible_bucket(
         common.validator_owner_badge_address,
         vec![
@@ -222,6 +224,7 @@ fn test_deposit_wrong_badge() -> Result<(), RuntimeError> {
         &mut common.env
     )?;
 
+    // Wrong badge
     let mut ids = IndexSet::<NonFungibleLocalId>::new();
         ids.insert(NonFungibleLocalId::Integer(1u64.into()));
     let wrong_badge_bucket = common.account_badge_bucket.take_non_fungibles(

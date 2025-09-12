@@ -85,6 +85,7 @@ fn test_wrong_percentage() -> Result<(), RuntimeError> {
         true
     )?;
 
+    // Percentage > 100
     let mut map = HashMap::<String, u8>::new();
     map.insert(a_protocol_name, 110u8);
 

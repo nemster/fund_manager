@@ -63,7 +63,7 @@ fn test_withdraw_no_auth() -> Result<(), RuntimeError> {
         Err(RuntimeError::ApplicationError(_)) => {},
         _ => return Err(
             RuntimeError::ApplicationError(
-                PanicMessage("Autorization bypassed in withdraw_fund_manager_badge".to_string())
+                PanicMessage("Authorization bypassed in withdraw_fund_manager_badge".to_string())
             )
         ),
     }

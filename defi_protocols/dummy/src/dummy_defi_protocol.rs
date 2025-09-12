@@ -137,8 +137,9 @@ mod dummy_defi_protocol {
                     self.coin_vault.take(available_coin_amount)
                 },
                 false => {
+                    let coin_bucket = self.coin_vault.take(amount);
                     amount = Decimal::ZERO;
-                    self.coin_vault.take(amount)
+                    coin_bucket
                 },
             };
 

@@ -48,7 +48,7 @@ fn test_no_auth() -> Result<(), RuntimeError> {
     if result.is_ok() {
         return Err(
             RuntimeError::ApplicationError(
-                PanicMessage("Autorization bypassed in set_buyback_fund".to_string())
+                PanicMessage("Authorization bypassed in set_buyback_fund".to_string())
             )
         );
     }
@@ -61,6 +61,7 @@ fn test_wrong_auth1() -> Result<(), RuntimeError> {
 
     let mut common = Common::new().unwrap();
 
+    // Percentage is missing
     for n in 1..=MIN_AUTHORIZERS {
         common.authorize_admin_operation(
             n,
@@ -97,6 +98,7 @@ fn test_wrong_auth2() -> Result<(), RuntimeError> {
 
     let mut common = Common::new().unwrap();
 
+    // Buyback fund address is missing
     for n in 1..=MIN_AUTHORIZERS {
         common.authorize_admin_operation(
             n,
@@ -144,6 +146,7 @@ fn test_wrong_proof() -> Result<(), RuntimeError> {
         )?;
     }
 
+    // Wrong proof
     let proof = common.account_badge_bucket.create_proof_of_non_fungibles(
         indexset!(NonFungibleLocalId::Integer(u64::from(MIN_AUTHORIZERS + 1).into())),
         &mut common.env
@@ -185,6 +188,7 @@ fn test_wrong_percentage() -> Result<(), RuntimeError> {
 
     let proof = common.create_admin_proof(MIN_AUTHORIZERS + 1)?;
 
+    // Percentage > 100
     let result = common.fund_manager.set_buyback_fund(
         proof,
         101u8,

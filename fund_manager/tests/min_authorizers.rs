@@ -43,6 +43,8 @@ fn test_decrease_increase_min_autorizers() -> Result<(), RuntimeError> {
 }
 
 #[test]
+// if min_authorizers == NUMBER_OF_ADMINS the authorization is no longer possible, the software
+// must avoid it
 fn test_increase_too_much() -> Result<(), RuntimeError> {
 
     let mut common = Common::new().unwrap();

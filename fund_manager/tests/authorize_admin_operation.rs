@@ -73,10 +73,11 @@ fn test_non_existent_operation() -> Result<(), RuntimeError> {
 }
 
 #[test]
-fn test_wrong_badge() -> Result<(), RuntimeError> {
+fn test_wrong_proof() -> Result<(), RuntimeError> {
 
     let mut common = Common::new().unwrap();
 
+    // Wrong proof
     let proof = common.account_badge_bucket.create_proof_of_non_fungibles(
         indexset!(NonFungibleLocalId::Integer(1u64.into())),
         &mut common.env
@@ -115,6 +116,7 @@ fn test_multiple_authorizations() -> Result<(), RuntimeError> {
         None,
     )?;
 
+    // Same auth as the previous one
     let result = common.authorize_admin_operation(
         1u8,
         2u8,
@@ -134,9 +136,12 @@ fn test_multiple_authorizations() -> Result<(), RuntimeError> {
 }
 
 #[test]
+// Check that the maximum vector size (50) is respected
 fn test_vector_size() -> Result<(), RuntimeError> {
 
     let mut common = Common::new().unwrap();
+
+    let max_vector_size = 50u8;
 
     let mut authorizations: u8 = 0;
 
@@ -156,13 +161,13 @@ fn test_vector_size() -> Result<(), RuntimeError> {
                     authorizations += 1;
 
                     if result.is_err() {
-                        if authorizations <= 50 {
+                        if authorizations <= max_vector_size {
                             return Err(RuntimeError::ApplicationError(
                                 PanicMessage("Failed authorization number ".to_string() + &authorizations.to_string())
                             ));
                         }
                     } else {
-                        if authorizations > 50 {
+                        if authorizations > max_vector_size {
                             return Err(RuntimeError::ApplicationError(
                                 PanicMessage("Succeded authorization number ".to_string() + &authorizations.to_string())
                             ));
@@ -171,6 +176,41 @@ fn test_vector_size() -> Result<(), RuntimeError> {
                 }
             }
         }
+    }
+
+    Ok(())
+}
+
+#[test]
+fn test_wrong_admin() -> Result<(), RuntimeError> {
+
+    let mut common = Common::new().unwrap();
+
+    for n in 1..=MIN_AUTHORIZERS {
+        common.authorize_admin_operation(
+            n,
+            MIN_AUTHORIZERS + 1,
+            WITHDRAW_VALIDATOR_BADGE,
+            None,
+            None,
+            None,
+        )?;
+    }
+
+    // Not the authorized admin
+    let proof = common.create_admin_proof(1u8)?;
+
+    let result = common.fund_manager.withdraw_validator_badge(
+        proof,
+        &mut common.env
+    );
+
+    if result.is_ok() {
+        return Err(
+            RuntimeError::ApplicationError(
+                PanicMessage("Validator badge withdrawn by an unauthorized admin".to_string())
+            )
+        );
     }
 
     Ok(())

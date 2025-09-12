@@ -80,6 +80,7 @@ fn test_non_existing_protocol() -> Result<(), RuntimeError> {
         true
     )?;
 
+    // Different protocol name from the created one
     let result = common.fund_manager.deposit_protocol_token(
         "B".to_string(),
         common.token_bucket,

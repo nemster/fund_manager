@@ -4,15 +4,34 @@ use scrypto_test::prelude::*;
 use scrypto_test::prelude::ApplicationError::PanicMessage;
 
 #[test]
-fn test_change_dex() -> Result<(), RuntimeError> {
+fn test_withdraw_claim_nfts() -> Result<(), RuntimeError> {
 
     let mut common = Common::new().unwrap();
+
+    common.create_and_add_defi_protocol(
+        "protocol name".to_string(),
+        XRD,
+        None,
+        100u8,
+        true
+    )?;
+
+    let xrd_to_unstake = dec!(100);
+
+    common.env.disable_auth_module();
+
+    common.fund_manager.start_unlock_owner_stake_units(
+        xrd_to_unstake,
+        &mut common.env
+    )?;
+
+    let (_, claim_nft_id) = common.fund_manager.start_unstake(&mut common.env)?;
 
     for n in 1..=MIN_AUTHORIZERS {
         common.authorize_admin_operation(
             n,
             MIN_AUTHORIZERS + 1,
-            SET_ORACLE_COMPONENT,
+            WITHDRAW_CLAIM_NFTS,
             None,
             None,
             None,
@@ -21,9 +40,14 @@ fn test_change_dex() -> Result<(), RuntimeError> {
 
     let proof = common.create_admin_proof(MIN_AUTHORIZERS + 1)?;
 
-    common.fund_manager.set_oracle_component(
+    let claim_nfts_bucket = common.fund_manager.withdraw_claim_nfts(
         proof,
-        common.dex_and_oracle.into(),
+        &mut common.env
+    )?;
+
+    // Check that the claim NFT is there
+    let _ = claim_nfts_bucket.take_non_fungibles(
+        indexset!(claim_nft_id),
         &mut common.env
     )?;
 
@@ -37,16 +61,15 @@ fn test_no_auth() -> Result<(), RuntimeError> {
 
     let proof = common.create_admin_proof(MIN_AUTHORIZERS + 1)?;
 
-    let result = common.fund_manager.set_oracle_component(
+    let result = common.fund_manager.withdraw_claim_nfts(
         proof,
-        common.dex_and_oracle.into(),
         &mut common.env
     );
 
     if result.is_ok() {
         return Err(
             RuntimeError::ApplicationError(
-                PanicMessage("Authorization bypassed in set_oracle_component".to_string())
+                PanicMessage("Authorization bypassed in withdraw_claim_nfts".to_string())
             )
         );
     }
@@ -63,7 +86,7 @@ fn test_wrong_proof() -> Result<(), RuntimeError> {
         common.authorize_admin_operation(
             n,
             MIN_AUTHORIZERS + 1,
-            SET_ORACLE_COMPONENT,
+            WITHDRAW_CLAIM_NFTS,
             None,
             None,
             None,
@@ -76,16 +99,15 @@ fn test_wrong_proof() -> Result<(), RuntimeError> {
         &mut common.env
     )?;
 
-    let result = common.fund_manager.set_oracle_component(
+    let result = common.fund_manager.withdraw_claim_nfts(
         proof.into(),
-        common.dex_and_oracle.into(),
         &mut common.env
     );
 
     if result.is_ok() {
         return Err(
             RuntimeError::ApplicationError(
-                PanicMessage("Wrong proof accepted in set_oracle_component".to_string())
+                PanicMessage("Wrong proof accepted in withdraw_claim_nfts".to_string())
             )
         );
     }
