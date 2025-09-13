@@ -171,6 +171,10 @@ impl Common {
         // Create coin A, deposit 1000000 A in the dex and set its price
         let a_bucket = ResourceBuilder::new_fungible(OwnerRole::None)
             .divisibility(18)
+            .burn_roles(Some(BurnRoles {
+                burner: Some(AccessRule::AllowAll),
+                burner_updater: Some(AccessRule::DenyAll),
+            }))
             .mint_initial_supply(2000000, &mut env)?;
         dummy_dex_and_oracle.deposit(
             a_bucket.take(dec!(1000000), &mut env)?.into(),
@@ -185,6 +189,10 @@ impl Common {
         // Create coin B, deposit 1000000 B in the dex and set its price
         let b_bucket = ResourceBuilder::new_fungible(OwnerRole::None)
             .divisibility(18)
+            .burn_roles(Some(BurnRoles {
+                burner: Some(AccessRule::AllowAll),
+                burner_updater: Some(AccessRule::DenyAll),
+            }))
             .mint_initial_supply(2000000, &mut env)?;
         dummy_dex_and_oracle.deposit(
             b_bucket.take(dec!(1000000), &mut env)?.into(),
