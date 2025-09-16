@@ -97,6 +97,11 @@ LSULP/fUSD@Flux fund account: `account_tdx_2_1c8tzxu68cwpe5l3kcwvq4nwx6t55gwuzym
 LSULP/fUSD@Flux fund account badge: `c1d6237347c3839a7e36c3980acdc6d2e9443b8226dced9477758642defa`  
 LSULP/fUSD@Flux FluxWrapper component: `component_tdx_2_1cp78mauptuds2ewzc3cc4pkx4nssfc6zy3lwhh0jesfkpgf5h0davj`  
 
+CaviarnineLpWrapper package: `package_tdx_2_1pk76xscsem2xtu9zz4lt2jdzffa7xn9uka93qxjun057xmvnrvuwqz`  
+XRD/xUSDC@Caviarnine fund account: `account_tdx_2_1c85vf7gp7qrlxj26d8u7ynufqf2a877xky47ve5p7505w86eydpual`  
+XRD/xUSDC@Caviarnine fund account badge: `resource_tdx_2_1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxx4vczzk:[c1e8c4f901f007f3495a69f9e24f890255d3fbc6b12be66681f51f471f59]`  
+XRD/xUSDC@Caviarnine wrapper component: `component_tdx_2_1cre928r6rhkantm7fa66xxjs3d8n6k08eq0d2gerxdmzxz40pr8wkw`  
+
 ## FundManager
 
 ### Component intantiation
@@ -1008,6 +1013,100 @@ CALL_METHOD
     Address("component_tdx_2_1cp78mauptuds2ewzc3cc4pkx4nssfc6zy3lwhh0jesfkpgf5h0davj")
     Some(Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc"))
     false
+;
+```
+
+## CaviarnineLpWrapper
+
+### Create an account
+```
+CREATE_ACCOUNT;
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "deposit_batch"
+    Expression("ENTIRE_WORKTOP")
+;
+```
+
+### Instantiate a CaviarnineLpWrapper component and give it the control over the created account
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "withdraw_non_fungibles"
+    Address("resource_tdx_2_1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxx4vczzk")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("[c1e8c4f901f007f3495a69f9e24f890255d3fbc6b12be66681f51f471f59]"))
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_tdx_2_1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxx4vczzk")
+    Bucket("account_badge")
+;
+CALL_FUNCTION
+    Address("package_tdx_2_1pk76xscsem2xtu9zz4lt2jdzffa7xn9uka93qxjun057xmvnrvuwqz")
+    "CaviarnineLpWrapper"
+    "new"
+    Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
+    Address("resource_tdx_2_1t50uv6v747hw4d2rneh7elfppz8jf7hzjxp2q260weh76cc9qzk85r")
+    Address("resource_tdx_2_1nt3t77pdrzfpux50ykrquz3gdpjnhpn6rt0wmn6fy5lzacgeunupcf")
+    Address("account_tdx_2_1c85vf7gp7qrlxj26d8u7ynufqf2a877xky47ve5p7505w86eydpual")
+    Bucket("account_badge")
+    Address("component_tdx_2_1cq2l8q44p2kdxxaup8mh8uywwhm4nyutc9g2p0ezxmcddmc8zzl4r7")
+    Address("resource_tdx_2_1tkl7aghjp3q4x6v65vak3h326cg6332gqx9uveayyvef0cfsfsx43s")
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
+    Array<Tuple>(
+        Tuple(-2i32, Decimal("0.1")),
+        Tuple(-1i32, Decimal("0.3")),
+        Tuple(0i32, Decimal("0.6")),
+        Tuple(1i32, Decimal("0.3")),
+        Tuple(2i32, Decimal("0.1"))
+    )
+;
+```
+
+### Authorize admin #2# to create the XRD/xUSDC@Caviarnine position in the FundManager
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "create_proof_of_non_fungibles"
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
+    "authorize_admin_operation"
+    Proof("admin_proof")
+    2u8
+    1u8
+    Some("XRD/xUSDC@Caviarnine")
+    None
+    None
+;
+```
+
+### Register the created CaviarnineLpWrapper component as XRD/xUSDC@Caviarnine protocol in the FundManager
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "create_proof_of_non_fungibles"
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
+    "add_defi_protocol"
+    Proof("admin_proof")
+    "XRD/xUSDC@Caviarnine"
+    Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
+    Some(Address("resource_tdx_2_1t50uv6v747hw4d2rneh7elfppz8jf7hzjxp2q260weh76cc9qzk85r"))
+    10u8
+    Address("component_tdx_2_1cre928r6rhkantm7fa66xxjs3d8n6k08eq0d2gerxdmzxz40pr8wkw")
+    None
+    true
 ;
 ```
 
