@@ -102,6 +102,11 @@ XRD/xUSDC@Caviarnine fund account: `account_tdx_2_1c85vf7gp7qrlxj26d8u7ynufqf2a8
 XRD/xUSDC@Caviarnine fund account badge: `resource_tdx_2_1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxx4vczzk:[c1e8c4f901f007f3495a69f9e24f890255d3fbc6b12be66681f51f471f59]`  
 XRD/xUSDC@Caviarnine wrapper component: `component_tdx_2_1cre928r6rhkantm7fa66xxjs3d8n6k08eq0d2gerxdmzxz40pr8wkw`  
 
+HyperStake package: `package_tdx_2_1p4xt4s9sxfqjlcc8edtdrhpgq73cvsup03sj5pkvqxx5k9jxtuwxga`  
+HyperStake component: `component_tdx_2_1cqc6w05cle2lxgrzc5j3tagr0wk76gen90qfagfz3hhes63kx7mzyq`  
+HyperStake TwoResourcePool component: `pool_tdx_2_1chqh0rttumpf78luzhxse9rw9xljjveectmlpr9xjudp4eqpujag4h`  
+HLP: `resource_tdx_2_1thy5caqfwkfe7gdwj947v5kyk370ltsq98x080555pat3q2xpkkt42`  
+
 ## FundManager
 
 ### Component intantiation
@@ -1110,3 +1115,120 @@ CALL_METHOD
 ;
 ```
 
+## HyperStake
+
+### Instantiate a mock LsuPool component
+```
+CALL_FUNCTION
+    Address("package_tdx_2_1ph5mgvj0lde0pngm0we3dyxwzuws5kccggzunwq202ztt7u6ep0c94")
+    "LsuPool"
+    "new"
+    Decimal("869565217")
+;
+```
+
+### Instantiate a mock FeeVaults component
+```
+CALL_FUNCTION
+    Address("package_tdx_2_1ph80922e35er7073a7hs5uynntz0umw4kjpnkngpz0x9xgwsfxh6nf")
+    "FeeVaults"
+    "new"
+;
+```
+
+### Instantiate an HyperStake component
+```
+CALL_FUNCTION
+    Address("package_tdx_2_1p4xt4s9sxfqjlcc8edtdrhpgq73cvsup03sj5pkvqxx5k9jxtuwxga")
+    "HyperStake"
+    "new"
+    Decimal("1")
+    Decimal("0.985")
+    Decimal("0.001")
+    None
+;
+```
+
+### Create an account and get the owner badge
+```
+CREATE_ACCOUNT;
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "deposit_batch"
+    Expression("ENTIRE_WORKTOP")
+;
+```
+
+### Instantiate an HyperstakeWrapper component and pass it the ownership of the created account
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "withdraw_non_fungibles"
+    Address("resource_tdx_2_1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxx4vczzk")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("[c1eeaaf42f2cd81956924dedc50028fe16ff3bdc9b75a9d58ae118d52a2b]"))
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_tdx_2_1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxx4vczzk")
+    Bucket("account_badge")
+;
+CALL_FUNCTION
+    Address("package_tdx_2_1p5npveema93gu2a5luvpe7fuwjp90d2sa24vnt4lwnt38sjtnw3nkp")
+    "HyperstakeWrapper"
+    "new"
+    Address("resource_tdx_2_1t59ygltctweq749ucj702a9d6ap8pv60pxjyu05048vfzdnq9fsc2c")
+    Address("resource_tdx_2_1thy5caqfwkfe7gdwj947v5kyk370ltsq98x080555pat3q2xpkkt42")
+    Address("account_tdx_2_1c8h24ap09nvpj45jfhku2qpglct07w7und66n4v2uyvd223tqtyn8m")
+    Bucket("account_badge")
+    Address("component_tdx_2_1cqc6w05cle2lxgrzc5j3tagr0wk76gen90qfagfz3hhes63kx7mzyq")
+    Address("resource_tdx_2_1thyu69x76sulvf6agqfp5njqd3uyxxtmtrnz3v7vrzszye6yu42s77")
+    Address("resource_tdx_2_1nfkhdgruseldvkrlgu9j3vp7uyh98t6arhfl7ugcrj6pzuraynpnfs")
+;
+```
+
+### Authorize admin #2# to add a protocol named HyperStake
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "create_proof_of_non_fungibles"
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
+    "authorize_admin_operation"
+    Proof("admin_proof")
+    2u8
+    1u8
+    Some("HyperStake")
+    None
+    None
+;
+```
+
+### Register the HyperstakeWrapper component as HyperStake in the FundManager
+```
+CALL_METHOD
+    Address("account_tdx_2_128vequruas26gq3we8u7wsqdrswtydh357x98444fdg3agfy5m0y9d")
+    "create_proof_of_non_fungibles"
+    Address("resource_tdx_2_1n26ulxgxzj9yvrqt3v4slnfzaymctpmekywztxcr9qwl5lt52nyj3w")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_tdx_2_1cpdhxgf8nmvzczs9ttvaf3307lq8m4wdky66rpn4zy5qdaat0av5sg")
+    "add_defi_protocol"
+    Proof("admin_proof")
+    "HyperStake"
+    Address("resource_tdx_2_1t59ygltctweq749ucj702a9d6ap8pv60pxjyu05048vfzdnq9fsc2c")
+    Some(Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc"))
+    10u8
+    Address("component_tdx_2_1cq0dp25smzafmgkhvkynvd5fhpqycms3pjdh0d7vwc44dce8qjf4k9")
+    None
+    true
+;
+```

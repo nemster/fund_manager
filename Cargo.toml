@@ -30,6 +30,7 @@ members= [
 	"defi_protocols/flux",
 	"defi_protocols/surge",
 	"defi_protocols/caviarnine",
+	"defi_protocols/hyperstake",
 	"dex",
 	"oracle",
 ]
