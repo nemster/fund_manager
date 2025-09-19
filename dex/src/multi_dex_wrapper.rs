@@ -16,6 +16,7 @@ enum PoolType {
     OciswapPrecisionPool,
     CaviarnineShapePool,
     CaviarnineWeightedPool,
+    CaviarnineHyperStakePool,
     DefiPlazaPool,
 }
 
@@ -110,6 +111,10 @@ mod multi_dex_wrapper {
                 },
                 "caviarnine_weighted_pool" => DexPool {
                     pool_type: PoolType::CaviarnineWeightedPool,
+                    component: component,
+                },
+                "caviarnine_hyperstake_pool" => DexPool {
+                    pool_type: PoolType::CaviarnineHyperStakePool,
                     component: component,
                 },
                 _ => { Runtime::panic("Unrecognized pool type".to_string()); },
@@ -208,9 +213,10 @@ mod multi_dex_wrapper {
                                 );
                         },
 
-                        // Both Caviarnine Shape pools and Ociswap precision pools always return a
-                        // couple of buckets
+                        // Both Caviarnine Shape pools, hyperstake pools and Ociswap precision
+                        // pools always return a couple of buckets
                         PoolType::OciswapPrecisionPool |
+                            PoolType::CaviarnineHyperStakePool |
                             PoolType::CaviarnineShapePool => {
                             (output_bucket, input_bucket) = dex_pool.component
                                 .call::<(Bucket, ), (Bucket, Bucket)>(
