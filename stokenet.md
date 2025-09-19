@@ -782,8 +782,8 @@ CALL_METHOD
     "add_defi_protocol"
     Proof("admin_proof")
     "WEFT/XRD@Ociswap"
-    Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc")
-    Some(Address("resource_tdx_2_1t4pttehu02el4jrqdua56rgt8057hx2fnzm63yv6wt5p5nj6ant0kq"))
+    Address("resource_tdx_2_1t4pttehu02el4jrqdua56rgt8057hx2fnzm63yv6wt5p5nj6ant0kq")
+    Some(Address("resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc"))
     20u8
     Address("component_tdx_2_1czny8yle3nazx3lkruduafzjgf650a4vvpkjz5vgqjva372g2wdqzz")
     None
