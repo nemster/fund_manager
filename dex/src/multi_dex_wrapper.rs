@@ -14,7 +14,8 @@ struct CoinsCouple {
 enum PoolType {
     OciswapPool2,
     OciswapPrecisionPool,
-    CaviarninePool,
+    CaviarnineShapePool,
+    CaviarnineWeightedPool,
     DefiPlazaPool,
 }
 
@@ -99,12 +100,16 @@ mod multi_dex_wrapper {
                     pool_type: PoolType::OciswapPrecisionPool,
                     component: component,
                 },
-                "caviarnine_pool" => DexPool {
-                    pool_type: PoolType::CaviarninePool,
+                "caviarnine_shape_pool" => DexPool {
+                    pool_type: PoolType::CaviarnineShapePool,
                     component: component,
                 },
                 "defiplaza_pool" => DexPool {
                     pool_type: PoolType::DefiPlazaPool,
+                    component: component,
+                },
+                "caviarnine_weighted_pool" => DexPool {
+                    pool_type: PoolType::CaviarnineWeightedPool,
                     component: component,
                 },
                 _ => { Runtime::panic("Unrecognized pool type".to_string()); },
@@ -183,8 +188,10 @@ mod multi_dex_wrapper {
                 Some(ref dex_pool) => {
                     match dex_pool.pool_type {
 
-                        // Ociswap latest pools only returns the output_bucket, no remainings
-                        PoolType::OciswapPool2 => {
+                        // Ociswap V2 pools and Caviarnine weighted pools only return the
+                        // output_bucket, no remainings
+                        PoolType::OciswapPool2 |
+                            PoolType::CaviarnineWeightedPool => {
                             output_bucket = dex_pool.component
                                 .call::<(Bucket, ), Bucket>(
                                     "swap",
@@ -192,7 +199,7 @@ mod multi_dex_wrapper {
                                 );
                         },
 
-                        // DefiPlaza return the output bucket and eventually a remainings bucket
+                        // DefiPlaza pools return the output bucket and eventually a remainings bucket
                         PoolType::DefiPlazaPool => {
                             (output_bucket, remainings_bucket) = dex_pool.component
                                 .call::<(Bucket, ), (Bucket, Option<Bucket>)>(
@@ -201,9 +208,10 @@ mod multi_dex_wrapper {
                                 );
                         },
 
-                        // Both Caviarnine pools and Ociswap precision pools always return a couple
-                        // of buckets
-                        _ => {
+                        // Both Caviarnine Shape pools and Ociswap precision pools always return a
+                        // couple of buckets
+                        PoolType::OciswapPrecisionPool |
+                            PoolType::CaviarnineShapePool => {
                             (output_bucket, input_bucket) = dex_pool.component
                                 .call::<(Bucket, ), (Bucket, Bucket)>(
                                     "swap",
