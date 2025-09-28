@@ -46,7 +46,8 @@ pub enum OracleType {
 }
 
 // This blueprint wraps some of the available price oracles on Radix (Ociswap and Morpher) and
-// defines two very simple additional oracles (FixedPrice and FixedMultiplier).
+// defines two very simple additional oracles (FixedPrice and FixedMultiplier); it can also query
+// the LsuPool for the LSULP/XRD price.
 //
 // FixedPrice always return the same number (e.g. xUSDC -> 1) while FixedMultiplier returns the
 // price of another coin multiplied by a fixed factor (e.g. LSULP -> 1.15 XRD).
@@ -77,6 +78,14 @@ mod multi_oracle_wrapper {
         }
     }
 
+    extern_blueprint! {
+        "package_tdx_2_1ph5mgvj0lde0pngm0we3dyxwzuws5kccggzunwq202ztt7u6ep0c94",
+        LsuPool {
+            fn get_dex_valuation_xrd(&self) -> Decimal;
+        }
+    }
+
+
     enable_method_auth! {
         roles {
             fund_manager => updatable_by: [];
@@ -97,11 +106,13 @@ mod multi_oracle_wrapper {
     }
 
     struct MultiOracleWrapper {
-        oracles: KeyValueStore<ResourceAddress, OracleType>,    // Infromation about he oracle to
+        oracles: KeyValueStore<ResourceAddress, OracleType>,    // Information about he oracle to
                                                                 // use for each coin
         morpher_component: Global<MorpherOracle>,   // Morpher component address
         observation_time: u64,                      // Ociswap's oracle observation time
         price_lifetime: u64,                        // Morpher oracle information lifetime
+        lsulp: ResourceAddress,
+        lsu_pool: Global<LsuPool>,
     }
 
     impl MultiOracleWrapper {
@@ -114,6 +125,8 @@ mod multi_oracle_wrapper {
             morpher_component: Global<MorpherOracle>,   // Morpher component address
             observation_time: u64,                      // Ociswap oracle observation time
             price_lifetime: u64,                        // Morpher oracle information lifetime
+            lsulp: ResourceAddress,                     // LSULP resource address
+            lsu_pool: Global<LsuPool>,                // LSULP pool component address
         ) -> Global<MultiOracleWrapper> {
 
             // Instantiate and globalize the component
@@ -122,6 +135,8 @@ mod multi_oracle_wrapper {
                 morpher_component: morpher_component,
                 observation_time: observation_time,
                 price_lifetime: price_lifetime,
+                lsulp: lsulp,
+                lsu_pool: lsu_pool,
             }
                 .instantiate()
                 .prepare_to_globalize(OwnerRole::Fixed(rule!(require(admin_badge_address))))
@@ -248,16 +263,39 @@ mod multi_oracle_wrapper {
         ) -> Decimal {
 
             // Find the oracle to use for the given coin
-            let mut oracle = self.oracles.get_mut(&coin_address).expect("Coin not found").clone();
+            let mut oracle = match self.oracles.get(&coin_address) {
 
-            // Use the found oracle type
-            match oracle {
-                OracleType::FixedPrice { price } => price,
+                // If the coin is LSULP and there's no available oracle, ask the LsuPool
+                None => if coin_address == self.lsulp {
+                    let dex_valuation_xrd = self.lsu_pool.get_dex_valuation_xrd();
+                    let lsulp_supply =
+                        ResourceManager::from_address(self.lsulp).total_supply().unwrap();
+                    return dex_valuation_xrd / lsulp_supply;
+                } else {
+                    Runtime::panic("No oracle available".to_string());
+                },
 
-                OracleType::FixedMultiplier { multiplier, reference_coin } =>
-                    multiplier * self.get_price(reference_coin, morpher_data),
+                Some(oracle) => oracle.clone(),
+            };
 
-                OracleType::Ociswap { component, reference_coin, reverse, ref mut last_update_time, ref mut last_price } => {
+            // Use the found oracle to get the price
+            let (price, oracle_updated) = match oracle {
+
+                OracleType::FixedPrice { price } => {
+                    return price;
+                },
+
+                OracleType::FixedMultiplier { multiplier, reference_coin } => {
+                    return multiplier * self.get_price(reference_coin, morpher_data);
+                },
+
+                OracleType::Ociswap {
+                    component,
+                    reference_coin,
+                    reverse,
+                    ref mut last_update_time,
+                    ref mut last_price
+                } => {
 
                     // Get current time
                     let now: u64 = Clock::current_time_rounded_to_seconds()
@@ -289,12 +327,14 @@ mod multi_oracle_wrapper {
                     if self.observation_time / 2 <= self.price_lifetime {
                         *last_update_time = now - self.observation_time / 2;
                         *last_price = price;
-                    }
 
-                    price
+                        (price, true)
+                    } else {
+                        return price;
+                    }
                 },
 
-                OracleType::Morpher { market_id, ref mut last_update_time, ref mut last_price } => {
+                OracleType::Morpher { ref market_id, ref mut last_update_time, ref mut last_price } => {
 
                     // Get current time
                     let now: u64 = Clock::current_time_rounded_to_seconds()
@@ -331,9 +371,16 @@ mod multi_oracle_wrapper {
                     *last_update_time = price_message.created_at;
                     *last_price = price_message.price;
 
-                    price_message.price
+                    (price_message.price, true)
                 },
+            };
+
+            // If the oracle object has been modified, insert it back in the KVS
+            if oracle_updated {
+                self.oracles.insert(coin_address, oracle);
             }
+
+            price
         }
     }
 }
