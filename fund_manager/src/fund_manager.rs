@@ -446,6 +446,7 @@ mod fund_manager {
                             )
                         ),
                         require(admin_badge_address),
+                        require(bot_badge_resource_manager.address())
                     ])
                 ),
                 rule!(require(fund_manager_badge_address)),             // storer_updater_role
