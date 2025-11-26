@@ -28,7 +28,7 @@ static NON_FUNGIBLES_PER_WITHDRAW: u32 = 100;
 mod surge_wrapper {
 
     extern_blueprint! {
-        "package_tdx_2_1phyewk3m6aeycqmmmk5easfmk7mg97sn20p2yvd499rj5y5xrxzdcc",
+        "package_rdx1p49tnhkqx20x9e3qndpu068x3xewksxq2ssrrvmyt8urquqdcah0nm",
         Exchange {
             fn add_liquidity(&self, payment: Bucket) -> Bucket;
             fn remove_liquidity(&self, lp_token: Bucket) -> Bucket;
@@ -37,7 +37,7 @@ mod surge_wrapper {
     }
 
     extern_blueprint! {
-        "package_tdx_2_1phjqhqsp286r7nc4e47kyeyus7drxwcf3965u693fzpe0krcpmt6hu",
+        "package_rdx1ph54xt0dgxumjznwd33qyd9g3c7czmtfj4qcdrxnmwz633xputxulj",
         TokenWrapper {
             fn wrap(&mut self, child_token: Bucket) -> Bucket;
             fn unwrap(&mut self, parent_token: Bucket, child_resource: ResourceAddress) -> Bucket;

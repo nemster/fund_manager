@@ -22,7 +22,7 @@ struct LiquidityReceipt {
 mod caviarnine_lp_wrapper {
 
     extern_blueprint! {
-        "package_tdx_2_1p4g09xagmsyql6r65a70c94n6qgvk6ffx9q0z5g3vnqmrsr96627vg",
+        "package_rdx1p4r9rkp0cq67wmlve544zgy0l45mswn6h798qdqm47x4762h383wa3",
         QuantaSwap {
             fn add_liquidity(
                 &mut self,

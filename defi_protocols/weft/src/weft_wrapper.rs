@@ -22,7 +22,7 @@ mod weft_wrapper {
 
     // Main WEFT Finance blueprint
     extern_blueprint! {
-        "package_tdx_2_1pk02rsgrec4dv3fhtw2ltmy3g80325wlusl76tjwhjpj48qtk8c80n",
+        "package_rdx1p5uwrs3heg37n5zyzate8xtc440l2x3l59ywya4jl2na6em25qjnfj",
         LendingPool {
             fn deposit(&mut self, buckets: Vec<Bucket>) -> Vec<Bucket>;
             fn withdraw(&mut self, buckets: Vec<Bucket>) -> Vec<Bucket>;
@@ -32,7 +32,7 @@ mod weft_wrapper {
 
     // Blueprint that handles WEFT Finance incentives
     extern_blueprint! {
-        "package_tdx_2_1p4qm5qpdj4tt3fr6cl0cqsmmk4h8ag2y0450zzvvzaqyyrf6a9e4p7",
+        "package_rdx1pk5ra34f2txkq82wtuang704x5cqxspet64rqx74hze8tfzar9eahk",
         WeftTokenClaimer {
             fn claim(&mut self, claim_type: u8, amount: Decimal, proof: Proof) -> Bucket;
         }

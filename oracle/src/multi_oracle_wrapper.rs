@@ -115,14 +115,14 @@ struct PoolDetails {
 mod multi_oracle_wrapper {
 
     extern_blueprint! {
-        "package_tdx_2_1p58lk25kdv698akrx3tq9dgejmns57530uyyvh8tuan2k3lcetcxhj",
+        "package_rdx1p5xvvessslnpnfam9weyzldlxr7q06gen2t3d3waa0x760g7jwxhkd",
         MorpherOracle {
             fn check_price_input(&mut self, message: String, signature: String) -> PriceMessage;
         }
     }
 
     extern_blueprint! {
-        "package_tdx_2_1ph5mgvj0lde0pngm0we3dyxwzuws5kccggzunwq202ztt7u6ep0c94",
+        "package_rdx1pkfrtmv980h85c9nvhxa7c9y0z4vxzt25c3gdzywz5l52g5t0hdeey",
         LsuPool {
             fn get_dex_valuation_xrd(&self) -> Decimal;
         }

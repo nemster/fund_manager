@@ -13,7 +13,7 @@ static NON_FUNGIBLES_PER_WITHDRAW: u32 = 100;
 mod hyperstake_wrapper {
 
     extern_blueprint! {
-        "package_tdx_2_1p4xt4s9sxfqjlcc8edtdrhpgq73cvsup03sj5pkvqxx5k9jxtuwxga",
+        "package_rdx1pk7qn3gm9g7s6ss93xgvmytua5awt7ujqkpmcse93zn4dvfel7s8rh",
         HyperStake {
             fn add_liquidity(&mut self, token_x: Bucket, token_y: Bucket) -> (Bucket, Option<Bucket>);
             fn remove_liquidity(&mut self, token_lp: Bucket) -> (Bucket, Bucket);

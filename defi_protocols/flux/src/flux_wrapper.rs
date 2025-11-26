@@ -32,7 +32,7 @@ static NON_FUNGIBLES_PER_WITHDRAW: u32 = 100;
 mod flux_wrapper {
 
     extern_blueprint! {
-        "package_tdx_2_1p42tqez7qegpjgz26vnfjrc92vcuqx7ghwezu49qlh785qjz40y9t5",
+        "package_rdx1p55x9av2cu7re0f2l044ednmznhj4rnm8y9cnpzstx4pemdglxu696",
         StabilityPools {
             fn contribute_to_pool(
                 &mut self,

@@ -33,7 +33,7 @@ static NON_FUNGIBLES_PER_WITHDRAW: u32 = 100;
 mod root_finance_wrapper {
 
     extern_blueprint! {
-        "package_tdx_2_1pk07dw324vwcvr75dk2p39yjt33jc6ndvd5zmn8p5k66a6zwjshdnr",
+        "package_rdx1phwak2lr7nczzl6rxzvtnjwszmvxqycp9h8pckcmy6uwdcucnjeu0p",
         LendingMarket {
             fn remove_collateral(
                 &mut self,
