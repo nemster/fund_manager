@@ -81,6 +81,7 @@ mod caviarnine_lp_wrapper {
             // Single admin operations
             deposit_account_badge => restrict_to: [admin];
             whithdraw_unexpected_coin => restrict_to: [admin];
+            update_shape => restrict_to: [admin];
 
             // Public method
             get_coin_amounts => PUBLIC;
@@ -237,6 +238,14 @@ mod caviarnine_lp_wrapper {
                 ),
             }
         }
+
+        pub fn update_shape(
+            &mut self,
+            shape: Vec<ShapePosition>
+        ) {
+            self.shape = shape;
+        }
+
     }
 
     impl DefiProtocolInterfaceTrait for CaviarnineLpWrapper {
@@ -382,6 +391,7 @@ mod caviarnine_lp_wrapper {
                 for shape_position in &self.shape {
                     if shape_position.0 == 0i32 {
                         share_in_active_tick = shape_position.1;
+                        break;
                     }
                 }
 
@@ -389,21 +399,27 @@ mod caviarnine_lp_wrapper {
                     x_amount_in_active_bin,
                     y_amount_in_active_bin
                 ) = match y_amount * price > x_amount {
-                    true => {
-                        let x_amount_in_active_bin = x_amount * share_in_active_tick;
+                    true => match x_amount == Decimal::ZERO {
+                        true => (Decimal::ZERO, y_amount * share_in_active_tick),
+                        false => {
+                            let x_amount_in_active_bin = x_amount * share_in_active_tick;
 
-                        (
-                            x_amount_in_active_bin,
-                            x_amount_in_active_bin * price
-                        )
+                            (
+                                x_amount_in_active_bin,
+                                x_amount_in_active_bin * price
+                            )
+                        },
                     },
-                    false => {
-                        let y_amount_in_active_bin = y_amount * share_in_active_tick;
+                    false => match y_amount == Decimal::ZERO {
+                        true => (x_amount * share_in_active_tick, Decimal::ZERO),
+                        false => {
+                            let y_amount_in_active_bin = y_amount * share_in_active_tick;
 
-                        (
-                            y_amount_in_active_bin * price,
-                            y_amount_in_active_bin
-                        )
+                            (
+                                y_amount_in_active_bin * price,
+                                y_amount_in_active_bin
+                            )
+                        },
                     },
                 };
 
@@ -419,6 +435,9 @@ mod caviarnine_lp_wrapper {
                         positions.push((
                             active_tick - shape_position.0.unsigned_abs(),
                             Decimal::ZERO,
+
+                            // The division is safe because if share_in_active_tick is 1 there must
+                            // be no other ticks in the shape
                             y_amount * shape_position.1 / (Decimal::ONE - share_in_active_tick)
                         ));
                     }

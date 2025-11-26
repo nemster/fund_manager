@@ -5,7 +5,7 @@ use scrypto_interface::*;
 // How many NFTs can be withdrawn in a single operation
 static NON_FUNGIBLES_PER_WITHDRAW: u32 = 100;
 
-// This blueprint is a wrapper to deposit and withdraw liquidity from the most reent Ociswap pools
+// This blueprint is a wrapper to deposit and withdraw liquidity from the most recent Ociswap pools
 // using the DefiProtocolInterface interface.
 // Here "coin" and "other coin" are the two coins managed by the pool; those are also called "x"
 // and "y" as Ociswap does.
@@ -473,7 +473,7 @@ mod ociswap_lp_pool2_wrapper {
         ) {
             let token_amount = self.account.balance(self.lp_token_address);
             let mut x_amount = self.account.balance(self.x_address);
-            let mut y_amount = self.account.balance(self.x_address);
+            let mut y_amount = self.account.balance(self.y_address);
 
             if token_amount > Decimal::ZERO {
                 let amounts = self.pool.get_redemption_value(token_amount);

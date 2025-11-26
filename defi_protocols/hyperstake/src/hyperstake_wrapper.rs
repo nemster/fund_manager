@@ -19,6 +19,7 @@ mod hyperstake_wrapper {
             fn remove_liquidity(&mut self, token_lp: Bucket) -> (Bucket, Bucket);
             fn swap(&mut self, input_token: Bucket) -> (Bucket, Bucket);
             fn get_redemption_value(&self, amount: Decimal) -> IndexMap<ResourceAddress, Decimal>;
+            fn get_oracle_price(&self) -> Decimal;
         }
     }
 
@@ -294,36 +295,40 @@ mod hyperstake_wrapper {
                     other_coin.as_ref().unwrap().resource_address() == XRD,
                     "Wrong other coin provided"
                 );
-            } 
-    
-            let coin_amount = coin.amount();
+            } else {
+                other_coin = Some(FungibleBucket::new(XRD));
+            }
+   
+            // Compute the XRD/LSULP coin ratio desired by the pool (it is not dependant on price
+            // for this pool)
+            let amounts = self.component_address.get_redemption_value(Decimal::ONE);
+            let xrd_lsulp_ratio = *amounts.get(&XRD).unwrap() /
+                *amounts.get(&self.lsulp_address).unwrap();
 
-            // If no XRD bucket have been provided, swap half of the LSULP for XRD
-            if other_coin.is_none() {
+            // Get the LSULP price in XRD
+            let lsulp_price = self.component_address.get_oracle_price();
+
+            let lsulp_amount = coin.amount();
+            let xrd_amount = other_coin.as_ref().unwrap().amount();
+
+            // If no XRD have been provided, swap part of the LSULP for XRD
+            if xrd_amount == Decimal::ZERO {
+
                 let (xrd, lsulp) = self.component_address.swap(
-                    coin.take(coin_amount / 2).into()
-                );
-
-                other_coin = Some(FungibleBucket(xrd));
-                coin.put(FungibleBucket(lsulp));
-
-            // Do the same if the XRD bucket has been provided but is empty
-            } else if other_coin.as_ref().unwrap().amount() == Decimal::ZERO {
-                let (xrd, lsulp) = self.component_address.swap(
-                    coin.take(coin_amount / 2).into()
+                    coin.take(xrd_lsulp_ratio * lsulp_amount / (xrd_lsulp_ratio + lsulp_price))
+                        .into()
                 );
 
                 other_coin.as_mut().unwrap().put(FungibleBucket(xrd));
                 coin.put(FungibleBucket(lsulp));
-            }
 
-            // If no LSULP have been provided, swap half of the XRD for LSULP
-            if coin_amount == Decimal::ZERO {
-
-                let other_coin_amount = other_coin.as_ref().unwrap().amount();
+            // If no LSULP have been provided, swap part of the XRD for LSULP
+            } else if lsulp_amount == Decimal::ZERO {
 
                 let (lsulp, xrd) = self.component_address.swap(
-                    other_coin.as_mut().unwrap().take(other_coin_amount / 2).into()
+                    other_coin.as_mut().unwrap().take(
+                        lsulp_price * xrd_amount / (xrd_lsulp_ratio + lsulp_price)
+                    ).into()
                 );
 
                 coin.put(FungibleBucket(lsulp));
