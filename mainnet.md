@@ -11,11 +11,15 @@
 - Fund unit: `resource_rdx1th38dkeamzmlhvv264tjk54gtvd2yn3x26kpa6c5ukspmyqd8rtgru`
 - Fund bot badge: `resource_rdx1t5s0qfsgsfhlf8q3sutt8j500dk2el4p3dk4psxyagqxdfwuhrm56k`
 
-- MultiOracleWrapper package: `package_rdx1pkkghh9jc7t32r82emylcsl0fvtrq2g2x524t9gyf29ltv6xz25m7n`
-- MultiOracleWrapper component: `component_rdx1cp7ts7a6ty2kq8kcj3zcg93z7jga8a4hyvfmx5070dtgsuzk2rmygh`
+- MultiOracleWrapper package: `package_rdx1p5ardguj2pr93sccv73russradn52fu80xsf3j4hdffgl0h8zttua6`
+- MultiOracleWrapper component: `component_rdx1cqssup6xpx6uwn8wrawljtlq0qncvl0fara2xvrjmee2vajpmqq7jn`
 
 - MultiDexWrapper package: `package_rdx1p43r79f9rr64hs6vk977uqxx6ds3c0xx23lmzw7yzlfttngd60vwgc`
 - MultiDexWrapper component: `component_rdx1cq03dl2atp9jl7w0vkc46udgsukkr56n2tmugsw3g5vklkttq88xh7`
+
+- WeftWrapper package: `package_rdx1ph2cg8m2l79dddyupun4kgmjvxzg3xytjd5cmn5celg77xe2gqyy4x`
+- LSULP@Weft component: `component_rdx1cp63nqsx3lsny4hpvd0lyma7802cepykxwrswehd0kdnpxas8hrcw0`
+- hUSDC@Weft component: `component_rdx1cpeeae00r9dl7zqjwsut40rgp97rq4yk8c8q70pz96575uflgcvnnp`
 
 ## FundManager
 
@@ -46,7 +50,7 @@ CALL_METHOD
 ### Instantiate the MultiOracleWrapper component
 ```
 CALL_FUNCTION
-    Address("package_rdx1pkkghh9jc7t32r82emylcsl0fvtrq2g2x524t9gyf29ltv6xz25m7n")
+    Address("package_rdx1p5ardguj2pr93sccv73russradn52fu80xsf3j4hdffgl0h8zttua6")
     "MultiOracleWrapper"
     "new"
     Address("resource_rdx1th9ul6k57hmfx8u26lgfhz8c7wl4j9jk7knl4crjzec0t8fdgl7sgf")
@@ -98,7 +102,7 @@ CALL_METHOD
     Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
     "set_oracle_component"
     Proof("admin_proof")
-    Address("component_rdx1cp7ts7a6ty2kq8kcj3zcg93z7jga8a4hyvfmx5070dtgsuzk2rmygh")
+    Address("component_rdx1cqssup6xpx6uwn8wrawljtlq0qncvl0fara2xvrjmee2vajpmqq7jn")
 ;
 ```
 
@@ -111,7 +115,7 @@ CALL_METHOD
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_rdx1cp7ts7a6ty2kq8kcj3zcg93z7jga8a4hyvfmx5070dtgsuzk2rmygh")
+    Address("component_rdx1cqssup6xpx6uwn8wrawljtlq0qncvl0fara2xvrjmee2vajpmqq7jn")
     "add_oracle"
     Address("resource_rdx1t4upr78guuapv5ept7d7ptekk9mqhy605zgms33mcszen8l9fac8vf")
     Some(Decimal("1"))
@@ -132,7 +136,7 @@ CALL_METHOD
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_rdx1cp7ts7a6ty2kq8kcj3zcg93z7jga8a4hyvfmx5070dtgsuzk2rmygh")
+    Address("component_rdx1cqssup6xpx6uwn8wrawljtlq0qncvl0fara2xvrjmee2vajpmqq7jn")
     "add_oracle"
     Address("resource_rdx1thrvr3xfs2tarm2dl9emvs26vjqxu6mqvfgvqjne940jv0lnrrg7rw")
     Some(Decimal("1"))
@@ -153,7 +157,7 @@ CALL_METHOD
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_rdx1cp7ts7a6ty2kq8kcj3zcg93z7jga8a4hyvfmx5070dtgsuzk2rmygh")
+    Address("component_rdx1cqssup6xpx6uwn8wrawljtlq0qncvl0fara2xvrjmee2vajpmqq7jn")
     "add_oracle"
     Address("resource_rdx1thxj9m87sn5cc9ehgp9qxp6vzeqxtce90xm5cp33373tclyp4et4gv")
     Some(Decimal("1"))
@@ -174,7 +178,7 @@ CALL_METHOD
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_rdx1cp7ts7a6ty2kq8kcj3zcg93z7jga8a4hyvfmx5070dtgsuzk2rmygh")
+    Address("component_rdx1cqssup6xpx6uwn8wrawljtlq0qncvl0fara2xvrjmee2vajpmqq7jn")
     "add_oracle"
     Address("resource_rdx1t49wa75gve8ehvejr760g3pgvkawsgsgq0u3kh7vevzk0g0cnsmscq")
     Some(Decimal("1"))
@@ -195,7 +199,7 @@ CALL_METHOD
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_rdx1cp7ts7a6ty2kq8kcj3zcg93z7jga8a4hyvfmx5070dtgsuzk2rmygh")
+    Address("component_rdx1cqssup6xpx6uwn8wrawljtlq0qncvl0fara2xvrjmee2vajpmqq7jn")
     "add_oracle"
     Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd")
     None
@@ -216,7 +220,7 @@ CALL_METHOD
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_rdx1cp7ts7a6ty2kq8kcj3zcg93z7jga8a4hyvfmx5070dtgsuzk2rmygh")
+    Address("component_rdx1cqssup6xpx6uwn8wrawljtlq0qncvl0fara2xvrjmee2vajpmqq7jn")
     "add_oracle"
     Address("resource_rdx1t58kkcqdz0mavfz98m98qh9m4jexyl9tacsvlhns6yxs4r6hrm5re5")
     None
@@ -237,7 +241,7 @@ CALL_METHOD
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_rdx1cp7ts7a6ty2kq8kcj3zcg93z7jga8a4hyvfmx5070dtgsuzk2rmygh")
+    Address("component_rdx1cqssup6xpx6uwn8wrawljtlq0qncvl0fara2xvrjmee2vajpmqq7jn")
     "add_oracle"
     Address("resource_rdx1th09yvv7tgsrv708ffsgqjjf2mhy84mscmj5jwu4g670fh3e5zgef0")
     None
@@ -258,13 +262,13 @@ CALL_METHOD
     Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
 ;
 CALL_METHOD
-    Address("component_rdx1cp7ts7a6ty2kq8kcj3zcg93z7jga8a4hyvfmx5070dtgsuzk2rmygh")
+    Address("component_rdx1cqssup6xpx6uwn8wrawljtlq0qncvl0fara2xvrjmee2vajpmqq7jn")
     "add_oracle"
     Address("resource_rdx1tk3fxrz75ghllrqhyq8e574rkf4lsq2x5a0vegxwlh3defv225cth3")
     None
     None
     Some(Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd"))
-    Some(Address("component_rdx1crvtvnr02f5fl49jvap4rndlepfsgta455wcyteacr7dtfgzvqqw6n"))
+    Some(Address("component_rdx1crpq83nf76ea2dkkjxfwr426qvmpu9pyakh58ay3eyswe4ps5yn3q2"))
     Some(false)
     None
 ;
@@ -458,4 +462,183 @@ CALL_METHOD
 ;
 ```
 
+### Tell the MultiDexWrapper component to use a DefiPlaza pool for xUSDT <-> XRD swaps
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1cq03dl2atp9jl7w0vkc46udgsukkr56n2tmugsw3g5vklkttq88xh7")
+    "add_pool"
+    Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd")
+    Address("resource_rdx1thrvr3xfs2tarm2dl9emvs26vjqxu6mqvfgvqjne940jv0lnrrg7rw")
+    "defiplaza_pool"
+    Address("component_rdx1crhrzxe6x35hwx3wmnnw0g8qs84p2hle6ud7n2q4ffzp0udluqm8hj")
+    true
+;
+```
 
+## WeftWrapper
+
+### Instantiate the LSULP@Weft wrapper component
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "withdraw_non_fungibles"
+    Address("resource_rdx1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxxaccwnr")
+    Array<NonFungibleLocalId>(
+        NonFungibleLocalId("[514a369114b937c5b429d43daff7af43163f14f9c897776c0ff4bdf50746]")
+    )
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_rdx1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxxaccwnr")
+    Bucket("account_badge")
+;
+CALL_FUNCTION
+    Address("package_rdx1ph2cg8m2l79dddyupun4kgmjvxzg3xytjd5cmn5celg77xe2gqyy4x")
+    "WeftWrapper"
+    "new"
+    Address("resource_rdx1thksg5ng70g9mmy9ne7wz0sc7auzrrwy7fmgcxzel2gvp8pj0xxfmf")
+    Address("resource_rdx1t4p82pms6r20k87rscms728tekujacd0sgxyysk7yvl0jgf56gvjuc")
+    Address("resource_rdx1tk3fxrz75ghllrqhyq8e574rkf4lsq2x5a0vegxwlh3defv225cth3")
+    Address("resource_rdx1nt3vrt8xtdal6gn7ddv0zfzvxpqylxyfmr97setz8r3amhhk90yqmg")
+    Address("component_rdx1czmr02yl4da709ceftnm9dnmag7rthu0tu78wmtsn5us9j02d9d0xn")
+    Address("component_rdx1crys4t0nvfjzwvsa2pt3zgsmaaaqql8squkannhzcfh36j6u993dnz")
+    Address("resource_rdx1th9ul6k57hmfx8u26lgfhz8c7wl4j9jk7knl4crjzec0t8fdgl7sgf")
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Address("resource_rdx1t5s0qfsgsfhlf8q3sutt8j500dk2el4p3dk4psxyagqxdfwuhrm56k")
+    Address("account_rdx1299rdyg5hymutdpf6s76laa0gvtr798eezthwmq07j7l2p6x82qcp6")
+    Bucket("account_badge")
+;
+```
+
+### Authorize admin #2# to add the LSULP@Weft wrapper component in the FundManager
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "authorize_admin_operation"
+    Proof("admin_proof")
+    2u8
+    1u8
+    Some("LSULP@Weft")
+    None
+    None
+;
+```
+
+### Add the LSULP@Weft wrapper component in the FundManager
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "add_defi_protocol"
+    Proof("admin_proof")
+    "LSULP@Weft"
+    Address("resource_rdx1thksg5ng70g9mmy9ne7wz0sc7auzrrwy7fmgcxzel2gvp8pj0xxfmf")
+    Some(Address("resource_rdx1tk3fxrz75ghllrqhyq8e574rkf4lsq2x5a0vegxwlh3defv225cth3"))
+    1u8
+    Address("component_rdx1cp63nqsx3lsny4hpvd0lyma7802cepykxwrswehd0kdnpxas8hrcw0")
+    None
+    false
+;
+```
+
+### Instantiate the hUSDC@Weft wrapper component
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "withdraw_non_fungibles"
+    Address("resource_rdx1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxxaccwnr")
+    Array<NonFungibleLocalId>(
+        NonFungibleLocalId("[51928e3acaacba594c0d4316c144a55c679bc677c75a0084b1ea398162f6]")
+    )
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_rdx1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxxaccwnr")
+    Bucket("account_badge")
+;
+CALL_FUNCTION
+    Address("package_rdx1ph2cg8m2l79dddyupun4kgmjvxzg3xytjd5cmn5celg77xe2gqyy4x")
+    "WeftWrapper"
+    "new"
+    Address("resource_rdx1thxj9m87sn5cc9ehgp9qxp6vzeqxtce90xm5cp33373tclyp4et4gv")
+    Address("resource_rdx1t4kxe9n00hgzng02myj6a320qxcma2umxj8ygr795cc5m0hsj3p4l2")
+    Address("resource_rdx1tk3fxrz75ghllrqhyq8e574rkf4lsq2x5a0vegxwlh3defv225cth3")
+    Address("resource_rdx1nt3vrt8xtdal6gn7ddv0zfzvxpqylxyfmr97setz8r3amhhk90yqmg")
+    Address("component_rdx1czmr02yl4da709ceftnm9dnmag7rthu0tu78wmtsn5us9j02d9d0xn")
+    Address("component_rdx1crys4t0nvfjzwvsa2pt3zgsmaaaqql8squkannhzcfh36j6u993dnz")
+    Address("resource_rdx1th9ul6k57hmfx8u26lgfhz8c7wl4j9jk7knl4crjzec0t8fdgl7sgf")
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Address("resource_rdx1t5s0qfsgsfhlf8q3sutt8j500dk2el4p3dk4psxyagqxdfwuhrm56k")
+    Address("account_rdx12xfguwk24ja9jnqdgvtvz399t3neh3nhcadqpp93aguczchkq5nsqh")
+    Bucket("account_badge")
+; 
+```
+
+### Authorize admin #2# to add the hUSDC@Weft wrapper component in the FundManager
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "authorize_admin_operation"
+    Proof("admin_proof")
+    2u8
+    1u8
+    Some("hUSDC@Weft")
+    None
+    None
+;
+```
+
+### Add the hUSDC@Weft wrapper component in the FundManager
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "add_defi_protocol"
+    Proof("admin_proof")
+    "hUSDC@Weft"
+    Address("resource_rdx1thxj9m87sn5cc9ehgp9qxp6vzeqxtce90xm5cp33373tclyp4et4gv")
+    Some(Address("resource_rdx1tk3fxrz75ghllrqhyq8e574rkf4lsq2x5a0vegxwlh3defv225cth3"))
+    1u8
+    Address("component_rdx1cpeeae00r9dl7zqjwsut40rgp97rq4yk8c8q70pz96575uflgcvnnp")
+    None
+    false
+;
+```
