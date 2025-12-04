@@ -325,7 +325,7 @@ CALL_METHOD
 ;
 ```
 
-### Tell the MultiDexWrapper component to use an Ociswap pool for hUSDC <-> XRD swaps
+### Tell the MultiDexWrapper component to use a DefiPlaza pool for hUSDC <-> XRD swaps
 ```
 CALL_METHOD
     Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
