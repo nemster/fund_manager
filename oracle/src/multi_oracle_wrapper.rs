@@ -43,6 +43,8 @@ pub enum OracleType {
         last_update_time: u64,              // Last time the price cache was updated
         last_price: Decimal,                // Price cache
     },
+    LsuPool {
+    },
 }
 
 // This blueprint wraps some of the available price oracles on Radix (Ociswap and Morpher) and
@@ -267,10 +269,7 @@ mod multi_oracle_wrapper {
 
                 // If the coin is LSULP and there's no available oracle, ask the LsuPool
                 None => if coin_address == self.lsulp {
-                    let dex_valuation_xrd = self.lsu_pool.get_dex_valuation_xrd();
-                    let lsulp_supply =
-                        ResourceManager::from_address(self.lsulp).total_supply().unwrap();
-                    return dex_valuation_xrd / lsulp_supply;
+                    OracleType::LsuPool {}
                 } else {
                     Runtime::panic("No oracle available".to_string());
                 },
@@ -280,6 +279,13 @@ mod multi_oracle_wrapper {
 
             // Use the found oracle to get the price
             let (price, oracle_updated) = match oracle {
+
+                OracleType::LsuPool {} => {
+                    let dex_valuation_xrd = self.lsu_pool.get_dex_valuation_xrd();
+                    let lsulp_supply =
+                        ResourceManager::from_address(self.lsulp).total_supply().unwrap();
+                    return self.get_price(XRD, morpher_data) * dex_valuation_xrd / lsulp_supply;
+                },
 
                 OracleType::FixedPrice { price } => {
                     return price;
