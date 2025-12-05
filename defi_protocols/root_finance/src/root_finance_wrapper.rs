@@ -55,7 +55,7 @@ mod root_finance_wrapper {
     }
 
     extern_blueprint! {
-        "package_tdx_2_1p456y0v4nvgvdv0v6at8zt7zwlkye59xvpzde5jjgje7wqplvumjp0",
+        "package_rdx1pkhvtjl4m968u3jlxmehnszxwn0kzake49wvfw4x45lu43eqm96c80",
         SingleResourcePool {
             fn get_pool_unit_ratio(&self) -> PreciseDecimal;
         }
