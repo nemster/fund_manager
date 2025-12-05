@@ -21,6 +21,10 @@
 - LSULP@Weft component: `component_rdx1cp63nqsx3lsny4hpvd0lyma7802cepykxwrswehd0kdnpxas8hrcw0`
 - hUSDC@Weft component: `component_rdx1cpeeae00r9dl7zqjwsut40rgp97rq4yk8c8q70pz96575uflgcvnnp`
 
+- RootFinanceWrapper package: `package_rdx1pk8mhrq8dmutr6dx38pxhmraq6u4puvmfgrm6xgzpxl3eja55ck8fu`
+- xUSDC@Root component: `component_rdx1cpenxg6c7h2nssq5uwnpgmqgxp5f3jlft69y7gg4z0nnrfz40w3aek`
+- xUSDT@Root component: `component_rdx1cruf4e7a063dm8w94nttsea3e9pdfa90h2pec6djw9zk6fh32y2k2k`
+
 ## FundManager
 
 ### Instantiate the FundManager component
@@ -641,4 +645,158 @@ CALL_METHOD
     None
     false
 ;
+```
+
+## RootFinanceWrapper
+
+### Instantiate the xUSDC@Root component
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "withdraw_non_fungibles"
+    Address("resource_rdx1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxxaccwnr")
+    Array<NonFungibleLocalId>(
+        NonFungibleLocalId("[51ad355add7fad1f2013ab1b4f994428b20ef62d9337917200a088c5272b]")
+    )
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_rdx1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxxaccwnr")
+    Bucket("account_badge")
+;
+CALL_FUNCTION
+    Address("package_rdx1pk8mhrq8dmutr6dx38pxhmraq6u4puvmfgrm6xgzpxl3eja55ck8fu")
+    "RootFinanceWrapper"
+    "new"
+    Address("resource_rdx1t4upr78guuapv5ept7d7ptekk9mqhy605zgms33mcszen8l9fac8vf")
+    Address("resource_rdx1ngekvyag42r0xkhy2ds08fcl7f2ncgc0g74yg6wpeeyc4vtj03sa9f")
+    Address("account_rdx12xkn2kka07k37gqn4vd5lx2y9zeqaa3djvmezusq5zyv2fetw723gs")
+    Bucket("account_badge")
+    Address("component_rdx1crwusgp2uy9qkzje9cqj6pdpx84y94ss8pe7vehge3dg54evu29wtq")
+    Address("resource_rdx1th9ul6k57hmfx8u26lgfhz8c7wl4j9jk7knl4crjzec0t8fdgl7sgf")
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+;
+```
+
+### Authorize admin #2# to add the xUSDC@Root component in the FundManager
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "authorize_admin_operation"
+    Proof("admin_proof")
+    2u8
+    1u8
+    Some("xUSDC@Root")
+    None
+    None
+;
+```
+
+### Add the xUSDC@Root component in the FundManager
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "add_defi_protocol"
+    Proof("admin_proof")
+    "xUSDC@Root"
+    Address("resource_rdx1t4upr78guuapv5ept7d7ptekk9mqhy605zgms33mcszen8l9fac8vf")
+    None
+    1u8
+    Address("component_rdx1cpenxg6c7h2nssq5uwnpgmqgxp5f3jlft69y7gg4z0nnrfz40w3aek")
+    None
+    false
+;
+```
+
+### Instantiate the xUSDT@Root component
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "withdraw_non_fungibles"
+    Address("resource_rdx1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxxaccwnr")
+    Array<NonFungibleLocalId>(
+        NonFungibleLocalId("[51bfce9d6d17187fb32102f09d838f19afb0daa263fc7071cb71cab9724b]")
+    )
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_rdx1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxxaccwnr")
+    Bucket("account_badge")
+;
+CALL_FUNCTION
+    Address("package_rdx1pk8mhrq8dmutr6dx38pxhmraq6u4puvmfgrm6xgzpxl3eja55ck8fu")
+    "RootFinanceWrapper"
+    "new"
+    Address("resource_rdx1thrvr3xfs2tarm2dl9emvs26vjqxu6mqvfgvqjne940jv0lnrrg7rw")
+    Address("resource_rdx1ngekvyag42r0xkhy2ds08fcl7f2ncgc0g74yg6wpeeyc4vtj03sa9f")
+    Address("account_rdx12xlua8tdzuv8lvepqtcfmqu0rxhmpk4zv078quwtw89tjujtmtmxud")
+    Bucket("account_badge")
+    Address("component_rdx1crwusgp2uy9qkzje9cqj6pdpx84y94ss8pe7vehge3dg54evu29wtq")
+    Address("resource_rdx1th9ul6k57hmfx8u26lgfhz8c7wl4j9jk7knl4crjzec0t8fdgl7sgf")
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+;
+```
+
+### Authorize admin #2# to add the xUSDT@Root component in the FundManager
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "authorize_admin_operation"
+    Proof("admin_proof")
+    2u8
+    1u8
+    Some("xUSDT@Root")
+    None
+    None
+;
+```
+
+### Add the xUSDT@Root component in the FundManager
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
+; 
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+; 
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "add_defi_protocol"
+    Proof("admin_proof")
+    "xUSDT@Root"
+    Address("resource_rdx1thrvr3xfs2tarm2dl9emvs26vjqxu6mqvfgvqjne940jv0lnrrg7rw")
+    None
+    1u8
+    Address("component_rdx1cruf4e7a063dm8w94nttsea3e9pdfa90h2pec6djw9zk6fh32y2k2k")
+    None
+    false
+; 
 ```
