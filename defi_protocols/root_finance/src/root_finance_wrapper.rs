@@ -54,6 +54,13 @@ mod root_finance_wrapper {
         }
     }
 
+    extern_blueprint! {
+        "package_tdx_2_1p456y0v4nvgvdv0v6at8zt7zwlkye59xvpzde5jjgje7wqplvumjp0",
+        SingleResourcePool {
+            fn get_pool_unit_ratio(&self) -> PreciseDecimal;
+        }
+    }
+
     enable_method_auth! {
         roles {
             fund_manager => updatable_by: [];
@@ -84,6 +91,7 @@ mod root_finance_wrapper {
         account: Global<Account>, // The account to hold the Root receipt and eventual incentives
         account_badge_vault: NonFungibleVault,      // Badge to manage the Account
         component_address: Global<LendingMarket>,   // Root Finance component
+        pool_address: Global<SingleResourcePool>,   // The pool used by the Root component
     }
 
     impl RootFinanceWrapper {
@@ -95,6 +103,7 @@ mod root_finance_wrapper {
             account: Global<Account>,                   // The account to hold the Root receipt
             account_badge: NonFungibleBucket,           // Badge to manage the Account
             component_address: Global<LendingMarket>,   // Root finance component
+            pool_address: Global<SingleResourcePool>,   // The pool used by the Root component
             fund_manager_badge_address: ResourceAddress,    // God's badge
             admin_badge_address: ResourceAddress,       // Admins' badge
         ) -> Global<RootFinanceWrapper> {
@@ -106,6 +115,7 @@ mod root_finance_wrapper {
                 account: account,
                 account_badge_vault: NonFungibleVault::with_bucket(account_badge),
                 component_address: component_address,
+                pool_address: pool_address,
             }
                 .instantiate()
                 .prepare_to_globalize(OwnerRole::Fixed(rule!(require(admin_badge_address))))
@@ -338,7 +348,7 @@ mod root_finance_wrapper {
         // Get coins out of the Root Finance component
         fn withdraw_coin(
             &mut self,
-            mut amount: Decimal,                                // Coin amount to withdraw
+            amount: Decimal,                                // Coin amount to withdraw
             _other_coin_to_coin_price_ratio: Option<Decimal>,   // Not used
         ) -> (
             FungibleBucket,         // Coin bucket
@@ -346,6 +356,10 @@ mod root_finance_wrapper {
             Decimal,                // Remaining coin amount
             Option<Decimal>         // None
         ) {
+            let pool_unit_ratio = self.pool_address.get_pool_unit_ratio();
+
+            let mut pool_unit_amount = amount * pool_unit_ratio;
+
             // If there's no Root receipt, there are no invested coins
             if self.account.balance(self.token_address) == Decimal::ZERO {
                 return (
@@ -363,13 +377,11 @@ mod root_finance_wrapper {
             let non_fungible_data = self.root_receipt_non_fungible_data();
             let available_amount = non_fungible_data.collaterals.get_index(0)
                 .expect("No coins in this Root receipt")
-                .1
-                .checked_truncate(RoundingMode::ToNegativeInfinity)
-                .unwrap();
+                .1;
 
             // It's not possible to withdraw more than the whole available amount
-            if amount > available_amount {
-                amount = available_amount;
+            if pool_unit_amount > *available_amount {
+                pool_unit_amount = *available_amount;
             }
 
             // Get back the coins from the Root component
@@ -377,17 +389,20 @@ mod root_finance_wrapper {
                 proof.into(),
                 vec![(
                     self.coin_address,
-                    amount,
+                    pool_unit_amount.checked_truncate(RoundingMode::ToZero).unwrap(),
                     false
                 )]
             )
                 .pop()
                 .unwrap();
 
+            let remaining_coin_amount = ((*available_amount - pool_unit_amount) / pool_unit_ratio)
+                .checked_truncate(RoundingMode::ToZero).unwrap();
+
             (
                 FungibleBucket(coin_bucket),
                 None,
-                available_amount - amount,
+                remaining_coin_amount,
                 None
             )
         }
@@ -418,14 +433,19 @@ mod root_finance_wrapper {
                 0 => (Decimal::ZERO, None),
 
                 1 => {
-                    let (address, amount) = non_fungible_data.collaterals.get_index(0).unwrap();
+                    let (address, &(mut amount)) = non_fungible_data.collaterals.get_index(0).unwrap();
     
                     assert!(
                         *address == self.coin_address,
                         "The Root receipt contains a different coin from the one managed by this wrapper"
                     );
 
-                    (amount.checked_truncate(RoundingMode::ToNegativeInfinity).unwrap(), None)
+                    amount /= self.pool_address.get_pool_unit_ratio();
+
+                    (
+                        amount.checked_truncate(RoundingMode::ToNegativeInfinity).unwrap(),
+                        None
+                    )
                 },
 
                 _ => Runtime::panic("Multiple coins in the Root receipt".to_string()),
