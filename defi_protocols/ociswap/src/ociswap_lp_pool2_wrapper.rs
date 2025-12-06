@@ -14,7 +14,7 @@ static NON_FUNGIBLES_PER_WITHDRAW: u32 = 100;
 mod ociswap_lp_pool2_wrapper {
 
     extern_blueprint! {
-        "package_rdx1pkl8tdw43xqx64etxwdf8rjtvptqurq4c3fky0kaj6vwa0zrkfmcmc",
+        "package_rdx1phyk2tszvfhz2ukht6pkg3f3q3ww3fsuwku4uyyzctslpfp6dqksqq",
         Pool {
             fn add_liquidity(
                 &mut self,

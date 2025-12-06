@@ -25,6 +25,9 @@
 - xUSDC@Root component: `component_rdx1cz3qgfjwa4alts2m74k9wf0ecsh4n6fj6kwuafxwku7fm43vmvjlaf`
 - xUSDT@Root component: `component_rdx1crjy22rvz83ujqxydwrajldxy33he68namweljeprx5sk75c0cppyd`
 
+- OciswapLpPool2Wrapper package: `package_rdx1pkw7natk0488kjuw77zypmulz2lg0stt3056e290j0j5mmv44r9828`
+- fUSD/XRD@Ociswap component: `component_rdx1cplxt80h3t24k8dfwhetlkd3gr4nmluqzz028kgz90uufj936xretr`
+
 ## FundManager
 
 ### Instantiate the FundManager component
@@ -236,7 +239,7 @@ CALL_METHOD
 ;
 ```
 
-### Tell the MultiOracleWrapper component that the price of hETC must be asked to the XRD/hETH pool
+### Tell the MultiOracleWrapper component that the price of hETH must be asked to the XRD/hETH pool
 ```
 CALL_METHOD
     Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
@@ -801,4 +804,83 @@ CALL_METHOD
     None
     false
 ; 
+```
+
+## OciswapLpPool2Wrapper
+
+### Instantiate the fUSD/XRD@Ociswap component
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "withdraw_non_fungibles"
+    Address("resource_rdx1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxxaccwnr")
+    Array<NonFungibleLocalId>(
+        NonFungibleLocalId("[51066a1f80acd7291bceb9e9102da760d721002bea2cefb586684951b177]")
+    )
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_rdx1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxxaccwnr")
+    Bucket("account_badge")
+;
+CALL_FUNCTION
+    Address("package_rdx1pkw7natk0488kjuw77zypmulz2lg0stt3056e290j0j5mmv44r9828")
+    "OciswapLpPool2Wrapper"
+    "new"
+    Address("resource_rdx1t49wa75gve8ehvejr760g3pgvkawsgsgq0u3kh7vevzk0g0cnsmscq")
+    Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd")
+    Address("resource_rdx1tkc32nfsvwnt7ysq2sdgyq6w2g4s69w86yzk8zwegf7pcvya905ctv")
+    Address("account_rdx12yrx58uq4ntjjx7wh853qtd8vrtjzqptagkwldvxdpy4rvth2ysphs")
+    Bucket("account_badge")
+    Address("component_rdx1cpmacy5gwzswse56jprvlfhrpnt3mplswupu7qtq8pdz2hywy5uaqd")
+    Address("resource_rdx1th9ul6k57hmfx8u26lgfhz8c7wl4j9jk7knl4crjzec0t8fdgl7sgf")
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+;
+```
+
+### Authorize admin #2# to add the fUSD/XRD@Ociswap component in the FundManager
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "authorize_admin_operation"
+    Proof("admin_proof")
+    2u8
+    1u8
+    Some("fUSD/XRD@Ociswap")
+    None
+    None
+;
+```
+
+### Add the fUSD/XRD@Ociswap component in the FundManager
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "add_defi_protocol"
+    Proof("admin_proof")
+    "fUSD/XRD@Ociswap"
+    Address("resource_rdx1t49wa75gve8ehvejr760g3pgvkawsgsgq0u3kh7vevzk0g0cnsmscq")
+    Some(Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd"))
+    1u8
+    Address("component_rdx1cplxt80h3t24k8dfwhetlkd3gr4nmluqzz028kgz90uufj936xretr")
+    None
+    true
+;
 ```
