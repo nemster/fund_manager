@@ -19,14 +19,23 @@
 
 - WeftWrapper package: `package_rdx1ph2cg8m2l79dddyupun4kgmjvxzg3xytjd5cmn5celg77xe2gqyy4x`
 - LSULP@Weft component: `component_rdx1cp63nqsx3lsny4hpvd0lyma7802cepykxwrswehd0kdnpxas8hrcw0`
+- LSULP@Weft account: `account_rdx1299rdyg5hymutdpf6s76laa0gvtr798eezthwmq07j7l2p6x82qcp6`
 - hUSDC@Weft component: `component_rdx1cpeeae00r9dl7zqjwsut40rgp97rq4yk8c8q70pz96575uflgcvnnp`
+- hUSDC@Weft account: `account_rdx12xfguwk24ja9jnqdgvtvz399t3neh3nhcadqpp93aguczchkq5nsqh`
 
 - RootFinanceWrapper package: `package_rdx1ph4k5tzazsanc536a4swcsh2sqeft2wquvuc5tf3vr8vdutzk04wy3`
 - xUSDC@Root component: `component_rdx1cz3qgfjwa4alts2m74k9wf0ecsh4n6fj6kwuafxwku7fm43vmvjlaf`
+- xUSDC@Root account: `account_rdx12xkn2kka07k37gqn4vd5lx2y9zeqaa3djvmezusq5zyv2fetw723gs`
 - xUSDT@Root component: `component_rdx1crjy22rvz83ujqxydwrajldxy33he68namweljeprx5sk75c0cppyd`
+- xUSDT@Root account: `account_rdx12xlua8tdzuv8lvepqtcfmqu0rxhmpk4zv078quwtw89tjujtmtmxud`
 
 - OciswapLpPool2Wrapper package: `package_rdx1pkw7natk0488kjuw77zypmulz2lg0stt3056e290j0j5mmv44r9828`
 - fUSD/XRD@Ociswap component: `component_rdx1cplxt80h3t24k8dfwhetlkd3gr4nmluqzz028kgz90uufj936xretr`
+- fUSD/XRD@Ociswap account: `account_rdx12yrx58uq4ntjjx7wh853qtd8vrtjzqptagkwldvxdpy4rvth2ysphs`
+
+- CaviarnineLpWrapper package: `package_rdx1p48tlgrksqhx3yghxjr66h2dgz3gqrtvj4t5kt0e7yqux84a8uzurg`
+- fUSD/xUSDC@Caviarnine component: `component_rdx1crkl95v8ccvpx3wz8yd9qvkdl063hfwfqtzy2rqrumsg6rrrp732cz`
+- fUSD/xUSDC@Caviarnine account: `account_rdx12x95s98uyexfcgq8s5r63xzups4hsjx8a7nyrsxm60wxk3dqg5u2js`
 
 ## FundManager
 
@@ -880,6 +889,88 @@ CALL_METHOD
     Some(Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd"))
     1u8
     Address("component_rdx1cplxt80h3t24k8dfwhetlkd3gr4nmluqzz028kgz90uufj936xretr")
+    None
+    true
+;
+```
+
+## CaviarnineLpWrapper
+
+### Instantiate the fUSD/xUSDC@Caviarnine component
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "withdraw_non_fungibles"
+    Address("resource_rdx1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxxaccwnr")
+    Array<NonFungibleLocalId>(
+        NonFungibleLocalId("[518b4814fc264c9c20078507a8985c0c2b7848c7efa641c0dbd3dc6b45a0]")
+    )
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_rdx1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxxaccwnr")
+    Bucket("account_badge")
+;
+CALL_FUNCTION
+    Address("package_rdx1p48tlgrksqhx3yghxjr66h2dgz3gqrtvj4t5kt0e7yqux84a8uzurg")
+    "CaviarnineLpWrapper"
+    "new"
+    Address("resource_rdx1t49wa75gve8ehvejr760g3pgvkawsgsgq0u3kh7vevzk0g0cnsmscq")
+    Address("resource_rdx1t4upr78guuapv5ept7d7ptekk9mqhy605zgms33mcszen8l9fac8vf")
+    Address("resource_rdx1ng2m9cn34czt73x0zjjxhzrpddt5kr6juyfyxrk4uc4gudhy2nkyxy")
+    Address("account_rdx12x95s98uyexfcgq8s5r63xzups4hsjx8a7nyrsxm60wxk3dqg5u2js")
+    Bucket("account_badge")
+    Address("component_rdx1cqmx9aqpr36anp960xes8f4wp7skc6pya6k9ra2jtlmlv24qslmwxf")
+    Address("resource_rdx1th9ul6k57hmfx8u26lgfhz8c7wl4j9jk7knl4crjzec0t8fdgl7sgf")
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<Tuple>(
+        Tuple(0i32, Decimal("1"))
+    )
+;
+```
+
+## Authorize admin #2# to add the fUSD/xUSDC@Caviarnine component in the FundManager
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "authorize_admin_operation"
+    Proof("admin_proof")
+    2u8
+    1u8
+    Some("fUSD/xUSDC@Caviarnine")
+    None
+    None
+;
+```
+
+### Add the fUSD/xUSDC@Caviarnine component in the FundManager
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "add_defi_protocol"
+    Proof("admin_proof")
+    "fUSD/xUSDC@Caviarnine"
+    Address("resource_rdx1t49wa75gve8ehvejr760g3pgvkawsgsgq0u3kh7vevzk0g0cnsmscq")
+    Some(Address("resource_rdx1t4upr78guuapv5ept7d7ptekk9mqhy605zgms33mcszen8l9fac8vf"))
+    1u8
+    Address("component_rdx1crkl95v8ccvpx3wz8yd9qvkdl063hfwfqtzy2rqrumsg6rrrp732cz")
     None
     true
 ;
