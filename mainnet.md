@@ -45,6 +45,10 @@
 - xUSDC@Surge component: `component_rdx1czascaqverqn397t4rug07pj89t7vmjue69hvc3lcdc9yatud5s7fh`
 - xUSDC@Surge account: `account_rdx12x7tcdyquxjl74nx6mk75ysdsw4ry6x4efgy8f3rg3u3fl0dyar6us`
 
+- Hyperstake package: `package_rdx1p4pprwwyq0vxz6zh7fj4584tugpcu96vcrkh6ru62fn39a66yzw8zy`
+- LSULP/XRD@Hyperstake component: `component_rdx1crne2830a2t3dsxp75p5g2nkkfu7k9ra2dz72v9cpu4xghl8g0jn4g`
+- LSULP/XRD@Hyperstake account: `account_rdx1289rpqu3j9clcxtmw57elg3vv57emyaqdscnada8sp5jpsd9ahgz5r`
+
 ## FundManager
 
 ### Instantiate the FundManager component
@@ -1140,5 +1144,83 @@ CALL_METHOD
     None
     false
 ;
+```
+
+## Hyperstake
+
+### Instantiate the LSULP/XRD@Hyperstake component
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "withdraw_non_fungibles"
+    Address("resource_rdx1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxxaccwnr")
+    Array<NonFungibleLocalId>(
+        NonFungibleLocalId("[51ca3083919171fc197b753d9fa22c653d9d93a06c313eb7a7806920c1a5]")
+    )
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_rdx1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxxaccwnr")
+    Bucket("account_badge")
+;
+CALL_FUNCTION
+    Address("package_rdx1p4pprwwyq0vxz6zh7fj4584tugpcu96vcrkh6ru62fn39a66yzw8zy")
+    "HyperstakeWrapper"
+    "new"
+    Address("resource_rdx1thksg5ng70g9mmy9ne7wz0sc7auzrrwy7fmgcxzel2gvp8pj0xxfmf")
+    Address("resource_rdx1th0f0khh9g8hwa0qtxsarmq8y7yeekjnh4n74494d5zf4k5vw8qv6m")
+    Address("account_rdx1289rpqu3j9clcxtmw57elg3vv57emyaqdscnada8sp5jpsd9ahgz5r")
+    Bucket("account_badge")
+    Address("component_rdx1cpz0zcyyl2fvtc5wdvfjjl3w0mjcydm4fefymudladklf6rn5gdwtf")
+    Address("resource_rdx1th9ul6k57hmfx8u26lgfhz8c7wl4j9jk7knl4crjzec0t8fdgl7sgf")
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+;
+```
+
+## Authorize admin #2# to add the LSULP/XRD@Hyperstake component in the FundManager
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "authorize_admin_operation"
+    Proof("admin_proof")
+    2u8
+    1u8
+    Some("LSULP/XRD@Hyperstake")
+    None
+    None
+;
+```
+
+### Add the LSULP/XRD@Hyperstake component in the FundManager
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
+; 
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+; 
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "add_defi_protocol"
+    Proof("admin_proof")
+    "LSULP/XRD@Hyperstake"
+    Address("resource_rdx1thksg5ng70g9mmy9ne7wz0sc7auzrrwy7fmgcxzel2gvp8pj0xxfmf")
+    Some(Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd"))
+    1u8
+    Address("component_rdx1crne2830a2t3dsxp75p5g2nkkfu7k9ra2dz72v9cpu4xghl8g0jn4g")
+    None
+    true
+; 
 ```
 
