@@ -38,8 +38,12 @@
 - fUSD/xUSDC@Caviarnine account: `account_rdx12x95s98uyexfcgq8s5r63xzups4hsjx8a7nyrsxm60wxk3dqg5u2js`
 
 - FluxWrapper package: `package_rdx1pk09n7x6vuf4ynywa7eps2fjqvhtrtukm0zmg9jfm7xmrdec0mxksf`
-- fUSD/LSULP@Flux component: `component_rdx1crgwrzxppp6w95y5m6vygkujyzt3273kq4y4v4x7wq9d8v8u5l7wsl`
+- fUSD/LSULP@Flux component: `component_rdx1crgwrzxppp6w95y5m6vygkujyzt3273kq4y4v4x7wq9d8v8u5l7wsl` (not tested)
 - fUSD/LSULP@Flux account: `account_rdx12xxp5gh9kxyhz8w83499ag53ptzhxykjp4ak8c46p5nwjw5xc37ctl`
+
+- SurgeWrapper package: `package_rdx1p5066w4vddkvq9dcd0tpmwngpktx3zzy07v42h6w4qyp4j6tty0n34`
+- xUSDC@Surge component: `component_rdx1czascaqverqn397t4rug07pj89t7vmjue69hvc3lcdc9yatud5s7fh`
+- xUSDC@Surge account: `account_rdx12x7tcdyquxjl74nx6mk75ysdsw4ry6x4efgy8f3rg3u3fl0dyar6us`
 
 ## FundManager
 
@@ -1054,6 +1058,85 @@ CALL_METHOD
     Some(Address("resource_rdx1thksg5ng70g9mmy9ne7wz0sc7auzrrwy7fmgcxzel2gvp8pj0xxfmf"))
     1u8
     Address("component_rdx1crgwrzxppp6w95y5m6vygkujyzt3273kq4y4v4x7wq9d8v8u5l7wsl")
+    None
+    false
+;
+```
+
+## SurgeWrapper
+
+### Instantiate the xUSDC@Surge component
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "withdraw_non_fungibles"
+    Address("resource_rdx1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxxaccwnr")
+    Array<NonFungibleLocalId>(
+        NonFungibleLocalId("[51bcbc3480e1a5ff5666d6edea120d83aa3268d5ca5043a623447914fded]")
+    )
+;
+TAKE_ALL_FROM_WORKTOP
+    Address("resource_rdx1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxxaccwnr")
+    Bucket("account_badge")
+;
+CALL_FUNCTION
+    Address("package_rdx1p5066w4vddkvq9dcd0tpmwngpktx3zzy07v42h6w4qyp4j6tty0n34")
+    "SurgeWrapper"
+    "new"
+    Address("resource_rdx1t4upr78guuapv5ept7d7ptekk9mqhy605zgms33mcszen8l9fac8vf")
+    Address("resource_rdx1t48x0z68dm6z422wxyctj5wvnt2nh95lvmly65vxzywdkd24zypl5d")
+    Address("account_rdx12x7tcdyquxjl74nx6mk75ysdsw4ry6x4efgy8f3rg3u3fl0dyar6us")
+    Bucket("account_badge")
+    Address("component_rdx1cz5dduz6flgsmx7frc0854nk545s69nryvgq0y02r2mlm3tsryk6xx")
+    Address("component_rdx1czqcwcqyv69y9s6xfk443250ruragewa0vj06u5ke04elcu9kae92n")
+    Address("resource_rdx1th9ul6k57hmfx8u26lgfhz8c7wl4j9jk7knl4crjzec0t8fdgl7sgf")
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+;
+```
+
+## Authorize admin #2# to add the xUSDC@Surge component in the FundManager
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "authorize_admin_operation"
+    Proof("admin_proof")
+    2u8
+    1u8
+    Some("xUSDC@Surge")
+    None
+    None
+;
+```
+
+### Add the xUSDC@Surge component in the FundManager
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "add_defi_protocol"
+    Proof("admin_proof")
+    "xUSDC@Surge"
+    Address("resource_rdx1t4upr78guuapv5ept7d7ptekk9mqhy605zgms33mcszen8l9fac8vf")
+    None
+    1u8
+    Address("component_rdx1czascaqverqn397t4rug07pj89t7vmjue69hvc3lcdc9yatud5s7fh")
     None
     false
 ;

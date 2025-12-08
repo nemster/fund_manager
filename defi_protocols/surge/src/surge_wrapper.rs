@@ -37,8 +37,8 @@ mod surge_wrapper {
     }
 
     extern_blueprint! {
-        "package_rdx1ph54xt0dgxumjznwd33qyd9g3c7czmtfj4qcdrxnmwz633xputxulj",
-        TokenWrapper {
+        "package_rdx1pkkemj9zdlkc2qaugztpgupwq2lpm5wmxmfpddmpxhqfynjux99a7j",
+        TokenWrapper2 {
             fn wrap(&mut self, child_token: Bucket) -> Bucket;
             fn unwrap(&mut self, parent_token: Bucket, child_resource: ResourceAddress) -> Bucket;
         }
@@ -72,7 +72,7 @@ mod surge_wrapper {
         account: Global<Account>,           // The account to hold the tokens
         account_badge_vault: NonFungibleVault,  // Badge to manage the Account
         exchange_component: Global<Exchange>,       // Surge main component
-        wrapper_component: Global<TokenWrapper>,    // Surge additional component to wrap/unwrap
+        wrapper_component: Global<TokenWrapper2>,    // Surge additional component to wrap/unwrap
                                                     // coins
     }
 
@@ -85,7 +85,7 @@ mod surge_wrapper {
             account: Global<Account>,       // The account to hold the tokens
             account_badge_bucket: NonFungibleBucket,    // Badge to manage the Account
             exchange_component: Global<Exchange>,       // Surge main component
-            wrapper_component: Global<TokenWrapper>,    // Surge additional component
+            wrapper_component: Global<TokenWrapper2>,    // Surge additional component
             fund_manager_badge_address: ResourceAddress,    // God's badge
             admin_badge_address: ResourceAddress,       // Admins' badge
         ) -> Global<SurgeWrapper> {
