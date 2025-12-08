@@ -346,7 +346,7 @@ mod surge_wrapper {
                 let pool_details = self.exchange_component.get_pool_details();
 
                 (
-                    pool_details.base_tokens_amount * (token_amount / pool_details.lp_supply),
+                    token_amount * pool_details.lp_price,
                     None
                 )
             }
