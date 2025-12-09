@@ -51,7 +51,12 @@ pub enum OracleType {
     OneResourcePoolUnit {
         pool: Global<OneResourcePool>,
         reference_coin: ResourceAddress,
-    }
+    },
+    TwoResourcePoolUnit {
+        pool: Global<TwoResourcePool>,
+        last_update_time: u64,              // Last time the price cache was updated
+        last_price: Decimal,                // Price cache
+    },
 }
 
 #[derive(ScryptoSbor, ScryptoEvent)]
@@ -222,6 +227,7 @@ mod multi_oracle_wrapper {
             morpher_market_id: Option<String>,  // Market id for the Morpher oracle
             validator: Option<Global<Validator>>,
             one_resource_pool: Option<Global<OneResourcePool>>,
+            two_resource_pool: Option<Global<TwoResourcePool>>,
         ) {
             // Add a FixedPrice oracle
             if fixed_price.is_some() {
@@ -280,6 +286,16 @@ mod multi_oracle_wrapper {
                     OracleType::OneResourcePoolUnit {
                         pool: one_resource_pool.unwrap(),
                         reference_coin: reference_coin.unwrap(),
+                    }
+                );
+
+            } else if two_resource_pool.is_some() {
+                self.oracles.insert(
+                    coin_address,
+                    OracleType::TwoResourcePoolUnit {
+                        pool: two_resource_pool.unwrap(),
+                        last_update_time: 0u64,
+                        last_price: Decimal::ONE,
                     }
                 );
 
@@ -480,6 +496,35 @@ mod multi_oracle_wrapper {
                     );
 
                     return price;
+                },
+
+                OracleType::TwoResourcePoolUnit { ref pool, ref mut last_update_time, ref mut last_price } => {
+                    // Get current time
+                    let now: u64 = Clock::current_time_rounded_to_seconds()
+                        .seconds_since_unix_epoch.try_into().unwrap();
+
+                    // If the cached value is still valid, return it
+                    if *last_update_time + self.price_lifetime >= now {
+                        return *last_price;
+                    }
+
+                    let mut price = Decimal::ZERO;
+                    for (coin, amount) in pool.get_redemption_value(Decimal::ONE).iter() {
+                        price += self.get_price(*coin, morpher_data.clone()) * *amount;
+                    }
+
+                    // Update cache
+                    *last_update_time = now;
+                    *last_price = price;
+
+                    Runtime::emit_event(
+                        PriceUpdated {
+                            coin: coin_address,
+                            price: price,
+                        }
+                    );
+
+                    (price, true)
                 },
             };
 
