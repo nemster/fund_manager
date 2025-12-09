@@ -45,6 +45,9 @@ pub enum OracleType {
     },
     LsuPool {
     },
+    Lsu {
+        validator: Global<Validator>,
+    },
 }
 
 #[derive(ScryptoSbor, ScryptoEvent)]
@@ -213,6 +216,7 @@ mod multi_oracle_wrapper {
             ociswap_component: Option<Global<AnyComponent>>,    // Ociswap pool
             ociswap_reverse: Option<bool>,      // Whether to reverse Ociswap oracle price
             morpher_market_id: Option<String>,  // Market id for the Morpher oracle
+            validator: Option<Global<Validator>>,
         ) {
             // Add a FixedPrice oracle
             if fixed_price.is_some() {
@@ -254,6 +258,14 @@ mod multi_oracle_wrapper {
                         market_id: morpher_market_id.unwrap(),
                         last_update_time: 0u64,
                         last_price: Decimal::ONE,
+                    }
+                );
+
+            } else if validator.is_some() {
+                self.oracles.insert(
+                    coin_address,
+                    OracleType::Lsu {
+                        validator: validator.unwrap(),
                     }
                 );
 
@@ -429,6 +441,19 @@ mod multi_oracle_wrapper {
 
                     (price_message.price, true)
                 },
+
+                OracleType::Lsu { ref validator } => {
+                    let price = self.get_price(XRD, morpher_data) * validator.get_redemption_value(Decimal::ONE);
+
+                    Runtime::emit_event(
+                        PriceUpdated {
+                            coin: coin_address,
+                            price: price,
+                        }
+                    );
+
+                    return price;
+                }
             };
 
             // If the oracle object has been modified, insert it back in the KVS
