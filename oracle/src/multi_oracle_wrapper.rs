@@ -47,6 +47,12 @@ pub enum OracleType {
     },
 }
 
+#[derive(ScryptoSbor, ScryptoEvent)]
+struct PriceUpdated {
+    coin: ResourceAddress,
+    price: Decimal,
+}
+
 // This blueprint wraps some of the available price oracles on Radix (Ociswap and Morpher) and
 // defines two very simple additional oracles (FixedPrice and FixedMultiplier); it can also query
 // the LsuPool for the LSULP/XRD price.
@@ -70,6 +76,9 @@ pub enum OracleType {
 #[types(
     ResourceAddress,
     OracleType,
+)]
+#[events(
+    PriceUpdated,
 )]
 mod multi_oracle_wrapper {
 
@@ -158,7 +167,16 @@ mod multi_oracle_wrapper {
             fixed_multiplier: Option<Decimal>,  // New fized multiplier or None
         ) {
             match self.oracles.get_mut(&coin_address).expect("Unknown coin").deref_mut() {
-                OracleType::FixedPrice { price } => { *price = fixed_price.unwrap(); },
+                OracleType::FixedPrice { price } => {
+                    *price = fixed_price.unwrap();
+
+                    Runtime::emit_event(
+                        PriceUpdated {
+                            coin: coin_address,
+                            price: *price,
+                        }
+                    );
+                },
                 OracleType::FixedMultiplier { multiplier, .. } => { *multiplier = fixed_multiplier.unwrap(); },
                 _ => Runtime::panic("Can't update this oracle type".to_string()),
             }
@@ -284,7 +302,16 @@ mod multi_oracle_wrapper {
                     let dex_valuation_xrd = self.lsu_pool.get_dex_valuation_xrd();
                     let lsulp_supply =
                         ResourceManager::from_address(self.lsulp).total_supply().unwrap();
-                    return self.get_price(XRD, morpher_data) * dex_valuation_xrd / lsulp_supply;
+                    let price = self.get_price(XRD, morpher_data) * dex_valuation_xrd / lsulp_supply;
+
+                    Runtime::emit_event(
+                        PriceUpdated {
+                            coin: coin_address,
+                            price: price,
+                        }
+                    );
+
+                    return price;
                 },
 
                 OracleType::FixedPrice { price } => {
@@ -292,7 +319,16 @@ mod multi_oracle_wrapper {
                 },
 
                 OracleType::FixedMultiplier { multiplier, reference_coin } => {
-                    return multiplier * self.get_price(reference_coin, morpher_data);
+                    let price = multiplier * self.get_price(reference_coin, morpher_data);
+
+                    Runtime::emit_event(
+                        PriceUpdated {
+                            coin: coin_address,
+                            price: price,
+                        }
+                    );
+
+                    return price;
                 },
 
                 OracleType::Ociswap {
@@ -326,6 +362,13 @@ mod multi_oracle_wrapper {
                         false => self.get_price(reference_coin, morpher_data) * price_sqrt * price_sqrt,
                         true => self.get_price(reference_coin, morpher_data) / (price_sqrt * price_sqrt),
                     };
+
+                    Runtime::emit_event(
+                        PriceUpdated {
+                            coin: coin_address,
+                            price: price,
+                        }
+                    );
 
                     // Update cache
                     // Cache will not work if observation_time / 2 > price_lifetime because newly
@@ -376,6 +419,13 @@ mod multi_oracle_wrapper {
                     // Update cache
                     *last_update_time = price_message.created_at;
                     *last_price = price_message.price;
+
+                    Runtime::emit_event(
+                        PriceUpdated {
+                            coin: coin_address,
+                            price: price_message.price,
+                        }
+                    );
 
                     (price_message.price, true)
                 },
