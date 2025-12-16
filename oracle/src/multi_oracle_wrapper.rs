@@ -4,7 +4,7 @@ use scrypto_interface::*;
 use std::ops::DerefMut;
 
 // Morpher price information struct
-#[derive(ScryptoSbor, Debug)]
+#[derive(ScryptoSbor)]
 struct PriceMessage {
     market_id: String,
     price: Decimal,
@@ -13,16 +13,23 @@ struct PriceMessage {
 }
 
 // Ociswap price information struct
-#[derive(ScryptoSbor, Debug)]
+#[derive(ScryptoSbor)]
 pub struct ObservationInterval {
     start: u64,
     end: u64,
     price_sqrt: Decimal,
 }
 
+// Price cache for a single coin
+#[derive(ScryptoSbor, Clone)]
+struct CachedPrice {
+    last_update_time: u64,              // Last time the price cache was updated
+    last_price: Decimal,                // Price cache
+}
+
 // Information about one single oracle
-#[derive(ScryptoSbor, Clone, Debug)]
-pub enum OracleType {
+#[derive(ScryptoSbor, Clone)]
+enum OracleType {
     FixedPrice {
         price: Decimal, // Fixed price
     },
@@ -35,15 +42,11 @@ pub enum OracleType {
         reference_coin: ResourceAddress,    // Reference coin
         reverse: bool,  // Whether the pool returns coin price against reference coin or the
                         // opposite
-        last_update_time: u64,              // Last time the price cache was updated
-        last_price: Decimal,                // Price cache
+        cached_price: CachedPrice,
     },
     Morpher {
         market_id: String, // String identifier of the market (e.g. "GATEIO:XRD_USDT")
-        last_update_time: u64,              // Last time the price cache was updated
-        last_price: Decimal,                // Price cache
-    },
-    LsuPool {
+        cached_price: CachedPrice,
     },
     Lsu {
         validator: Global<Validator>,
@@ -54,8 +57,9 @@ pub enum OracleType {
     },
     TwoResourcePoolUnit {
         pool: Global<TwoResourcePool>,
-        last_update_time: u64,              // Last time the price cache was updated
-        last_price: Decimal,                // Price cache
+    },
+    MultiResourcePoolUnit {
+        pool: Global<MultiResourcePool>,
     },
 }
 
@@ -63,6 +67,19 @@ pub enum OracleType {
 struct PriceUpdated {
     coin: ResourceAddress,
     price: Decimal,
+}
+
+// Info about a Surge pool
+#[derive(ScryptoSbor)]
+struct PoolDetails {
+    base_tokens_amount: Decimal,
+    virtual_balance: Decimal,
+    unrealized_pool_funding: Decimal,
+    pnl_snap: Decimal,
+    skew_ratio: Decimal,
+    skew_ratio_cap: Decimal,
+    lp_supply: Decimal,
+    lp_price: Decimal,
 }
 
 // This blueprint wraps some of the available price oracles on Radix (Ociswap and Morpher) and
@@ -108,6 +125,19 @@ mod multi_oracle_wrapper {
         }
     }
 
+    extern_blueprint! {
+        "package_tdx_2_1p4rv3hyae94tmyg36wru460wzcfjzajpw2zlt7ns5m7mswmchxud0l",
+        FundManager {
+            fn fund_unit_value(&self) -> (Decimal, Decimal);
+        }
+    }
+
+    extern_blueprint! {
+        "package_tdx_2_1phyewk3m6aeycqmmmk5easfmk7mg97sn20p2yvd499rj5y5xrxzdcc",
+        Exchange {
+            fn get_pool_details(&self) -> PoolDetails;
+        }
+    }
 
     enable_method_auth! {
         roles {
@@ -134,8 +164,12 @@ mod multi_oracle_wrapper {
         morpher_component: Global<MorpherOracle>,   // Morpher component address
         observation_time: u64,                      // Ociswap's oracle observation time
         price_lifetime: u64,                        // Morpher oracle information lifetime
-        lsulp: ResourceAddress,
-        lsu_pool: Global<LsuPool>,
+        lsulp: ResourceAddress,                     // LSULP resource address
+        lsu_pool: Global<LsuPool>,                  // Caviarnine LSU pool 
+        fund_unit: ResourceAddress,                 // Fund Unit resource address
+        fund_manager: Global<FundManager>,          // FundManager component address
+        surge_lp: ResourceAddress,                  // Surge LP coin resource address
+        surge: Global<Exchange>,                    // Surge component address
     }
 
     impl MultiOracleWrapper {
@@ -149,7 +183,11 @@ mod multi_oracle_wrapper {
             observation_time: u64,                      // Ociswap oracle observation time
             price_lifetime: u64,                        // Morpher oracle information lifetime
             lsulp: ResourceAddress,                     // LSULP resource address
-            lsu_pool: Global<LsuPool>,                // LSULP pool component address
+            lsu_pool: Global<LsuPool>,                  // LSULP pool component address
+            fund_unit: ResourceAddress,                 // Fund Unit resource address
+            fund_manager: Global<FundManager>,          // FundManager component address
+            surge_lp: ResourceAddress,                  // Surge LP coin resource address
+            surge: Global<Exchange>,                    // Surge component address
         ) -> Global<MultiOracleWrapper> {
 
             // Instantiate and globalize the component
@@ -160,6 +198,10 @@ mod multi_oracle_wrapper {
                 price_lifetime: price_lifetime,
                 lsulp: lsulp,
                 lsu_pool: lsu_pool,
+                fund_unit: fund_unit,
+                fund_manager: fund_manager,
+                surge_lp: surge_lp,
+                surge: surge,
             }
                 .instantiate()
                 .prepare_to_globalize(OwnerRole::Fixed(rule!(require(admin_badge_address))))
@@ -228,6 +270,7 @@ mod multi_oracle_wrapper {
             validator: Option<Global<Validator>>,
             one_resource_pool: Option<Global<OneResourcePool>>,
             two_resource_pool: Option<Global<TwoResourcePool>>,
+            multi_resource_pool: Option<Global<MultiResourcePool>>,
         ) {
             // Add a FixedPrice oracle
             if fixed_price.is_some() {
@@ -256,8 +299,10 @@ mod multi_oracle_wrapper {
                         component: ociswap_component.unwrap(),
                         reference_coin: reference_coin.unwrap(),
                         reverse: ociswap_reverse.unwrap(),
-                        last_update_time: 0u64,
-                        last_price: Decimal::ONE,
+                        cached_price: CachedPrice {
+                            last_update_time: 0,
+                            last_price: Decimal::ONE,
+                        },
                     }
                 );
 
@@ -267,8 +312,10 @@ mod multi_oracle_wrapper {
                     coin_address,
                     OracleType::Morpher {
                         market_id: morpher_market_id.unwrap(),
-                        last_update_time: 0u64,
-                        last_price: Decimal::ONE,
+                        cached_price: CachedPrice {
+                            last_update_time: 0,
+                            last_price: Decimal::ONE,
+                        },
                     }
                 );
 
@@ -294,8 +341,14 @@ mod multi_oracle_wrapper {
                     coin_address,
                     OracleType::TwoResourcePoolUnit {
                         pool: two_resource_pool.unwrap(),
-                        last_update_time: 0u64,
-                        last_price: Decimal::ONE,
+                    }
+                );
+
+            } else if multi_resource_pool.is_some() {
+                self.oracles.insert(
+                    coin_address,
+                    OracleType::MultiResourcePoolUnit {
+                        pool: multi_resource_pool.unwrap(),
                     }
                 );
 
@@ -310,6 +363,21 @@ mod multi_oracle_wrapper {
             coin_address: ResourceAddress, // The coin whose oracle will be removed
         ) {
             self.oracles.remove(&coin_address);
+        }
+
+        // Internal method to check if price cache is still valid
+        fn get_cached_price(
+            &self,
+            cached_price: &CachedPrice,
+            now: u64,
+        ) -> Option<Decimal> {
+
+            // If the cached value is still valid, return it
+            if cached_price.last_update_time + self.price_lifetime >= now {
+                return Some(cached_price.last_price);
+            } else {
+                return None;
+            }
         }
 
     }
@@ -327,34 +395,63 @@ mod multi_oracle_wrapper {
             // Find the oracle to use for the given coin
             let mut oracle = match self.oracles.get(&coin_address) {
 
-                // If the coin is LSULP and there's no available oracle, ask the LsuPool
-                None => if coin_address == self.lsulp {
-                    OracleType::LsuPool {}
-                } else {
-                    Runtime::panic("No oracle available".to_string());
+
+                // If there's no available oracle for this coin
+                None => {
+                    let price;
+
+                    // If the coin is LSULP, ask the LsuPool
+                    if coin_address == self.lsulp {
+                        let dex_valuation_xrd = self.lsu_pool.get_dex_valuation_xrd();
+                        let lsulp_supply =
+                            ResourceManager::from_address(self.lsulp).total_supply().unwrap();
+
+                        OracleType::FixedMultiplier {
+                            multiplier: dex_valuation_xrd / lsulp_supply,
+                            reference_coin: XRD,
+                        }
+
+                    // If the coin is the fund unit get the net price from the FundManager component
+                    } else if coin_address == self.fund_unit {
+                        let (net_price, _) = self.fund_manager.fund_unit_value();
+                        price = net_price;
+
+                        Runtime::emit_event(
+                            PriceUpdated {
+                                coin: coin_address,
+                                price: price,
+                            }
+                        );
+
+                        return price;
+
+                    // If the coin is the Surge LP, ask the Surge component
+                    } else if coin_address == self.surge_lp {
+                        price = self.surge.get_pool_details().lp_price;
+
+                        Runtime::emit_event(
+                            PriceUpdated {
+                                coin: coin_address,
+                                price: price,
+                            }
+                        );
+
+                        return price;
+
+                    } else {
+                        Runtime::panic("No oracle available".to_string());
+                    }
                 },
 
                 Some(oracle) => oracle.clone(),
             };
 
+            // Get current time
+            let now: u64 = Clock::current_time_rounded_to_seconds()
+                .seconds_since_unix_epoch.try_into().unwrap();
+
             // Use the found oracle to get the price
             let (price, oracle_updated) = match oracle {
-
-                OracleType::LsuPool {} => {
-                    let dex_valuation_xrd = self.lsu_pool.get_dex_valuation_xrd();
-                    let lsulp_supply =
-                        ResourceManager::from_address(self.lsulp).total_supply().unwrap();
-                    let price = self.get_price(XRD, morpher_data) * dex_valuation_xrd / lsulp_supply;
-
-                    Runtime::emit_event(
-                        PriceUpdated {
-                            coin: coin_address,
-                            price: price,
-                        }
-                    );
-
-                    return price;
-                },
 
                 OracleType::FixedPrice { price } => {
                     return price;
@@ -377,18 +474,13 @@ mod multi_oracle_wrapper {
                     component,
                     reference_coin,
                     reverse,
-                    ref mut last_update_time,
-                    ref mut last_price
+                    ref mut cached_price,
                 } => {
-
-                    // Get current time
-                    let now: u64 = Clock::current_time_rounded_to_seconds()
-                        .seconds_since_unix_epoch.try_into().unwrap();
-
-                    // If the cached value is still valid, return it
-                    if *last_update_time + self.price_lifetime >= now {
-                        return *last_price;
-                    }
+                    // If the cached price is still valid, return it
+                    match self.get_cached_price(cached_price, now) {
+                        Some(price) => return price,
+                        None => {},
+                    };
 
                     // Ociswap oracle requires a time interval to return an average price
                     let intervals = vec![(now - self.observation_time, now)];
@@ -405,36 +497,25 @@ mod multi_oracle_wrapper {
                         true => self.get_price(reference_coin, morpher_data) / (price_sqrt * price_sqrt),
                     };
 
-                    Runtime::emit_event(
-                        PriceUpdated {
-                            coin: coin_address,
-                            price: price,
-                        }
-                    );
-
                     // Update cache
                     // Cache will not work if observation_time / 2 > price_lifetime because newly
                     // collected data will already be osolete, so no need to store them
                     if self.observation_time / 2 <= self.price_lifetime {
-                        *last_update_time = now - self.observation_time / 2;
-                        *last_price = price;
+                        cached_price.last_update_time = now - self.observation_time / 2;
+                        cached_price.last_price = price;
 
                         (price, true)
                     } else {
-                        return price;
+                        (price, false)
                     }
                 },
 
-                OracleType::Morpher { ref market_id, ref mut last_update_time, ref mut last_price } => {
-
-                    // Get current time
-                    let now: u64 = Clock::current_time_rounded_to_seconds()
-                        .seconds_since_unix_epoch.try_into().unwrap();
-
-                    // If the cached value is still valid, return it
-                    if *last_update_time + self.price_lifetime >= now {
-                        return *last_price;
-                    }
+                OracleType::Morpher { ref market_id, ref mut cached_price } => {
+                    // If the cached price is still valid, return it
+                    match self.get_cached_price(cached_price, now) {
+                        Some(price) => return price,
+                        None => {},
+                    };
 
                     // Extract message and signature for this coin from the morpher_data HashMap
                     let (message, signature) = morpher_data.get(&coin_address).expect("Missing Morpher data");
@@ -459,74 +540,53 @@ mod multi_oracle_wrapper {
                     );
 
                     // Update cache
-                    *last_update_time = price_message.created_at;
-                    *last_price = price_message.price;
-
-                    Runtime::emit_event(
-                        PriceUpdated {
-                            coin: coin_address,
-                            price: price_message.price,
-                        }
-                    );
+                    cached_price.last_update_time = price_message.created_at;
+                    cached_price.last_price = price_message.price;
 
                     (price_message.price, true)
                 },
 
                 OracleType::Lsu { ref validator } => {
+                    // Get XRD/LSU ratio from the Validator and multiply it for XRD price
                     let price = self.get_price(XRD, morpher_data) * validator.get_redemption_value(Decimal::ONE);
 
-                    Runtime::emit_event(
-                        PriceUpdated {
-                            coin: coin_address,
-                            price: price,
-                        }
-                    );
-
-                    return price;
+                    (price, false)
                 },
 
                 OracleType::OneResourcePoolUnit { ref pool, reference_coin } => {
+                    // Get coin/LP ratio from the pool and multiply it for coin price
                     let price = self.get_price(reference_coin, morpher_data) * pool.get_redemption_value(Decimal::ONE);
 
-                    Runtime::emit_event(
-                        PriceUpdated {
-                            coin: coin_address,
-                            price: price,
-                        }
-                    );
-
-                    return price;
+                    (price, false)
                 },
 
-                OracleType::TwoResourcePoolUnit { ref pool, ref mut last_update_time, ref mut last_price } => {
-                    // Get current time
-                    let now: u64 = Clock::current_time_rounded_to_seconds()
-                        .seconds_since_unix_epoch.try_into().unwrap();
-
-                    // If the cached value is still valid, return it
-                    if *last_update_time + self.price_lifetime >= now {
-                        return *last_price;
-                    }
-
+                OracleType::TwoResourcePoolUnit { ref pool } => {
+                    // The price is the sum of the coin/LP ratios multiplied by coin prices
                     let mut price = Decimal::ZERO;
                     for (coin, amount) in pool.get_redemption_value(Decimal::ONE).iter() {
                         price += self.get_price(*coin, morpher_data.clone()) * *amount;
                     }
 
-                    // Update cache
-                    *last_update_time = now;
-                    *last_price = price;
+                    (price, false)
+                },
 
-                    Runtime::emit_event(
-                        PriceUpdated {
-                            coin: coin_address,
-                            price: price,
-                        }
-                    );
+                OracleType::MultiResourcePoolUnit { ref pool } => {
+                    // The price is the sum of the coin/LP ratios multiplied by coin prices
+                    let mut price = Decimal::ZERO;
+                    for (coin, amount) in pool.get_redemption_value(Decimal::ONE).iter() {
+                        price += self.get_price(*coin, morpher_data.clone()) * *amount;
+                    }
 
-                    (price, true)
+                    (price, false)
                 },
             };
+
+            Runtime::emit_event(
+                PriceUpdated {
+                    coin: coin_address,
+                    price: price,
+                }
+            );
 
             // If the oracle object has been modified, insert it back in the KVS
             if oracle_updated {
