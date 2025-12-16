@@ -61,6 +61,9 @@ enum OracleType {
     MultiResourcePoolUnit {
         pool: Global<MultiResourcePool>,
     },
+    Weft {
+        reference_coin: ResourceAddress,    // Which coin this one is a Weft wrapped version
+    },
 }
 
 #[derive(ScryptoSbor, ScryptoEvent)]
@@ -139,6 +142,13 @@ mod multi_oracle_wrapper {
         }
     }
 
+    extern_blueprint! {
+        "package_tdx_2_1pk02rsgrec4dv3fhtw2ltmy3g80325wlusl76tjwhjpj48qtk8c80n",
+        LendingPool {
+            fn get_deposit_unit_ratio(&mut self, resources: IndexSet<ResourceAddress>) -> IndexMap<ResourceAddress, Option<PreciseDecimal>>;
+        }
+    }
+
     enable_method_auth! {
         roles {
             fund_manager => updatable_by: [];
@@ -170,6 +180,7 @@ mod multi_oracle_wrapper {
         fund_manager: Global<FundManager>,          // FundManager component address
         surge_lp: ResourceAddress,                  // Surge LP coin resource address
         surge: Global<Exchange>,                    // Surge component address
+        weft: Global<LendingPool>,                  // Weft component address
     }
 
     impl MultiOracleWrapper {
@@ -188,6 +199,7 @@ mod multi_oracle_wrapper {
             fund_manager: Global<FundManager>,          // FundManager component address
             surge_lp: ResourceAddress,                  // Surge LP coin resource address
             surge: Global<Exchange>,                    // Surge component address
+            weft: Global<LendingPool>,                  // Weft component address
         ) -> Global<MultiOracleWrapper> {
 
             // Instantiate and globalize the component
@@ -202,6 +214,7 @@ mod multi_oracle_wrapper {
                 fund_manager: fund_manager,
                 surge_lp: surge_lp,
                 surge: surge,
+                weft: weft,
             }
                 .instantiate()
                 .prepare_to_globalize(OwnerRole::Fixed(rule!(require(admin_badge_address))))
@@ -354,6 +367,21 @@ mod multi_oracle_wrapper {
 
             } else {
                 Runtime::panic("Can't understand oracle type".to_string());
+            }
+
+            // Check if a Weft wrapped version of this coin exists
+            let index_set = indexset!(coin_address);
+            let out = self.weft.get_deposit_unit_ratio(index_set);
+            for (coin, amount) in out.iter() {
+                // if found, insert it in the KVS too
+                if amount.is_some() {
+                    self.oracles.insert(
+                        *coin,
+                        OracleType::Weft {
+                            reference_coin: coin_address,
+                        }
+                    );
+                }
             }
         }
 
@@ -579,6 +607,20 @@ mod multi_oracle_wrapper {
 
                     (price, false)
                 },
+
+                OracleType::Weft { reference_coin } => {
+                    let mut price = Decimal::ZERO;
+                    let out = self.weft.get_deposit_unit_ratio(indexset!(reference_coin));
+                    for (wrapped_coin, amount) in out.iter() {
+                        if *wrapped_coin == coin_address && amount.is_some() {
+                            price = (self.get_price(reference_coin, morpher_data.clone()) / amount.unwrap())
+                                .checked_truncate(RoundingMode::ToNearestMidpointTowardZero)
+                                .unwrap();
+                        }
+                    }
+
+                    (price, false)
+                }
             };
 
             Runtime::emit_event(
