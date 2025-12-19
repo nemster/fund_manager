@@ -276,7 +276,7 @@ mod multi_oracle_wrapper {
             fixed_price: Option<Decimal>,               // Fixed price or None
             fixed_multiplier: Option<Decimal>,          // Fixed multiplier or None
             reference_coin: Option<ResourceAddress>,    // Reference coin (for FixedMultiplier or
-                                                        // Ociswap) or None
+                                                        // Ociswap or Weft) or None
             ociswap_component: Option<Global<AnyComponent>>,    // Ociswap pool
             ociswap_reverse: Option<bool>,      // Whether to reverse Ociswap oracle price
             morpher_market_id: Option<String>,  // Market id for the Morpher oracle
@@ -365,23 +365,23 @@ mod multi_oracle_wrapper {
                     }
                 );
 
+            } else if reference_coin.is_some() {
+                let reference_coin = reference_coin.unwrap();
+                let index_set = indexset!(reference_coin);
+                let out = self.weft.get_deposit_unit_ratio(index_set);
+                for (coin, amount) in out.iter() {
+                    if *coin == reference_coin && amount.is_some() {
+                        self.oracles.insert(
+                            coin_address,
+                            OracleType::Weft {
+                                reference_coin: reference_coin,
+                            }
+                        );
+                    }
+                }
+
             } else {
                 Runtime::panic("Can't understand oracle type".to_string());
-            }
-
-            // Check if a Weft wrapped version of this coin exists
-            let index_set = indexset!(coin_address);
-            let out = self.weft.get_deposit_unit_ratio(index_set);
-            for (coin, amount) in out.iter() {
-                // if found, insert it in the KVS too
-                if amount.is_some() {
-                    self.oracles.insert(
-                        *coin,
-                        OracleType::Weft {
-                            reference_coin: coin_address,
-                        }
-                    );
-                }
             }
         }
 
