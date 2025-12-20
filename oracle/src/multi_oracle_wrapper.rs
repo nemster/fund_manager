@@ -129,21 +129,21 @@ mod multi_oracle_wrapper {
     }
 
     extern_blueprint! {
-        "package_tdx_2_1p4rv3hyae94tmyg36wru460wzcfjzajpw2zlt7ns5m7mswmchxud0l",
+        "package_rdx1p464xs2twhhw8ql85effprf0xpr7v24u2k6qumtrezwkvv8n9l8r2r",
         FundManager {
             fn fund_unit_value(&self) -> (Decimal, Decimal);
         }
     }
 
     extern_blueprint! {
-        "package_tdx_2_1phyewk3m6aeycqmmmk5easfmk7mg97sn20p2yvd499rj5y5xrxzdcc",
+        "package_rdx1p49tnhkqx20x9e3qndpu068x3xewksxq2ssrrvmyt8urquqdcah0nm",
         Exchange {
             fn get_pool_details(&self) -> PoolDetails;
         }
     }
 
     extern_blueprint! {
-        "package_tdx_2_1pk02rsgrec4dv3fhtw2ltmy3g80325wlusl76tjwhjpj48qtk8c80n",
+        "package_rdx1p5uwrs3heg37n5zyzate8xtc440l2x3l59ywya4jl2na6em25qjnfj",
         LendingPool {
             fn get_deposit_unit_ratio(&mut self, resources: IndexSet<ResourceAddress>) -> IndexMap<ResourceAddress, Option<PreciseDecimal>>;
         }

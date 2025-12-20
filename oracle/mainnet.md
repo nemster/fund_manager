@@ -1,0 +1,604 @@
+# MultiOracleWrapper mainnet deployment
+
+- Owner badge: `resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a`  
+- MultiOracleWrapper package: `package_rdx1pkkqwel9uey0zsdut9vcwh29e66lvez24jm9uxhnpj0maya0kt0lyp`  
+- MultiOracleWrapper component: `component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c`  
+
+## Instantiate the MultiOracleWrapper component
+```
+CALL_FUNCTION
+    Address("package_rdx1pkkqwel9uey0zsdut9vcwh29e66lvez24jm9uxhnpj0maya0kt0lyp")
+    "MultiOracleWrapper"
+    "new"
+    Address("resource_rdx1th9ul6k57hmfx8u26lgfhz8c7wl4j9jk7knl4crjzec0t8fdgl7sgf")
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Address("resource_rdx1t5s0qfsgsfhlf8q3sutt8j500dk2el4p3dk4psxyagqxdfwuhrm56k")
+    Address("component_rdx1cp07hrz378zfugcf6h8f9usct4zqx7rdgjhxjwphkzxyv9h7l2q04s")
+    300u64
+    150u64
+    Address("resource_rdx1thksg5ng70g9mmy9ne7wz0sc7auzrrwy7fmgcxzel2gvp8pj0xxfmf")
+    Address("component_rdx1cppy08xgra5tv5melsjtj79c0ngvrlmzl8hhs7vwtzknp9xxs63mfp")
+    Address("resource_rdx1th38dkeamzmlhvv264tjk54gtvd2yn3x26kpa6c5ukspmyqd8rtgru")
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    Address("resource_rdx1t48x0z68dm6z422wxyctj5wvnt2nh95lvmly65vxzywdkd24zypl5d")
+    Address("component_rdx1cz5dduz6flgsmx7frc0854nk545s69nryvgq0y02r2mlm3tsryk6xx")
+    Address("component_rdx1czmr02yl4da709ceftnm9dnmag7rthu0tu78wmtsn5us9j02d9d0xn")
+;
+```
+
+## Tell the MultiOracleWrapper component that the price of xUSDC is always 1
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t4upr78guuapv5ept7d7ptekk9mqhy605zgms33mcszen8l9fac8vf")
+    Some(Decimal("1"))
+    None
+    None
+    None
+    None
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the price of xUSDT is always 1
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thrvr3xfs2tarm2dl9emvs26vjqxu6mqvfgvqjne940jv0lnrrg7rw")
+    Some(Decimal("1"))
+    None
+    None
+    None
+    None
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the price of hUSDC is always 1
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thxj9m87sn5cc9ehgp9qxp6vzeqxtce90xm5cp33373tclyp4et4gv")
+    Some(Decimal("1"))
+    None
+    None
+    None
+    None
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the price of fUSD is always 1
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t49wa75gve8ehvejr760g3pgvkawsgsgq0u3kh7vevzk0g0cnsmscq")
+    Some(Decimal("1"))
+    None
+    None
+    None
+    None
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the price of XRD must be asked to the XRD/hUSDC pool
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd")
+    None
+    None
+    Some(Address("resource_rdx1thxj9m87sn5cc9ehgp9qxp6vzeqxtce90xm5cp33373tclyp4et4gv"))
+    Some(Address("component_rdx1czy2naejcqx8gv46zdsex2syuxrs4jnqzug58e66zr8wglxzvu97qr"))
+    Some(false)
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the price of hWBTC must be asked to the hWBTC/XRD pool
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t58kkcqdz0mavfz98m98qh9m4jexyl9tacsvlhns6yxs4r6hrm5re5")
+    None
+    None
+    Some(Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd"))
+    Some(Address("component_rdx1crd7xk0nu07kj60artzz6evws7r6w69lwarf0nqmkxuwwluy5xjud0"))
+    Some(false)
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the price of hETH must be asked to the XRD/hETH pool
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1th09yvv7tgsrv708ffsgqjjf2mhy84mscmj5jwu4g670fh3e5zgef0")
+    None
+    None
+    Some(Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd"))
+    Some(Address("component_rdx1crumqsy0nu4pl3fwah3nkf8eg8qhltxenk83wh9tzlmr5jnsqs3x4c"))
+    Some(true)
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the price of WEFT must be asked to the WEFT/XRD pool
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tk3fxrz75ghllrqhyq8e574rkf4lsq2x5a0vegxwlh3defv225cth3")
+    None
+    None
+    Some(Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd"))
+    Some(Address("component_rdx1crpq83nf76ea2dkkjxfwr426qvmpu9pyakh58ay3eyswe4ps5yn3q2"))
+    Some(false)
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the price of REDDICKS must be asked to the REDDICKS/XRD pool
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t42hpqvsk4t42l6aw09hwphd2axvetp6gvas9ztue0p30f4hzdwxrp")
+    None
+    None
+    Some(Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd"))
+    Some(Address("component_rdx1cpwwhuxpe2npedx0axkj4nae8uv5222r0syjtu5fxuaxaj78rf30v9"))
+    Some(false)
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the price of ILIS must be asked to the ILIS/XRD pool
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t4r86qqjtzl8620ahvsxuxaf366s6rf6cpy24psdkmrlkdqvzn47c2")
+    None
+    None
+    Some(Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd"))
+    Some(Address("component_rdx1cr9tj8xd5cjs9mzkqdnamrzq0xgy4eylk75vhqqzka5uxsxatv4wxd"))
+    Some(false)
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the price of OCI must be asked to the OCI/XRD pool
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t52pvtk5wfhltchwh3rkzls2x0r98fw9cjhpyrf3vsykhkuwrf7jg8")
+    None
+    None
+    Some(Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd"))
+    Some(Address("component_rdx1crm530ath85gcwm4gvwq8m70ay07df085kmupp6gte3ew94vg5pdcp"))
+    Some(false)
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the price of WOWO must be asked to the WOWO/XRD pool
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t4kc5ljyrwlxvg54s6gnctt7nwwgx89h9r2gvrpm369s23yhzyyzlx")
+    None
+    None
+    Some(Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd"))
+    Some(Address("component_rdx1cp6fus3tmgfddxvfksn9ng8nh7rd0zqyarl3pgvatzfcwdzuq4nvst"))
+    Some(false)
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the price of hBNB must be asked to the hBNB/XRD pool
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t4et4jddp2fdupr00k83ct9jpnkgewply42l5098ztjkfvjfedvjva")
+    None
+    None
+    Some(Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd"))
+    Some(Address("component_rdx1cq3zslamrr949gsj7xggr5c02znvurc9uma2rlyrhuj3j70xdjhty5"))
+    Some(false)
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the price of xwBTC must be asked to the xwBTC/XRD pool
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t580qxc7upat7lww4l2c4jckacafjeudxj5wpjrrct0p3e82sq4y75")
+    None
+    None
+    Some(Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd"))
+    Some(Address("component_rdx1cpcd3wxrwgtldnrtkz995dzj6zhsqg2sym9tpqgmg7g9wsuu00jn65"))
+    Some(false)
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the price of JWLXRD must be asked to the XRD/JWLXRD pool
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tklsaw4evqgmue59v7c87qm79tx2ppjp93ycxek8shrlmz426h7axq")
+    None
+    None
+    Some(Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd"))
+    Some(Address("component_rdx1czzh0zy3fk6vtgjyhurhqfq6dek7qzgw68v30s62v3krrexkkau7d4"))
+    Some(true)
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the w2-LSULP/LSULP ratio must be asked to the WEFT component
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t4p82pms6r20k87rscms728tekujacd0sgxyysk7yvl0jgf56gvjuc")
+    None
+    None
+    Some(Address("resource_rdx1thksg5ng70g9mmy9ne7wz0sc7auzrrwy7fmgcxzel2gvp8pj0xxfmf"))
+    None
+    None
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the w2-hWBTC/hWBTC ratio must be asked to the WEFT component
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t4y98gg8r4mvlaf6tyut0natx874er06qy84ct3d5dvg0c3j2d6d4s")
+    None
+    None
+    Some(Address("resource_rdx1t58kkcqdz0mavfz98m98qh9m4jexyl9tacsvlhns6yxs4r6hrm5re5"))
+    None
+    None
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the w2-hUSDC/hUSDC ratio must be asked to the WEFT component
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t4kxe9n00hgzng02myj6a320qxcma2umxj8ygr795cc5m0hsj3p4l2")
+    None
+    None
+    Some(Address("resource_rdx1thxj9m87sn5cc9ehgp9qxp6vzeqxtce90xm5cp33373tclyp4et4gv"))
+    None
+    None
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the w2-XRD/XRD ratio must be asked to the WEFT component
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1th0gjs665xgm343j4jee7k8apu8l8pg9cf8x587qprszeeknu8wsxz")
+    None
+    None
+    Some(Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd"))
+    None
+    None
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the w2-hETH/hETH ratio must be asked to the WEFT component
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t5tcgsd0m6ptqsd0g70xu08tzdhy23ml5ql9xlmmv9wpchg3lw7dtk")
+    None
+    None
+    Some(Address("resource_rdx1th09yvv7tgsrv708ffsgqjjf2mhy84mscmj5jwu4g670fh3e5zgef0"))
+    None
+    None
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the w2-hUSDT/hUSDT ratio must be asked to the WEFT component
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t48fy4e7d0zfzkky5yxvgaxvewp65ecv49vtccyawlulhegk3sw7kz")
+    None
+    None
+    Some(Address("resource_rdx1th4v03gezwgzkuma6p38lnum8ww8t4ds9nvcrkr2p9ft6kxx3kxvhe"))
+    None
+    None
+    None
+    None
+    None
+    None
+    None
+;
+```
+
+## Tell the MultiOracleWrapper component that the sREDDICKS/REDDICKS ratio must be asked to the Defiplaza stacking pool
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t4ay2r4m8gm8rylyz73gu4dfrg08wrz3lnmqqun62ak78r60n9qhpf")
+    None
+    None
+    Some(Address("resource_rdx1t42hpqvsk4t42l6aw09hwphd2axvetp6gvas9ztue0p30f4hzdwxrp"))
+    None
+    None
+    None
+    None
+    Some(Address("pool_rdx1cjxhes2ldcv97kcra0t5h3dh9cw3966vkzvly2ygsdwrxz6m3ka2nt"))
+    None
+    None
+;
+```
+
+
+## Tell the MultiOracleWrapper component that the sWOWO/WOWO ratio must be asked to the Defiplaza stacking pool
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tkhen0yttyqm3aqn2zg8tc9qj00jckukfrsz52svd9zyns225vphfr")
+    None
+    None
+    Some(Address("resource_rdx1t4kc5ljyrwlxvg54s6gnctt7nwwgx89h9r2gvrpm369s23yhzyyzlx"))
+    None
+    None
+    None
+    None
+    Some(Address("pool_rdx1cjgda4982t4vac3e0mgq3rf9d7qhkv490g2mg9xrtu0vqyx75ww2cx"))
+    None
+    None
+;
+```
+
