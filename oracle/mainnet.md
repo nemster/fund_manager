@@ -602,3 +602,1358 @@ CALL_METHOD
 ;
 ```
 
+## Tell the MultiOracleWrapper component that the LSU/XRD ratio must be asked to the Validators
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1th2amycz40mfrkss0hd86gqjuufmelfm7q699car4f283r0e58484f")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1swywqhv3ed5w6dldfs2vamtrsyrdsfd6l9cqen5xqe54597gyckpns"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tkd3835xejvxga84jnp4jwnjykec0tqwwm9f5n0g85wgsxaan3tkwm")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sdauznj9luja8v7vd4jndmlp449tcr9qxkx6fkm87lxkn0lq6m9mn0"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1th6un0cfsmtk2zjagyn0y70rahvz9zhyz68lk8gcnt39y4aa28jsnr")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1swzn5hvtut6yq0zxqqsa0wk4rnkfd8wewvnphzrckau22pun2lv86t"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tkpgfcc063lvjdjn6s8vskkzydh3wfv37v0ezs0jrrmyuraeyqcx67")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s0cdlvk5wpgklxnkap05jvgdskpa54yyfu232tfu5s65n7ya6mxhlg"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1th38fd5hgyjv2mmxnc025rzw5qlu97v935y2mav8gjwl0jhah0wppm")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1svug50cdlalm6plazajrmntf209j5azf57xeukuhx2hw7e7ut5mmz8"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thr6xdcvcmjuq8u2zjrwe6l0cgnnyn28evj5ftvqm4eqx466dpuk6m")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sdk493n96m2v8t0st6hgrdmdua8y6kp84lcwv35qr7umvj7ar4x3e8"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t5yqg3w3k4czya77rraeahawdn5yty289v0sj0cczq4khj75csvhw4")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1svkch0tjam57zrs72hu7gc2z93vaq5raqsg0z3vwqz6v46mc7rxtuz"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thn4jwe59x7nak62v99mvpu58khrt6lwsx09cgdhr80yenadx6n2ne")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sv07myvl9hs935aadunwwmp0fy0jh8p2h555j6836et5etswnjjwd6"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tkw9gqj0kl3jy0y6s0jfs8344xgf56l2cnlsk7wgpa6mrfvzv3jzaz")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s0k2g57gxld3nydl8535e2tkp6tduh6pmynd3mf2a3q428zh09n24s"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tkwrxs8ak7narzldq4e9e0xds0rfkdn936qe4myn2e83upvfp4gc9g")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1svpqafv4te3qtfhux5yxv2vyv95mp866dp9xpe28v0pvvwzhrk4vyz"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t4cnsln5k8qhzjqgww7q4429kfnnqnu4ux3scd0q9h9r6p2zqxt6tq")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s0quzpxcnvh2h7ua2rq6ds0nka3z05kfpz3eventwpamve22uxjdxj"))
+    None
+    None
+    None
+;
+```
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tkgz3zq8c9htpdgd772gycrv3etee5fm7y685sup8tzjh8u4amhluc")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sv2rav2zqvufxs9dk5yu92t00ncrcw3dfu64pxxz29vvq3tj4fem2p"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thyjeq3zn9r3jsurwt8asq72dr5gn3v8xxtyufy6ah4antynqm5gxj")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1svfawmdwc77092hzhd6rzlay0tg4g8dw2sd37mu7skaqjlsq624rfa"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tk6pgwj6tzceepp5usu2pfjhxcnnsy3punfu7auxtmfzmvs878n03d")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sdcmd3ymwzvswgyva8lpknqrzuzzmmkac9my4auk29j5feumfh77fs"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thq95xukxu9yer4washsysexgf928ake6msevg0scqanmxa7uy0zeq")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sweyknyzw9lzh6hdjeq2avh9gg5g6l7dd8he77khnv76ac8ut84hq4"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t5kfrda2jac4ey4lnd005xkhs25w7u0f7myas3rjdr04rntg6ndeag")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s002geu08u94z4unkjvhlvyhs0dzj0glq82t6mhhvmahh3w0gerqyh"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t5duyh4luhdqafn5r9lwh7s6j34cxut76lqw0j63f38jnce5mup70s")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s0txh4cx4nd7eh5nsxyt7h7njja5galwj602x57e9r2dszv6h2aahj"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thx6499x9zddv22afvetghp6zwzjy53052qmwtcdw5zf0dnrv0j9gh")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1svn77rj5gmhhhapafxhd3tv9yg9eq2a2gc578weeqx6huurlfu5aec"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tkavp0ydh3w5lnqueuhvhkrzaec4p7mx0dvecv5qwnc8x8uygjr9dp")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1svm98ppmxzft82lykaeudwp3z562dlqk692ws5us5a8lr78ux3v8kr"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1th39tpmmm35ul2vdlvg7xcp4ud6fl2krt8vwt0q5evtze7ev7w0rga")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sd0s8g47y6w37dezandh2re9d4h7v252hq5a2kwj0swk0s7kkc2dkt"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t480axsxfrps66t3cw89mtusmssgrnf2y22q6vw709ez4cupc9sjdv")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sv559zk2z927wmc9464kypyjltjrhelcmrx8486x37sv6xartj5x8h"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tk5x0fp49n34tslpsmvcrtf6jwt0jv989xvjnrz5dqje3sf3vk2f8f")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s0kenl8rwh8e0qxpfrxhw7ry3uzl5x7gsu2ur7jfg6ec4sluk5gv05"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t5ps49648qxex4n9shvlen2kq7h8q5qh0zr73685ux0ay0m7z97wfz")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sde3jp4g6ldh2mg4af0v0sq3c8en4agk3p7p63zcv58l5h05sej4kh"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t554n6l00f208regjt9xj2av0en8pueqyjldqd2u6tdvtrclrs4ev3")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1swslug7tu9rgww8zdd0x8htptzgw92vx9606lx2ptdm9wsdam8uvxq"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1th9kand0lmgqgxxy4k5qrvgl02eh8c9cgt80tf7p8haamaxsawwrkh")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s08twr4tpfkxy5sy5e4yaz38uhgdcu3gjyzuexaheqq6mqxsjx7440"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t40zmekpspmm8j465rtsv0ce7ghcc9nmajxkkk3xxlzl3p0pa90u7l")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sdcheqrngr92u8mkd7pvu57grys54q3mkl4cvcc7nj92kk3n56up6s"))
+    None
+    None
+    None
+;
+```
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t5x9s2s69js5nh8834djdud7q4x74rqxap72d9gw3egvs73p2rs0g2")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1svfvxj0glmg0ea2m0nqm47qlfypj2rcmp74t7p4wgjx2m0f2nju2zz"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t4mg2x7u6qwgwn5cmnwt5lzvmzznhuzj8zlp9fcpm7965yex5pdwtm")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sd5368vqdmjk0y2w7ymdts02cz9c52858gpyny56xdvzuheepdeyy0"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tke8gtr0ahrxyl7y7zrf7jv08r4y2d32lqc37yaefr64tjelnpfa4d")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1swtv0s6ryf8rdce5zkml450ch23rzww9ajquz3p4lr3e87asq5sa94"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t456sjfr8kmjvx2zp2wtgpjg8c2y7e22h7cq6ukxxmvcpuszd8rnrv")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s0y90ud7edmnaz7x52s7xsyhf8rgu2xr75u9526zqznhc5w3hkt34u"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t5d8gv6fmwv40sreuypwrwh2mmknr4vf7fdtyrmfr7upjmschwczn0")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s0tkjt8mureaw3kkfl3900law5tnrlg3wte9f4vlaruxe4nfjzdam7"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t4w8526vuj40p4qv375h0g9mra5f7nmj4jfp6ru35djlhsx8mwl25v")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s007thnssqwg0pa332ynxmyvremuvv9uuggnmm6y6qgj0nez5fjnx9"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thn33rsgh5zwlfwsl30yag9hafgcgse9v8rw7klwlql8psx2z2ytpw")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1swqzqfll4r6h45e6rxx7p45vk9nn74mk0zlts4r3td2fj85kaekq0t"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thf2zlncdm37eyp34w6x83rfpzrws8ryex9juk5d5jzjpxdega7hh2")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s030jqqp9d9z55t234g53ts5zqmqn7xuwj8hyqtnhfqxgkg4wtu2n5"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thh59ts3qukwcgkp39sjp4d35cth20dgwypyc06zx3ax98mua2wy23")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1svudtxxkegaeg6ks0qgjujfp8g80de2f63ygvfqug6zv987e99jk3q"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t5zggncc2k5qcq26rlw9l9fr7whdar2l9ytugwy9gsvmsd6aeecrcj")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sdzyh7reza3k7y9cyu93ghnak2n89uhugwc072kxrl7unsxgsacx8j"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tkq9sgfr5hypt6lyqvqsvj0eg9ga6n9q552v70n40tuv6mkdu4g7th")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sdha45dw0sj2z8c3qdrzua237nycpmdrqfnn6hcrg4hquyhlm9yu9q"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tk6m8xlep4e8qkfnh3lgl6l2nqg6snfg7kmrw4hxjm3e0pcvnqy4h2")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1swqnvclxd9j8z937zr9y4hvjecex7235dz00xezejtuc3wg7j2rxrh"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t4pl597e7lp6flduhd3a6tp9jsqw2vzgyj9jxtk8y3dawum5aahap0")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sva6pmkgm5yacumw4p6k0xsfnqg598xkj9p4e2a58dl6gcrqpx7z86"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thtms6xv76g8ven747m46nnlkmzm00yy4ckehz057v5wrhmgwgjlte")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sv856az023f380u0gzezaf50djcvcmpzf4ntv5au9xzt68sqjra7n3"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t4avknvw32htlysrzzkjykpqj7szgrdhgqf7d9mvp28rt736wup4c3")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sw2qt9k0placmjgwku2kvk66c2v8v0f9ny2fkvzhsh7wwzey6g7zam"))
+    None
+    None
+    None
+;
+```
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t5m7rj35ruxdtjq5fk3ftm9y69zjcpphjkvava0nk23j5q6gqa6m3q")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1svlpfx0kxp5yk7h8dqrd8uzqtm7dkd0mlmerq6xsy3rng84d4wqnmv"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thztqskrppevpwu5s23cdjz5m8ma8r462j4yc7f2s6aj7vfst02e8x")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sw3vpmmyykrc9vk8xp9hk4595d0qv9q8pmm2pkursum65r67gsrwwq"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tk6fnlqhkgucvrjtgzdy7y5jpuhfgy5pmn4pc90z7rv8wjysrpdcqs")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s04r2c2pcq7mhs7s4pfy4a22xemes7wquuwmfsxdpfmw73zvp9gkha"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t5pqykd5eq2he6u2fxyk5u2srp54ereljgr05qjang2lld9v7m8rlz")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sdd0s7vy83qtqevqj7dgkuf660hfmf6xn4dl6t8rasg8njwh4nrx55"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thnkeraq0lukdlhcj226qefqmvdqnqnhegzvxpcw2sscp4q6jegdz0")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1svjhajkrvar9lc4q045t5n02llhdm95wx2pampdm9tc3fglxdgjc8a"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t5d0p6zwcvrcl4xvj6vanmrjc2c56egvl4kwqzsvq3vhrpwjp7y985")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s08nr8ukas7yklpf7q0dg9s3resvmhjau9r5ye3vvkrhpycayjrfrw"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t4mweh7dhefg3akepnu5currzg8sy8q7fjpkeufvdnsk85kz5ly3uz")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s066xuq885l0mttgmx4ptflte6fepkt0c06mqnqtdgajj4mcwh70q4"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thxu53kc99ay55v2nepm75glx868nkkmsz4q7h7prgy96n3gshy02h")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sdt7m2m3umwyuk9evzzcg6q34s5elu64pjkxlhtqu2w4zh65c99sw0"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thuy5j23qjskmqjq2700am2w63yn47daplvvhnw6ece3y02ft3aske")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sdvntpsfvlyx2hapn5zfr6z7etfwgqljsqdqh23876r33fpd8cvu5j"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1th36gg7h0rqvu3xzk8kum0jahp4mmu37z467e5y4gyra4ga9s2jwva")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sw5va0gazh39jypat3t55vjskc90v93c558ef9c6pjkrctx8quzh6d"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tkfxrsffdlh82fjxjwpgrgrgcmc7cfe0sy99c7vm6gsnujelupglnj")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s0g5uuw3a7ad7akueetzq5lpejzp9uw5glv2qnflvymgendvepgduj"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1th3adk93ale3n8nzrypghtkasczmpt42qamq7x5dy8lsu3uwycvh4n")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1svvnmmgdr6sl7llxc8sdu32ys7tn8v6k8quh7e6m6ec83fr3pf6d04"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tk9c8gktx59p9uydpy2zx7mlwux5m0l94u2lk0updyyaypnrw4tr3k")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s0phwevr0tcenaaptx4ecmduw8zy8yv449vzmktw2wk2x8r47vfnf0"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t5g926qvn26t7gltml33qvyjsnxjggy66s0kqtyxsepgr46qsx5rju")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1svheuuvqlmp4l2mhx99m7xldk8tk2lu8kfjgdvxaes9xevpuww63se"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t4lal858k4vpl64ks4kugc59zgy9804rdvfz42vjnj6ns56cjhp8ng")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sdzp792ktu30rd0kvj5stxu7mdpwylgkprdpnx5ysv2uj4km3ggrvf"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tk6fnx3zcqmena7ntykd7j86rxh2alaqj0pn5dvzaken0gjhjrwjfx")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sdvcfj2tcg8cjtqzymmqukdt2ue9qpqmfq8hl7zx00whdmspj0u55k"))
+    None
+    None
+    None
+;
+```
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t5squ0emp8glemxrj7qcxuhttmfy45r0u0dfcgujhpr9l5mw5n8dkz")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1swffjvsu78ej866pnd89yhv5ragthk67whp68fyw9eudt4fsxjdua6"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t59xxkrv5hgkh34lcvwmdtxv2gm468gglrc3a062dn3sv9n39d3js0")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sw32mp374vrd0extsg4d6z3mwpgpalydnt5tp8a6fnsq0smax4tv35"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tk9a0nmggwvj5u96aq70wqzn0jvw24wdnvtw0ssaf6tywfanxe630u")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sd2fdyrmnhrrr3gmrx47atpgh3nvhpax66aufcwj3ey9lyvyqgvndf"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tkg6ndw69mwje4lfu93zk3vcxyjvnl3y07d2hxx4vxvq2et835jeah")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sw54cuswwzlcgw2zh3ax93pddnsm78qwwhmtvz650q84yyckzkh7nk"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tkhpmejwlqn8fqlgtqe8ex0cpzkmlkth572hddy07g37a40s356wz4")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sd6n65sx0thvfzfp6x0jp4qgwxtudpx575wpwqespdlva2wldul9xk"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t5jygng80pjj7ccllc7rznnaerqzc2mceum4w7vxn5w8xgs7rj6f2w")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s0qzv2vmxydpnglk36mczrdwczpsskuzek2cs5nnld6j533rzatmln"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thkedranx6dltw04a023gjpryhjqmkzsh708yg0jfgtkmcc98x5m5g")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1svxx0jetjwnptndj60sm8h7ljs0v88fl6xhwcyp6ar397agwd0ezaz"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1th0waeypmx3z0t7lf9dhneag4kh4jl6sp82998dyv2muqrl989pav8")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sd3lant0vgk8jkxfgmmcd2zsljnu7xf2vu8lzc5cljgammdvfa9y7x"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tk89jscfhrv8z8s2h574ljg454kwl2stxv5qdxrx83was470v942y0")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sdh43pkyltan8qucr0xh928mdkz3fgyeehajnqxxnhhz9ux8gp74k0"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tk5zggl8pcxu55zg0cwh9eaqz7nt0whtxwatjkw6qmpvmq6aceeley")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sds4prpgf0p25pu458fg468nw9rtwqdawwg9w45hgf0t95yd3ncs09"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tkxy5t2qknjuunzurfxrcmwt3tacaf0smq7pztcv2wmswvg0evvx25")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s0kpu7dq8nugrcvc6u3vnl9rhntzxyck0k3r5ze67r5knk4auxaq69"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thw0zmffjdx7e7ktuwxqjr3y46635vjevytzyxk70mx78kk7yp2ylt")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s048k34ctk3m57gumema2e5jmhfxhdryyr5hq42xa9q59pvn8lezg8"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t5zsesu635vcgl2kkymu06d6al9mx3dg08pvmd8md9wfx7ac5z2pj9")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s0v38ep79xx6y7cv86afuqw3z2sd074sldcvrld4lefw3fagvjdhnm"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t4qs620v3r9uzs6744eas47vdxnf39407hhh82c09cvvj2sqz8h4h5")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sd8c8v9tffjtgqtuzygnctrmyfnhkd63avcgpzuknx3dlklds85rkv"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1th3d2c2pp54cwn20dcz5l3us082zrpamq30wgtcch9ug3q2k7le8jm")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s0u9v6a4n2q7cvjkmgq0wnl8gml8c3purzdqg2cwdah2l4g086xzw4"))
+    None
+    None
+    None
+;
+```
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t5m8r5mjwxjek8jxqecmz66gxmmdzujr6kjm6fty7ks5x6t9hf4mlg")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sd9uhhpml8vjz8uz0tut9jzv2mx326jdusfxjpccccj2904s8ndhqq"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thwyxe5luuxaf30a26qrltt6wmpytqstslq7zeccvm50y2x67jetvq")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s0eg9fzf0wm9yucpzug69fyngjpdw6w7ra50j74ktvahhhysmxyw68"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t570xgx0tmgavwdjcwmk8l4aa88uaxccapuzmhtcc8wtd3uxknw2fc")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s0nxs6d4k5fpw05paeal05sm8ffsgvvuf7jkcleucr3zjxf87wm5gc"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thudk8yaj9jqysg3j4anyll3zhpe8cvukfz6qsnqr8tdfjh0f9acgf")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1svsvx7w30pq4d2t3587r5tqkv7gne7pgdrtgtl94uefax07qr50quu"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t4gkr2s0u8jrgcnjlugaw4r8zk5k63fgtpjwwymwmq9w8xqk6xw69n")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s07zllgtzvy9xfyj34jfa9qpd004tcqg80c6vjezv5xmvk0d7jvcjm"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tkfscjv5qhql3y6fwane8puakk2xdc4xfm7ml3cwk4dmsukle9k5zk")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sd3m2lhf6ts8au09haxq69v7sg02fktpjn33w9krz0gvjadawp3y6x"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tk0kuuahs2djtn40tqh8rm46ergt489vwwd0elelgathkwf795nkzu")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s0sr7xsr286jwffkkcwz8ffnkjlhc7h594xk5gvamtr8xqxr23a99a"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t4ke5pm0m02qgl83f3zehuc4jpmhx4f7gj55u3ll2nd835axr0z7v5")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s0qjxdwy5ssl9rnqquhv9gucpm6cvxvn8uwngw26c6y9ff06d6s3fy"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t4lgzsqcnz2m4pgy9jd7q78cmhe7hhfc63rfa3reuu7jmrdtp6et7j")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sdslt8qu2e54as6gtuk4xzsyd0rr0yr4jqpr03eu86wk4mnsrw6gdv"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t4d3ka2x2j35e30gh75j6hma6fccwdsft88h2v2ul4qmqshnwjmxf7")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1swez5cqmw4d6tls0mcldehnfhpxge0mq7cmnypnjz909apqqjgx6n9"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thxv5vsm6ndytzptreraaygvd3wqvvv6kdqr4w5eukclld46cfpmeh")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s0u0lted0fspzkx609qsfkfxkv0j42rshxqq0t2r5qxek0th5uq9t8"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1thv772036frh9wydhvaw8vktm87f30n8hqfhcsylf9ywa4358g9r36")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sdqmn6u6nmtwffdtt4gme9p08xytls404hst80q68tup6xegqdqm9a"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1tkpprqz9dyf032c6khe6ykv20wdyz50wlgrt4k3h0k0s6gcgprt62d")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1sdnsrcjz2a3qlkqqyf9554pqssq5y7l4h0u8utmu84nzdmnkqtwrpz"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1th4arrtz7ggzy85y0xmsppsl7uje5l8tk8dkdzm5enxwzu9awxm3gf")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1svwaxe5frfrcd8t9s38zdwv067860w02xth9jr4pd6cpkd38vln0vx"))
+    None
+    None
+    None
+;
+CALL_METHOD
+    Address("component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c")
+    "add_oracle"
+    Address("resource_rdx1t5df6fwdpewwjvdasuzy5gphu0thvws0pwttp6e4937g4dtytkkdma")
+    None
+    None
+    None
+    None
+    None
+    None
+    Some(Address("validator_rdx1s0zv344mylkx220q7dmueaz6j4y6fygmsrs8mmcmx8dpuxucz987le"))
+    None
+    None
+    None
+;
+```
+

@@ -73,7 +73,7 @@ The oracle can ask the Weft LendingPool component the wrapped coin / base coin r
 
 ### Validators LSUs
 The oracle can ask a Validator about the LSU/XRD ratio.  
-
+All of the LSUs from Validators active in epoch 266863 are supported.  
 
 ### Single resource pools
 The oracle can ask a OneResourcePool (such as Defiplaza staking pools) the pool unit / staked coin ratio.  
