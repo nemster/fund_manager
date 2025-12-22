@@ -10,6 +10,7 @@
 - Fund admin badge: `resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a`
 - Fund unit: `resource_rdx1th38dkeamzmlhvv264tjk54gtvd2yn3x26kpa6c5ukspmyqd8rtgru`
 - Fund bot badge: `resource_rdx1t5s0qfsgsfhlf8q3sutt8j500dk2el4p3dk4psxyagqxdfwuhrm56k`
+- Fund unit bot account: `account_rdx129puw6c9lhw9f5wceaeumj97lmaryzc8z2sdzk76z99ackqhc7f7yg`  
 
 - MultiOracleWrapper package: `package_rdx1pkkqwel9uey0zsdut9vcwh29e66lvez24jm9uxhnpj0maya0kt0lyp`
 - MultiOracleWrapper component: `component_rdx1crca7ztnmus92avl4e8gh90zntj48nh7k26zp5mhnastg7gt7fmd5c`
@@ -70,6 +71,48 @@ CALL_METHOD
     Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
     "deposit_batch"
     Expression("ENTIRE_WORKTOP")
+;
+```
+
+## Authorize admin #2# to mint a bot badge
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "authorize_admin_operation"
+    Proof("admin_proof")
+    2u8
+    10u8
+    None
+    None
+    Some(Address("account_rdx129puw6c9lhw9f5wceaeumj97lmaryzc8z2sdzk76z99ackqhc7f7yg"))
+;
+```
+
+## Mint a bot badge and send it to the bot account
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "mint_bot_badge"
+    Proof("admin_proof")
+    Address("account_rdx129puw6c9lhw9f5wceaeumj97lmaryzc8z2sdzk76z99ackqhc7f7yg")
 ;
 ```
 
