@@ -276,7 +276,7 @@ CALL_METHOD
 CALL_METHOD
     Address("<FUND_MANAGER_COMPONENT_ADDRESS>")
     "update_defi_protocols_value"
-    Set<String>(
+    Array<String>(
         "<PROTOCOL_NAME>",
         ...
     )

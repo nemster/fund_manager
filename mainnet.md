@@ -30,8 +30,8 @@
 - xUSDT@Root component: `component_rdx1crjy22rvz83ujqxydwrajldxy33he68namweljeprx5sk75c0cppyd`
 - xUSDT@Root account: `account_rdx12xlua8tdzuv8lvepqtcfmqu0rxhmpk4zv078quwtw89tjujtmtmxud`
 
-- OciswapLpPool2Wrapper package: `package_rdx1pkw7natk0488kjuw77zypmulz2lg0stt3056e290j0j5mmv44r9828`
-- fUSD/XRD@Ociswap component: `component_rdx1cplxt80h3t24k8dfwhetlkd3gr4nmluqzz028kgz90uufj936xretr`
+- OciswapLpPool2Wrapper package: `package_rdx1pkwtnxhefcwnf8dfc3mnf2f5lcylzxy64aqfmvggtnxv07hmdun8q4`
+- fUSD/XRD@Ociswap component: `component_rdx1czef53d6tr8u3rcyyjjxgpdmg3xx5fzmhr3y04jykxnyplx76yyw5a`
 - fUSD/XRD@Ociswap account: `account_rdx12yrx58uq4ntjjx7wh853qtd8vrtjzqptagkwldvxdpy4rvth2ysphs`
 
 - CaviarnineLpWrapper package: `package_rdx1p48tlgrksqhx3yghxjr66h2dgz3gqrtvj4t5kt0e7yqux84a8uzurg`
@@ -704,7 +704,7 @@ TAKE_ALL_FROM_WORKTOP
     Bucket("account_badge")
 ;
 CALL_FUNCTION
-    Address("package_rdx1pkw7natk0488kjuw77zypmulz2lg0stt3056e290j0j5mmv44r9828")
+    Address("package_rdx1pkwtnxhefcwnf8dfc3mnf2f5lcylzxy64aqfmvggtnxv07hmdun8q4")
     "OciswapLpPool2Wrapper"
     "new"
     Address("resource_rdx1t49wa75gve8ehvejr760g3pgvkawsgsgq0u3kh7vevzk0g0cnsmscq")
@@ -760,7 +760,7 @@ CALL_METHOD
     Address("resource_rdx1t49wa75gve8ehvejr760g3pgvkawsgsgq0u3kh7vevzk0g0cnsmscq")
     Some(Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd"))
     1u8
-    Address("component_rdx1cplxt80h3t24k8dfwhetlkd3gr4nmluqzz028kgz90uufj936xretr")
+    Address("component_rdx1czef53d6tr8u3rcyyjjxgpdmg3xx5fzmhr3y04jykxnyplx76yyw5a")
     None
     true
 ;
@@ -1082,5 +1082,30 @@ CALL_METHOD
     None
     true
 ; 
+```
+
+### Set desired percentages
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "set_defi_protocols_percentage"
+    Map<String, U8>(
+        "fUSD/XRD@Ociswap" => 24u8,
+        "xUSDC@Surge" => 22u8,
+        "xUSDC@Root" => 21u8,
+        "fUSD/xUSDC@Caviarnine" => 11u8,
+        "LSULP/XRD@Hyperstake" => 9u8,
+        "xUSDT@Root" => 8u8,
+        "hUSDC@Weft" => 5u8,
+        "LSULP@Weft" => 0u8,
+        "fUSD/LSULP@Flux" => 0u8
+    )
+;   
 ```
 
