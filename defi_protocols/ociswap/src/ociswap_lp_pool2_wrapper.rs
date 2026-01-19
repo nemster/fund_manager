@@ -425,25 +425,30 @@ mod ociswap_lp_pool2_wrapper {
                 remaining_x_amount += reedemeble_x_amount;
                 remaining_y_amount += reedemeble_y_amount;
 
-                // Compute the number of tokens to convert to fill amount
-                let reedemeble_x_amount_equivalent = reedemeble_x_amount +
-                    reedemeble_y_amount * other_coin_to_coin_price_ratio.unwrap();
-                let lp_token_amount_to_withdraw = lp_token_available_amount
-                    * (amount / reedemeble_x_amount_equivalent);
+                if amount > Decimal::ZERO {
 
-                // Take up to this numebr of tokens from the Account and convert them
-                let (lp_token_bucket, _) = self.take_from_account(
-                    self.lp_token_address,
-                    lp_token_amount_to_withdraw
-                );
-                if lp_token_bucket.amount() > Decimal::ZERO {
-                    let (x, y) = self.component_address.remove_liquidity(lp_token_bucket);
+                    // Compute the number of tokens to convert to fill amount
+                    let reedemeble_x_amount_equivalent = reedemeble_x_amount +
+                        reedemeble_y_amount * other_coin_to_coin_price_ratio.unwrap();
+                    let lp_token_amount_to_withdraw = lp_token_available_amount
+                        * (amount / reedemeble_x_amount_equivalent);
 
-                    // Put all coins in the buckets and update the remaining amounts
-                    remaining_x_amount -= x.amount();
-                    remaining_y_amount -= y.amount();
-                    x_bucket.put(x);
-                    y_bucket.put(y);
+                    // Take up to this numebr of tokens from the Account and convert them
+                    let (lp_token_bucket, _) = self.take_from_account(
+                        self.lp_token_address,
+                        lp_token_amount_to_withdraw
+                    );
+                    if lp_token_bucket.amount() > Decimal::ZERO {
+                        let (x, y) = self.component_address.remove_liquidity(lp_token_bucket);
+
+                        // Put all coins in the buckets and update the remaining amounts
+                        remaining_x_amount -= x.amount();
+                        remaining_y_amount -= y.amount();
+                        x_bucket.put(x);
+                        y_bucket.put(y);
+                    } else {
+                        self.account.try_deposit_or_abort(lp_token_bucket, None);
+                    }
                 }
             }
 
