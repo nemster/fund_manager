@@ -77,6 +77,7 @@ mod root_finance_wrapper {
             // Single admin callable methods
             deposit_account_badge => restrict_to: [admin];
             whithdraw_unexpected_coin => restrict_to: [admin];
+            get_from_root  => restrict_to: [admin];
 
             // TODO: how to manage root points?
 
@@ -92,6 +93,7 @@ mod root_finance_wrapper {
         account_badge_vault: NonFungibleVault,      // Badge to manage the Account
         component_address: Global<LendingMarket>,   // Root Finance component
         pool_address: Global<SingleResourcePool>,   // The pool used by the Root component
+        just_hold: bool,                            // Hold the coins, don't really invest in Root
     }
 
     impl RootFinanceWrapper {
@@ -106,6 +108,7 @@ mod root_finance_wrapper {
             pool_address: Global<SingleResourcePool>,   // The pool used by the Root component
             fund_manager_badge_address: ResourceAddress,    // God's badge
             admin_badge_address: ResourceAddress,       // Admins' badge
+            just_hold: bool,                            // Hold the coins, don't really invest in Root
         ) -> Global<RootFinanceWrapper> {
 
             // Instantiate and globalize the component
@@ -116,6 +119,7 @@ mod root_finance_wrapper {
                 account_badge_vault: NonFungibleVault::with_bucket(account_badge),
                 component_address: component_address,
                 pool_address: pool_address,
+                just_hold: just_hold,
             }
                 .instantiate()
                 .prepare_to_globalize(OwnerRole::Fixed(rule!(require(admin_badge_address))))
@@ -144,7 +148,7 @@ mod root_finance_wrapper {
 
             // Make sure the admin isn't stealing from the fund
             assert!(
-                coin_address != self.token_address,
+                coin_address != self.token_address && coin_address != self.coin_address,
                 "You can't withdraw this coin",
             );
 
@@ -182,6 +186,46 @@ mod root_finance_wrapper {
             }
         }
 
+        // Private method to withdraw from the Account
+        fn take_from_account(
+            &mut self,
+            resource_address: ResourceAddress,
+            mut amount: Decimal,
+        ) -> (
+            Bucket,     // Bucket of the requested coin
+            Decimal     // Remaining amount
+        ) {
+            let available_amount = self.account.balance(resource_address);
+            if amount > available_amount {
+                amount = available_amount;
+            } else {
+                let divisibility = ResourceManager::from_address(resource_address)
+                    .resource_type()
+                    .divisibility()
+                    .unwrap();
+
+                amount = amount.checked_round(divisibility, RoundingMode::ToNegativeInfinity).unwrap();
+            }
+
+            match amount > Decimal::ZERO {
+                true => {
+                    let bucket = self.account_badge_vault.authorize_with_non_fungibles(
+                        &self.account_badge_vault.non_fungible_local_ids(1),
+                        || self.account.withdraw(
+                            resource_address,
+                            amount,
+                        )
+                    );
+
+                    (bucket, available_amount - amount)
+                },
+                false => (
+                    Bucket::new(resource_address),
+                    available_amount,
+                ),
+            }
+        }
+
         // Private method to create a proof of the Root receipt in the account
         fn create_root_receipt_proof(&self) -> Proof {
 
@@ -212,17 +256,43 @@ mod root_finance_wrapper {
             NonFungibleResourceManager::from(self.token_address)
                 .get_non_fungible_data::<CollaterizedDebtPositionData>(&id)
         }
+
+        pub fn get_from_root(
+            &mut self,
+            amount: Decimal,
+        ) {
+            assert!(
+                self.account.balance(self.token_address) == Decimal::ONE,
+                "Wrong number of tokens"
+            );
+
+            // Create a Root receipt proof
+            let proof = self.create_root_receipt_proof();
+
+            // Take the coins and deposit them into the account
+            self.account.try_deposit_or_abort(
+                self.component_address.remove_collateral(
+                    proof.into(),
+                    vec![(
+                        self.coin_address,
+                        amount,
+                        false
+                    )]
+                )
+                    .pop()
+                    .unwrap(),
+                None
+            );
+        }
     }
 
     impl DefiProtocolInterfaceTrait for RootFinanceWrapper {
 
-        // Deposit a Root receipt
-        // This method doesn't support depositing coins because withdraw_all never returns coins,
-        // just tokens
+        // Deposit a Root receipt and eventually coins
         fn deposit_all(
             &mut self,
             token: Bucket,                          // Root receipt bucket
-            _coin: Option<FungibleBucket>,          // Not supported
+            coin: Option<FungibleBucket>,           // Not invested coins
             _other_coin: Option<FungibleBucket>,    // Not supported
         ) -> (
             Decimal,                // Total coin amount
@@ -238,8 +308,21 @@ mod root_finance_wrapper {
                 "Wrong token provided"
             );
 
-            // Deposit the Root receipt
-            self.account.try_deposit_or_abort(token, None);
+            match coin {
+                Some(bucket) => {
+                    assert!(
+                        bucket.resource_address() == self.coin_address,
+                        "Wrong coin provided"
+                    );
+
+                    // Deposit the Root receipt and the coin
+                    self.account.try_deposit_batch_or_abort(vec![token, bucket.into()], None);
+                },
+                None => {
+                    // Deposit the Root receipt
+                    self.account.try_deposit_or_abort(token, None);
+                },
+            }
 
             // Check that the the provided Root receipt is relative to che coin this wrapper is
             // dedicated to
@@ -258,12 +341,12 @@ mod root_finance_wrapper {
             self.get_coin_amounts()
         }
 
-        // Withdraw the Root receipt
+        // Withdraw the Root receipt and the coins
         fn withdraw_all(
             &mut self,
         ) -> (
             Bucket,                 // Root receipt
-            Option<FungibleBucket>, // None
+            Option<FungibleBucket>, // coin
             Option<FungibleBucket>, // None
         ) {
             // If there's no Root receipt in the Account, there's nothing to withdraw
@@ -286,9 +369,14 @@ mod root_finance_wrapper {
                 )
             );
 
+            let (coin_bucket, _) = self.take_from_account(
+                self.coin_address,
+                Decimal::MAX
+            );
+
             (
                 token_bucket.into(),
-                None,
+                Some(FungibleBucket(coin_bucket)),
                 None,
             )
         }
@@ -309,46 +397,49 @@ mod root_finance_wrapper {
                 "Wrong coin provided"
             );
 
-            // There must be only one Root receipt NFT so let's see there already one or we have to
-            // mint it
-            if self.account.balance(self.token_address) == Decimal::ZERO {
+            match self.just_hold {
+                true => self.account.try_deposit_or_abort(coin.into(), None),
 
-                let coin_amount = coin.amount();
+                false => {
+                    // There must be only one Root receipt NFT so let's see there already one or
+                    // we have to mint it
+                    if self.account.balance(self.token_address) == Decimal::ZERO {
 
-                // If there's no Root receipt in the Account, we have to mint one and deposit it in
-                // the Account
-                self.account.try_deposit_or_abort(
-                    self.component_address.create_cdp(
-                        None,
-                        None,
-                        None,
-                        vec![coin.into()],
-                    ),
-                    None
-                );
-           
-                (coin_amount, None)
+                        // If there's no Root receipt in the Account, we have to mint one and deposit
+                        // it in the Account
+                        self.account.try_deposit_or_abort(
+                            self.component_address.create_cdp(
+                                None,
+                                None,
+                                None,
+                                vec![coin.into()],
+                            ),
+                            None
+                        );
 
-            } else {
+                    } else {
 
-                // Create a Root receipt proof
-                let proof = self.create_root_receipt_proof();
+                        // Create a Root receipt proof
+                        let proof = self.create_root_receipt_proof();
 
-                // Add collateral associated to the Root receipt position
-                self.component_address.add_collateral(
-                    proof.into(),
-                    vec![coin.into()],
-                );
+                        // Add collateral associated to the Root receipt position
+                        self.component_address.add_collateral(
+                            proof.into(),
+                            vec![coin.into()],
+                        );
 
-                // Return the total number of coin invested
-                self.get_coin_amounts()
+                    }
+                },
             }
+
+            // Return the total number of coin
+            self.get_coin_amounts()
         }
 
         // Get coins out of the Root Finance component
         fn withdraw_coin(
             &mut self,
-            amount: Decimal,                                // Coin amount to withdraw
+            mut amount: Decimal,                                // Coin amount to withdraw
             _other_coin_to_coin_price_ratio: Option<Decimal>,   // Not used
         ) -> (
             FungibleBucket,         // Coin bucket
@@ -356,48 +447,59 @@ mod root_finance_wrapper {
             Decimal,                // Remaining coin amount
             Option<Decimal>         // None
         ) {
-            let pool_unit_ratio = self.pool_address.get_pool_unit_ratio();
 
-            let mut pool_unit_amount = amount * pool_unit_ratio;
+            let (mut coin_bucket, mut remaining_coin_amount) = self.take_from_account(
+                self.coin_address,
+                amount,
+            );
+            amount -= coin_bucket.amount();
 
-            // If there's no Root receipt, there are no invested coins
-            if self.account.balance(self.token_address) == Decimal::ZERO {
-                return (
-                    FungibleBucket::new(self.coin_address),
-                    None,
-                    Decimal::ZERO,
-                    None
+            if amount > Decimal::ZERO {
+                let pool_unit_ratio = self.pool_address.get_pool_unit_ratio();
+
+                let mut pool_unit_amount = amount * pool_unit_ratio;
+
+                // If there's no Root receipt, there are no invested coins
+                if self.account.balance(self.token_address) == Decimal::ZERO {
+                    return (
+                        FungibleBucket(coin_bucket),
+                        None,
+                        remaining_coin_amount,
+                        None
+                    );
+                }
+
+                // Create a Root receipt proof
+                let proof = self.create_root_receipt_proof();
+
+                // Read the available amount of coins from the Root receipt non fungible data
+                let non_fungible_data = self.root_receipt_non_fungible_data();
+                let available_amount = non_fungible_data.collaterals.get_index(0)
+                    .expect("No coins in this Root receipt")
+                    .1;
+
+                // It's not possible to withdraw more than the whole available amount
+                if pool_unit_amount > *available_amount {
+                    pool_unit_amount = *available_amount;
+                }
+
+                // Get back the coins from the Root component
+                coin_bucket.put(
+                    self.component_address.remove_collateral(
+                        proof.into(),
+                        vec![(
+                            self.coin_address,
+                            pool_unit_amount.checked_truncate(RoundingMode::ToZero).unwrap(),
+                            false
+                        )]
+                    )
+                        .pop()
+                        .unwrap()
                 );
+
+                remaining_coin_amount += ((*available_amount - pool_unit_amount) / pool_unit_ratio)
+                    .checked_truncate(RoundingMode::ToZero).unwrap();
             }
-
-            // Create a Root receipt proof
-            let proof = self.create_root_receipt_proof();
-
-            // Read the available amount of coins from the Root receipt non fungible data
-            let non_fungible_data = self.root_receipt_non_fungible_data();
-            let available_amount = non_fungible_data.collaterals.get_index(0)
-                .expect("No coins in this Root receipt")
-                .1;
-
-            // It's not possible to withdraw more than the whole available amount
-            if pool_unit_amount > *available_amount {
-                pool_unit_amount = *available_amount;
-            }
-
-            // Get back the coins from the Root component
-            let coin_bucket = self.component_address.remove_collateral(
-                proof.into(),
-                vec![(
-                    self.coin_address,
-                    pool_unit_amount.checked_truncate(RoundingMode::ToZero).unwrap(),
-                    false
-                )]
-            )
-                .pop()
-                .unwrap();
-
-            let remaining_coin_amount = ((*available_amount - pool_unit_amount) / pool_unit_ratio)
-                .checked_truncate(RoundingMode::ToZero).unwrap();
 
             (
                 FungibleBucket(coin_bucket),
@@ -422,9 +524,11 @@ mod root_finance_wrapper {
             Decimal,                // Total coin amount
             Option<Decimal>         // None
         ) {
+            let mut coin_amount = self.account.balance(self.coin_address);
+
             // If there's no Root receipt, there are no invested coins
             if self.account.balance(self.token_address) == Decimal::ZERO {
-                return (Decimal::ZERO, None);
+                return (coin_amount, None);
             }
 
             let non_fungible_data = self.root_receipt_non_fungible_data();
@@ -441,9 +545,10 @@ mod root_finance_wrapper {
                     );
 
                     amount /= self.pool_address.get_pool_unit_ratio();
+                    coin_amount += amount.checked_truncate(RoundingMode::ToNegativeInfinity).unwrap();
 
                     (
-                        amount.checked_truncate(RoundingMode::ToNegativeInfinity).unwrap(),
+                        coin_amount,
                         None
                     )
                 },
