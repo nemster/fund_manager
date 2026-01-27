@@ -923,7 +923,7 @@ CALL_METHOD
     Some(Address("resource_rdx1thksg5ng70g9mmy9ne7wz0sc7auzrrwy7fmgcxzel2gvp8pj0xxfmf"))
     1u8
     Address("component_rdx1crgwrzxppp6w95y5m6vygkujyzt3273kq4y4v4x7wq9d8v8u5l7wsl")
-    None
+    Some(Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd"))
     false
 ;
 ```
