@@ -24,8 +24,8 @@
 - hUSDC@Weft component: `component_rdx1cpeeae00r9dl7zqjwsut40rgp97rq4yk8c8q70pz96575uflgcvnnp`
 - hUSDC@Weft account: `account_rdx12xfguwk24ja9jnqdgvtvz399t3neh3nhcadqpp93aguczchkq5nsqh`
 
-- RootFinanceWrapper package: `package_rdx1pk8ducymvj4fqx3e0u7cnedvpgn6wf032nm3yq5y0p8a3y6335xh2a`
-- xUSDC@Root component: `component_rdx1crq2m0vpsqnngx7tmw6nc7tr68lyxzkgjk0etku6vxyqpxlj9uxmag`
+- RootFinanceWrapper package: `package_rdx1pkrtpfaqhrusvy5x2ymeq8fyr209wsu7946c28rlvxe9h8cjnx0qap`
+- xUSDC@Root component: `component_rdx1crvqfsf6pntgkp248zrmg2vq903ssr35s3vamxe59x6dupkzcyttfm`
 - xUSDC@Root account: `account_rdx12xkn2kka07k37gqn4vd5lx2y9zeqaa3djvmezusq5zyv2fetw723gs`
 - xUSDT@Root component: `component_rdx1crjy22rvz83ujqxydwrajldxy33he68namweljeprx5sk75c0cppyd`
 - xUSDT@Root account: `account_rdx12xlua8tdzuv8lvepqtcfmqu0rxhmpk4zv078quwtw89tjujtmtmxud`
@@ -548,7 +548,7 @@ TAKE_ALL_FROM_WORKTOP
     Bucket("account_badge")
 ;
 CALL_FUNCTION
-    Address("package_rdx1pk8ducymvj4fqx3e0u7cnedvpgn6wf032nm3yq5y0p8a3y6335xh2a")
+    Address("package_rdx1pkrtpfaqhrusvy5x2ymeq8fyr209wsu7946c28rlvxe9h8cjnx0qap")
     "RootFinanceWrapper"
     "new"
     Address("resource_rdx1t4upr78guuapv5ept7d7ptekk9mqhy605zgms33mcszen8l9fac8vf")
@@ -605,7 +605,7 @@ CALL_METHOD
     Address("resource_rdx1t4upr78guuapv5ept7d7ptekk9mqhy605zgms33mcszen8l9fac8vf")
     None
     1u8
-    Address("component_rdx1crq2m0vpsqnngx7tmw6nc7tr68lyxzkgjk0etku6vxyqpxlj9uxmag")
+    Address("component_rdx1crvqfsf6pntgkp248zrmg2vq903ssr35s3vamxe59x6dupkzcyttfm")
     None
     false
 ;
