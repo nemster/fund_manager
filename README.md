@@ -255,7 +255,7 @@ CALL_METHOD
 `<BOT_BADGE>` is the resource address of the badge held by the bot account.  
 `<FUND_MANAGER_COMPONENT_ADDRESS>` the address of the fund manager component.  
 `<RECIPIENT_ADDRESS>` the account address of a recipient of the airdrop.  
-`<AMOUNT>` the number of fund units to send to `<RECIPIENT_ADDRESS>`.  
+`<AMOUNT>` the percentage of fund units to send to `<RECIPIENT_ADDRESS>` [0-1] range.  
 `<MORE_STAKERS>` must be `false` if the airdrop is completed, `true` if there will be more calls to this method.  
 
 ### update\_defi\_protocols\_value
