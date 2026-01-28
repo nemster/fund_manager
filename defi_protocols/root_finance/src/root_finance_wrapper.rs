@@ -78,6 +78,7 @@ mod root_finance_wrapper {
             deposit_account_badge => restrict_to: [admin];
             whithdraw_unexpected_coin => restrict_to: [admin];
             get_from_root  => restrict_to: [admin];
+            update_strategy  => restrict_to: [admin];
 
             // TODO: how to manage root points?
 
@@ -284,6 +285,13 @@ mod root_finance_wrapper {
                 None
             );
         }
+
+        pub fn update_strategy(
+            &mut self,
+            just_hold: bool,
+        ) {
+            self.just_hold = just_hold;
+        }
     }
 
     impl DefiProtocolInterfaceTrait for RootFinanceWrapper {
@@ -447,6 +455,12 @@ mod root_finance_wrapper {
             Decimal,                // Remaining coin amount
             Option<Decimal>         // None
         ) {
+
+            let divisibility = ResourceManager::from_address(self.coin_address)
+                .resource_type()
+                .divisibility()
+                .unwrap();
+            amount = amount.checked_round(divisibility, RoundingMode::ToNegativeInfinity).unwrap();
 
             let (mut coin_bucket, mut remaining_coin_amount) = self.take_from_account(
                 self.coin_address,
