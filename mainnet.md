@@ -39,7 +39,7 @@
 - fUSD/xUSDC@Caviarnine account: `account_rdx12x95s98uyexfcgq8s5r63xzups4hsjx8a7nyrsxm60wxk3dqg5u2js`
 
 - FluxWrapper package: `package_rdx1pk09n7x6vuf4ynywa7eps2fjqvhtrtukm0zmg9jfm7xmrdec0mxksf`
-- fUSD/LSULP@Flux component: `component_rdx1crgwrzxppp6w95y5m6vygkujyzt3273kq4y4v4x7wq9d8v8u5l7wsl` (not tested)
+- fUSD/LSULP@Flux component: `component_rdx1crgwrzxppp6w95y5m6vygkujyzt3273kq4y4v4x7wq9d8v8u5l7wsl`
 - fUSD/LSULP@Flux account: `account_rdx12xxp5gh9kxyhz8w83499ag53ptzhxykjp4ak8c46p5nwjw5xc37ctl`
 
 - SurgeWrapper package: `package_rdx1p5066w4vddkvq9dcd0tpmwngpktx3zzy07v42h6w4qyp4j6tty0n34`
@@ -923,6 +923,83 @@ CALL_METHOD
     Some(Address("resource_rdx1thksg5ng70g9mmy9ne7wz0sc7auzrrwy7fmgcxzel2gvp8pj0xxfmf"))
     1u8
     Address("component_rdx1crgwrzxppp6w95y5m6vygkujyzt3273kq4y4v4x7wq9d8v8u5l7wsl")
+    Some(Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd"))
+    false
+;
+```
+
+### Instantiate the fUSD/XRD@Flux component
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "withdraw_non_fungibles"
+    Address("resource_rdx1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxxaccwnr")
+    Array<NonFungibleLocalId>(
+        NonFungibleLocalId("[51e7479583c070a52618a9b96a98680d97d1532a81e0076e7463cddc7ff0]")
+    )
+;
+TAKE_ALL_FROM_WORKTOP 
+    Address("resource_rdx1nfxxxxxxxxxxaccwnrxxxxxxxxx006664022062xxxxxxxxxaccwnr")
+    Bucket("account_badge")
+;
+CALL_FUNCTION 
+    Address("package_rdx1pk09n7x6vuf4ynywa7eps2fjqvhtrtukm0zmg9jfm7xmrdec0mxksf")
+    "FluxWrapper" 
+    "new"
+    Address("resource_rdx1t49wa75gve8ehvejr760g3pgvkawsgsgq0u3kh7vevzk0g0cnsmscq")
+    Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd")
+    Address("resource_rdx1tk6gnvp5tmxqdr5zppuu50p2q9uvv89q2gyz432ukrh5md7ft4xesr")
+    Address("account_rdx128n509vrcpc22fsc4xuk4xrgpktaz5e2s8sqwmn5v0xacllsx8rkkq")
+    Bucket("account_badge")
+    Address("component_rdx1cpkye6pp2643ghalcppdxks6kymyu5gla87gf7sk34k0vg7xu57jaj")
+    Address("resource_rdx1th9ul6k57hmfx8u26lgfhz8c7wl4j9jk7knl4crjzec0t8fdgl7sgf")
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+;
+```
+
+## Authorize admin #2# to add the fUSD/XRD@Flux component in the FundManager
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#1#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "authorize_admin_operation"
+    Proof("admin_proof")
+    2u8
+    1u8
+    Some("fUSD/XRD@Flux")
+    None
+    None
+;
+```
+
+### Add the fUSD/XRD@Flux component in the FundManager
+```
+CALL_METHOD
+    Address("account_rdx1289mytexylv27ey3xty93lskxyjnxat6d5r3ldsljwygtw8gwyusmj")
+    "create_proof_of_non_fungibles"
+    Address("resource_rdx1nthnjx8ltdk26c8vmvlajtfk4xzy4dlnayqmq7v5l5arurfrh5mp5a")
+    Array<NonFungibleLocalId>(NonFungibleLocalId("#2#"))
+;
+POP_FROM_AUTH_ZONE
+    Proof("admin_proof")
+;
+CALL_METHOD
+    Address("component_rdx1cpd5eajj0rq9dcwuymdhjhcrn2k62xgn07msfj2xhk3rn8mn2gcuut")
+    "add_defi_protocol"
+    Proof("admin_proof")
+    "fUSD/XRD@Flux"
+    Address("resource_rdx1t49wa75gve8ehvejr760g3pgvkawsgsgq0u3kh7vevzk0g0cnsmscq")
+    Some(Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd"))
+    0u8
+    Address("component_rdx1cpydpqf35gw8uhs3j8w6egadvnm07et37f8j7ll5h5y7dwt504x0c7")
     Some(Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd"))
     false
 ;
