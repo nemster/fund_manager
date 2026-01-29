@@ -468,59 +468,76 @@ mod root_finance_wrapper {
             );
             amount -= coin_bucket.amount();
 
-            if amount > Decimal::ZERO {
-                let pool_unit_ratio = self.pool_address.get_pool_unit_ratio();
+            // If there's no Root receipt, there are no invested coins
+            if self.account.balance(self.token_address) == Decimal::ZERO {
+                return (
+                    FungibleBucket(coin_bucket),
+                    None,
+                    remaining_coin_amount,
+                    None
+                );
+            }
 
-                let mut pool_unit_amount = amount * pool_unit_ratio;
+            // Read the available amount of coins from the Root receipt non fungible data
+            let non_fungible_data = self.root_receipt_non_fungible_data();
+            let opt_collateral = non_fungible_data.collaterals.get_index(0);
 
-                // If there's no Root receipt, there are no invested coins
-                if self.account.balance(self.token_address) == Decimal::ZERO {
-                    return (
+            match opt_collateral {
+                None => return (
+                    FungibleBucket(coin_bucket),
+                    None,
+                    remaining_coin_amount,
+                    None
+                ),
+
+                Some(collateral) => {
+
+                    // Pool units available amount
+                    let mut available_amount = *collateral.1;
+
+                    let pool_unit_ratio = self.pool_address.get_pool_unit_ratio();
+
+                    if amount > Decimal::ZERO {
+
+                        // Compute how many pool units must be withdraw to obtain amount coins
+                        let mut pool_unit_amount = amount * pool_unit_ratio;
+
+                        // It's not possible to withdraw more than the whole available amount
+                        if pool_unit_amount > available_amount {
+                            pool_unit_amount = available_amount;
+                        }
+
+                        // Create a Root receipt proof
+                        let proof = self.create_root_receipt_proof();
+
+                        // Get back the coins from the Root component
+                        coin_bucket.put(
+                            self.component_address.remove_collateral(
+                                proof.into(),
+                                vec![(
+                                    self.coin_address,
+                                    pool_unit_amount.checked_truncate(RoundingMode::ToZero).unwrap(),
+                                    false
+                                )]
+                            )
+                                .pop()
+                                .unwrap()
+                        );
+
+                        available_amount -= pool_unit_amount;
+                    }
+
+                    remaining_coin_amount += (available_amount / pool_unit_ratio)
+                        .checked_truncate(RoundingMode::ToZero).unwrap();
+
+                    (
                         FungibleBucket(coin_bucket),
                         None,
                         remaining_coin_amount,
                         None
-                    );
-                }
-
-                // Create a Root receipt proof
-                let proof = self.create_root_receipt_proof();
-
-                // Read the available amount of coins from the Root receipt non fungible data
-                let non_fungible_data = self.root_receipt_non_fungible_data();
-                let available_amount = non_fungible_data.collaterals.get_index(0)
-                    .expect("No coins in this Root receipt")
-                    .1;
-
-                // It's not possible to withdraw more than the whole available amount
-                if pool_unit_amount > *available_amount {
-                    pool_unit_amount = *available_amount;
-                }
-
-                // Get back the coins from the Root component
-                coin_bucket.put(
-                    self.component_address.remove_collateral(
-                        proof.into(),
-                        vec![(
-                            self.coin_address,
-                            pool_unit_amount.checked_truncate(RoundingMode::ToZero).unwrap(),
-                            false
-                        )]
                     )
-                        .pop()
-                        .unwrap()
-                );
-
-                remaining_coin_amount += ((*available_amount - pool_unit_amount) / pool_unit_ratio)
-                    .checked_truncate(RoundingMode::ToZero).unwrap();
+                },
             }
-
-            (
-                FungibleBucket(coin_bucket),
-                None,
-                remaining_coin_amount,
-                None
-            )
         }
 
         // Withdraw the badge used to manage the Account; this component will no loger be able to
