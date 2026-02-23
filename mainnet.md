@@ -229,7 +229,7 @@ CALL_METHOD
     Address("component_rdx1cq03dl2atp9jl7w0vkc46udgsukkr56n2tmugsw3g5vklkttq88xh7")
     "add_pool"
     Address("resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd")
-    Address("resource_rdx1t4upr78guuapv5ept7d7ptekk9mqhy605zgms33mcszen8l9fac8vf")
+    Address("resource_rdx1thxj9m87sn5cc9ehgp9qxp6vzeqxtce90xm5cp33373tclyp4et4gv")
     "defiplaza_pool"
     Address("component_rdx1cqs6t5t70fcgrva6ws6gs84u29w3kecn6j0zkjg0u0x9szx0xnusxj")
     true
